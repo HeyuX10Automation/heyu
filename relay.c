@@ -367,7 +367,7 @@ int start_relay ( char *tty_name )
 	    /* just write any unknown data */
 	    ignoret = write(outfd,ibuff, 1);
         }
-
+#if 0
 	if ( ibuff[0] == 0x5a && (count_5a == 0 || in_sync == 1 ) )  {
 	    /* write the first 0x5a that's seen */
 	    ignoret = write(outfd,ibuff, 1);
@@ -377,19 +377,19 @@ int start_relay ( char *tty_name )
 	     * let's try that next time that I'm deep into the code.
 	     */
 	}
-
+#endif
 	if ( ibuff[0] == 0x5a && count == 1)  {
 
             /* CM11A has a character to read */
 	    if ( ++count_5a > 1 || (count_5a == 1 && in_sync == 1) )  {
                 /* After a (configurable) short delay, tell the CM11A to send it */
                 millisleep(configp->cm11a_query_delay);
-		ibuff[0] = 0xC3;
+		ibuff[1] = 0xC3;
 
 		/* if( lock_for_write() == 0 ) */
 		{
 		    port_locked = 1;
-		    ignoret = write(tty,ibuff, 1);
+		    ignoret = write(tty,ibuff + 1, 1);
 		    munlock(writefilename);
                     port_locked = 0;
 		}
@@ -401,12 +401,12 @@ int start_relay ( char *tty_name )
 		 * Like power fail or hail request.
 		 */
 
-	         count = sxread(tty, ibuff, 1, 5);  	/* Get number of bytes which follow */
+	         count = sxread(tty, ibuff + 1, 1, 5); 	/* Get number of bytes which follow */
 	         				      
 	         if ( count == 1 ) {
                      /* so far so good */
 
-		     expected = ibuff[0];
+		     expected = ibuff[1];
 
                      if ( expected == 0x5a ) {
                         /* CM11A quirk - sometimes send 0xC3, get nothing */
@@ -417,25 +417,25 @@ int start_relay ( char *tty_name )
                      }
 
 		     if ( expected > 20 )  {
-                         ignoret = write(outfd,ibuff, 1);
+                         ignoret = write(outfd,ibuff, 2);
                          /* Too many. We must not be synced. */
 		         in_sync = 0;
 		         continue; /* go to outer while to grab this */
 		     }
 
-                     count = sxread(tty, ibuff + 1, expected, 5);
+                     count = sxread(tty, ibuff + 2, expected, 5);
 
 		     if ( count != expected )  {
 		         /* This should be too few. so we aren't in sync yet. */
-                         ibuff[0] = count;
-		         ignoret = write(outfd,ibuff, count + 1);
+                         ibuff[1] = count;
+		         ignoret = write(outfd,ibuff, count + 2);
 		         in_sync = 0;
 		         continue; /* go to outer while to grab this */
 		     }
 		     if ( count == expected )  {
 			count_5a = 0;
 			in_sync = 1;
-			ignoret = write(outfd,ibuff, count + 1);
+			ignoret = write(outfd,ibuff, count + 2);
                      }
 
 	         }
