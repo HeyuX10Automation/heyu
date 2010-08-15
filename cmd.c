@@ -1303,7 +1303,7 @@ int send_buffer ( unsigned char *buffer, int length,
 
    /* get a check sum in reply */
 
-   nread = exread(sptty, inbuff, 1, timeout);
+   nread = exread(sptty, inbuff, 1, 1);
 
    if ( chksum == inbuff[0] ) {
       /* Checksum is OK; tell interface to transmit the code. */
