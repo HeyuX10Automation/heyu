@@ -63,6 +63,7 @@
 #include <sys/time.h>
 #endif /* NSLEEP | ATTSVR4 */
 
+#include <syslog.h>
 #include <time.h>
 #include <sys/time.h>
 #include <limits.h>
@@ -1315,6 +1316,12 @@ int send_buffer ( unsigned char *buffer, int length,
          wait_external_trigger(syncmode);
 
       (void) xwrite(tty, "\00" , 1);	/* WRMI (we really mean it) */
+   }
+   else if (!nread) {
+      if ( verbose )
+         display_send_message("Checksum NOT confirmed, no response from interface");
+      syslog(LOG_WARNING, "Checksum NOT confirmed, no response from interface");
+      return 1;
    }
    else  {
       if ( verbose ) {
