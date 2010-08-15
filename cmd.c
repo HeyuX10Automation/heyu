@@ -85,7 +85,7 @@ extern int line_no;
 extern int sptty, i_am_relay, i_am_aux, i_am_state;
 extern int heyu_parent;
 extern int verbose;
-extern int xwrite(), exread(), sxread(), check4poll();
+extern int xwrite(), xread(), exread(), sxread(), check4poll();
 extern int is_modem_support(void);
 extern CONFIG  config;
 extern CONFIG  *configp;
@@ -1325,7 +1325,7 @@ int send_buffer ( unsigned char *buffer, int length,
       return 1;
    }
 
-   if ( (nread = exread(sptty, inbuff, 1, timeout)) >= 1 ) {
+   if ( (nread = xread(sptty, inbuff, 1, timeout)) >= 1 ) {
       if( inbuff[0] == 0x55 ) {
          /* interface is ready again */
          if ( verbose )
