@@ -6677,20 +6677,19 @@ char *translate_rf_sent ( unsigned char *buf, int *launchp )
 /*---------------------------------------------------------------------+
  | Interpret byte string sent to CM11A.                                |
  +---------------------------------------------------------------------*/
-char *translate_other ( unsigned char *buf, int len )
+char *translate_other ( unsigned char *buf, int len, unsigned char *chksum )
 { 
    static char outbuf[80];
-   unsigned char chksum;
    unsigned int memloc;
 
    if ( buf[0] == 0 && len == 1 ) {
       return "";
    }
    else if ( buf[0] == 0xfb && len == 19 ) {
-      chksum = checksum(buf + 1, len - 1);
+      *chksum = checksum(buf + 1, len - 1);
       memloc = (buf[1] << 8) + buf[2];
       sprintf(outbuf, "Upload to EEPROM location %03x, checksum = %02x",
-          memloc, chksum);
+          memloc, *chksum);
       return outbuf;
    }
    else if ( buf[0] == 0x8b && len == 1 ) {

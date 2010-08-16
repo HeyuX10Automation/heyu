@@ -170,7 +170,7 @@ int check4poll( int showdata, int timeout )
     extern int display_expanded_macro();
     int ichksum;
     int identify_sent(unsigned char *, int, unsigned char *);
-    char *translate_other(unsigned char *, int);
+    char *translate_other(unsigned char *, int, unsigned char *);
     extern char *translate_sent(unsigned char *, int, int *);
     extern char *translate_rf_sent(unsigned char *, int *);
 #if 0
@@ -551,7 +551,7 @@ int check4poll( int showdata, int timeout )
                    }
                    else if ( sent_type == SENT_OTHER ) {
                       /* Other command */
-                      if ( *(transp = translate_other(buf, n)) )
+                      if ( *(transp = translate_other(buf, n, &chksum)) )
                          fprintf(fdsout, "%s %s\n", datstrf(), transp);
 		      chksum_alert = chksum;
                       launchp = -1;
