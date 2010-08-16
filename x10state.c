@@ -5726,12 +5726,11 @@ int fetch_x10state_old ( void )
  | Identify the type of data read from the spoolfile which was written |
  | there by heyu, i.e., excluding data received from the interface.    |
  +---------------------------------------------------------------------*/
-int identify_sent ( unsigned char *buf, int len )
+int identify_sent ( unsigned char *buf, int len, unsigned char *chksum )
 {
    int type;
-   unsigned char chksum;
 
-   chksum = checksum(buf, len);
+   *chksum = checksum(buf, len);
    
    if ( buf[0] == 0 && len == 1 )
       type = SENT_WRMI;  /* WRMI */
@@ -5784,7 +5783,7 @@ int identify_sent ( unsigned char *buf, int len )
       type = SENT_STCMD;  /* Monitor/state control command */
    else if ( buf[0] == 0x0C && len == 2 && buf[1] == 0x56 )
       type = SENT_ADDR;  /* Address of G1 with 5a fix */
-   else if ( buf[0] == 0x0F && len == 5 && chksum == 0x62 )
+   else if ( buf[0] == 0x0F && len == 5 && *chksum == 0x62 )
       type = SENT_EXTFUNC;  /* Extended function with 5a fix */
    else if ( buf[0] == ST_COMMAND && buf[1] == ST_SETTIMER && len == 8 )
       type = SENT_SETTIMER; /* Set a countdown timer */

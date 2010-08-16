@@ -169,7 +169,7 @@ int check4poll( int showdata, int timeout )
     extern int special_func;
     extern int display_expanded_macro();
     int ichksum;
-    int identify_sent(unsigned char *, int);
+    int identify_sent(unsigned char *, int, unsigned char *);
     char *translate_other(unsigned char *, int);
     extern char *translate_sent(unsigned char *, int, int *);
     extern char *translate_rf_sent(unsigned char *, int *);
@@ -274,11 +274,13 @@ int check4poll( int showdata, int timeout )
 		n = buf[0];
 
                 if ( n < 127 ) {
+		   unsigned char chksum;
+
                    n = xread(sptty, buf, n, timeout);
 
                    /* Identify the type of sent command from the leading */
                    /* byte and the length of the buffer.                 */
-                   sent_type = identify_sent(buf, n);
+                   sent_type = identify_sent(buf, n, &chksum);
 
                    if ( sent_type == SENT_STCMD ) {
                       /* A command for the monitor/state process */
