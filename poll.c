@@ -388,6 +388,7 @@ int check4poll( int showdata, int timeout )
                       /* An address */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
+		      chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -396,6 +397,7 @@ int check4poll( int showdata, int timeout )
                       /* Standard function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
+		      chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -404,6 +406,7 @@ int check4poll( int showdata, int timeout )
                       /* Extended function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, transp);
+		      chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -550,6 +553,7 @@ int check4poll( int showdata, int timeout )
                       /* Other command */
                       if ( *(transp = translate_other(buf, n)) )
                          fprintf(fdsout, "%s %s\n", datstrf(), transp);
+		      chksum_alert = chksum;
                       launchp = -1;
                    }
 
