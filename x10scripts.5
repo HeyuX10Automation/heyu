@@ -1,0 +1,1503 @@
+.TH X10SCRIPTS 5 local
+.SH NAME
+.B x10scripts\^
+- Scripting for HEYU, an X-10 CM11A serial interface control program
+.SH DESCRIPTION
+.I Heyu
+is a program for controlling an X-10 "CM11A" home control device.
+See  the \fIheyu\fP(1) man page for usage information.
+.PP
+This page contains information regarding the capabilities of Heyu
+version 2 for launching scripts upon reception of specified X10 signals
+or special conditions.  The word \'script\' as used here encompasses
+not only shell scripts but also executable binaries and shell commands,
+in fact, any valid command line.
+
+(The auxilliary program Xtend by David Shaw which was required by
+earlier versions of Heyu for this functionality is no longer needed or used.)
+.PP
+In order to launch scripts the Heyu state engine daemon must be running.
+It is started manually by executing \'heyu engine\', or can be configured
+to start automatically with the \'heyu start\' command by including the directive
+"START_ENGINE AUTO" in the configuration file.  If the Heyu configuration
+file is changed, the daemon must be restarted by executing \'heyu restart\' -
+the existing daemon will re-read the configuration file and incorporate
+the changes.
+.PP
+Scripts to be launched are each defined in the Heyu configuration file with a
+SCRIPT directive.  This directive (more fully explained below) defines
+the launch conditions under which a command line will be executed and the command
+line itself.  For each event, i.e., X10 signal or special condition, encountered
+by Heyu the list of SCRIPT launch conditions are tested in the order the SCRIPT
+directives appear in the configuration file.  The command line is executed for
+the first set of corresponding launch conditions which are satisfied.  Any given
+event can normally launch no more than a single SCRIPT command line, but see
+section "SCAN MODE" below to override this restriction.
+.PP
+There are eight types of scripts which can be launched by Heyu:
+.br
+\fINormal\fP scripts are launched by an X10 function signal, e.g., \'on\', \'off\',
+etc., which can be either sent or received.
+.br
+\fIAddress\fP scripts are similar to normal scripts but require only an
+X10 address signal.
+.br  
+\fIPowerfail\fP scripts are launched when the restoration of AC power following
+an interruption is reported to the computer by the CM11A.
+.br
+\fIRFFlood\fP scripts are launched when an unbroken stream of RF signals
+are received by the auxiliary input daemon heyu_aux.
+.br
+\fIRFJamming\fP scripts are launched by an RF Jamming signal
+reported by older firmware versions of RFXCOM receivers.
+.br
+\fITimeout\fP scripts are launched at expiration of a countdown time specified
+by the user with a \'heyu settimer n hh:mm:ss\' command or by a script with the
+\'@settimer n hh:mm:ss\' precommand.
+.br
+\fIExec\fP scripts are launched only from the command line with the
+\'heyu launch <scriptname>\' command, not by any signal or hardware condition.
+.br
+\fISensorfail\fP scripts are launched when a sensor with a heartbeat
+(i.e., which periodically reports its current state), fails to report in the
+specified time, however they are now deprecated.
+.PP
+As of heyu-2.9, when an inactive sensor is detected Heyu generates the pseudo-signal
+"Inactive" which appears to have been transmitted by the sensor.  The function
+"inactive" can be used in the launch conditions for a Normal script the same
+as any other function, however one difference is that the "changed" launched condition
+refers only to the transition from Active to Inactive rather than a change in
+the data value as for real signals.  The directive "HIDE_UNCHANGED_INACTIVE YES|NO"
+(default NO) determines whether the unchanged pseudo-signal is displayed in the
+monitor and logfile.
+.PP  
+Sensorfail scripts are ignored under this new system.
+The config directive "INACTIVE_HANDLING  OLD" can be used to revert to the
+previous system.
+ 
+.PP
+The Heyu state engine daemon (heyu_engine) interprets X10 signals, both those
+received over the AC power line via the CM11A interface, those sent to the
+interface from the Heyu command line, and those RF signals transceived or
+forwarded from the heyu_aux daemon.  It keeps a record of the effect of these
+signals upon each X10 module identified in an ALIAS directive in the
+configuration file (or the default module). See the \fIx10config\fP(5) man
+page for details about this. 
+.PP
+Heyu classifies each X10 signal by its source, which will be one of the
+following:
+.br
+   \fIsndc\fP  - Sent from the Heyu command line.
+.br
+   \fIsnds\fP  - Sent by Heyu executed from a normal or address script. (*)
+.br
+   \fIsndp\fP  - Sent by Heyu executed from a power-fail script. (*)
+.br
+   \fIsndm\fP  - Sent by an uploaded macro when initiated by a Timer.
+.br
+   \fIsndt\fP  - Sent by an uploaded macro when initiated by a Trigger.
+.br
+   \fIsnda\fP  - RF transceived to power line code by the heyu_aux daemon.
+.br
+   \fIrcva\fP  - RF signals forwarded from the heyu_aux daemon.
+.br
+   \fIrcvi\fP  - Received over the AC power line.
+.br
+   \fIrcvt\fP  - A Trigger signal which initiated an uploaded macro.
+.br
+(*) When that script is launched by the Heyu state engine daemon.
+
+.PP
+The launch conditions for a script requires that the source or sources
+to be allowed to launch the script be specified if other than the
+default \'rcvi\'.  Using the source keyword \'anysrc\' is equivalent to
+specifying all the above mentioned sources except \'snds\'.  If you
+are new to using Heyu scripts, including \'anysrc\' in the launch
+conditions for your scripts is probably a good idea until you gain
+more experience.
+
+.PP
+Note that a CM11A does NOT report the individual addresses and
+functions when a macro is executed, only the fact that a macro at
+EEPROM address XXX has been executed.  Heyu determines the individual
+addresses and functions from a copy of the EEPROM memory image it
+stores in file \'x10image\' when a schedule is uploaded to the CM11A.
+.br
+Neither does the CM11A report the actual X10 signal which triggers
+a macro, at least not reliably.  Again, Heyu determines this from the
+stored memory image file.  (The CM11A firmware allows Heyu to distinguish
+up to six different triggers for the _same_ macro.)
+ 
+.PP
+Each X10 standard module in the system can be in the major states 
+\fIOn\fP, \fIDimmed\fP, and \fIOff\fP.  They are not mutually exclusive - a
+module that is in the \fIDimmed\fP state is also considered to be in the
+\fIOn\fP state.
+.PP
+There are additional major states for X10 security sensors and remotes,
+e.g., \fIAlert\fP, \fIClear\fP, \fIActive\fP, \fIInactive\fP.
+.PP
+In addition, there are minor states: \fIAddressed\fP, \fIChanged\fP,
+and \fIModuleChanged\fP.
+.PP
+A module is considered to be in the \fIModuleChanged\fP state when the
+last X10 signal matching its housecode and unit caused a change in its
+major state.
+.PP
+A module is considered to be in the \fIChanged\fP state when:
+.br
+  It\'s in the \fIModuleChanged\fP state -OR-
+.br
+  If the X10 signal matching its housecode and unit is the first
+.br
+    valid signal encountered since start or restart -OR-
+.br
+  For sensors with a heartbeat, if the sensor first becomes Inactive
+    or returns to Active status.
+.PP
+(A signal is considered "valid" if it is supported by the module type in
+question.)  
+.PP
+Addressing is a feature built into module firmware and emulated
+in the Heyu state engine.
+.PP
+A standard X10 module becomes \fIAddressed\fP when it receives an
+X10 address code matching its own housecode|unit address.
+It becomes unaddressed when it receives an X10 address code not
+matching its own address after having received _any_ X10 function
+code on the same housecode -or- when it receives the \'alloff\'
+(all_units_off) function on that housecode.
+.PP
+The X-10 company has not been consistant with their designs and some,
+but not all, dimmer modules which support the \'lightsoff\' (all_lights_off)
+command will become unaddressed after receiving that command, and
+some dimmer modules will become unaddressed after receiving the \'lightson\'
+(all_lights_on) command.  Similarly there are some modules, usually
+X10 camera power supplies, which are not unaddressed by the \'alloff\'
+command.
+.PP 
+SwitchLinc and other modules which support the \'preset\' function
+automatically unaddress themselves insofar as a subsequent \'preset\'
+function is concerned immediately after receiving any X10 function code.
+.PP
+The state tables maintained by the Heyu state engine daemon include
+common flags which can be set or cleared by Heyu commands.  The state
+of one or more flags, "flagNN" or "notflagNN", can be included as part
+of the conditions determining whether a script is to be executed.
+Heyu counters set a "counter-zero" ("czflagNN") flag when the corresponding
+counter NN value is zero.  Heyu user-configurable countdown timers set
+a "timer-zero" ("tzflagNN") flag when the corresponding timer NN is zero. 
+.PP
+Heyu\'s security commands set flags,
+e.g., \'armed\', \'disarmed\', etc., which can also be tested as part
+of the launch conditions.  If the LONGITUDE and LATITUDE directives are
+included in the user\'s configuration file, the flags \'night\' and \'dark\'
+and their negations \'notnight\' and \'notdark\' can also be tested in
+the launch conditions.
+.PP
+The user can choose to run in a mode compatible with the \fIheyuhelper\fP
+feature of Heyu 1.xx, a mode compatible with (most) Xtend scripts, or
+with the full features of Heyu scripting.  For \fIheyuhelper\fP, put
+the directive SCRIPT_MODE HEYUHELPER in your configuration file,
+otherwise specify (or take the default) SCRIPT_MODE SCRIPTS.
+.PP
+When SCRIPT_MODE HEYUHELPER is specified, all the other script-oriented
+directives described below except SCRIPT_SHELL and SCRIPT_CTRL are ignored.
+If an executable script named \'heyuhelper\' exists on the user\'s path,
+it is launched every time Heyu receives an X10 function over the AC power
+line via the CM11A interface.  One difference from Heyu 1.xx however is
+that the heyuhelper script is NOT launched when an uploaded macro
+is executed.
+
+.SH QUICK SCRIPTS
+For those anxious to get started without having to understand all of
+Heyu\'s extended scripting features, just take the default for
+SCRIPT_MODE, add one or more simple SCRIPT directives like the
+following to your configuration file, and run \'heyu engine\' to
+start the Heyu state engine (or \'heyu restart\' if it's already
+running).  The simple SCRIPT format for (normal) scripts is:
+.PP
+  SCRIPT  <Housecode|unit>  <function>  anysrc :: <command line>
+.PP
+The Housecode|Unit, function, and keyword "anysrc" taken together describe
+for Heyu the \fIlaunch condition\fP, i.e., the condition under which
+the command line is to be executed.
+.PP
+The Housecode|Unit can be an ALIAS defined in the configuration file.
+.PP
+The keyword "anysrc" allows Heyu to satisfy the launch condition regardless
+of the source of the X10 signal, e.g., whether received over the power
+line or sent from the command line.  Later you may wish to restrict the
+source(s) of the signal to specific ones from the list of sources above.
+.PP 
+Examples:
+.br
+  SCRIPT porch_light on anysrc :: echo "Porch light has been turned on" | mail
+.PP
+The above sends an email to you whenever the X10 \'on\' signal for the
+housecode|unit aliased to \'porch_light\' is received over the power line
+or sent from the command line.
+.PP
+  SCRIPT  C1 off anysrc ::  play ssb.wav; heyu turn tv_set off
+.PP
+When remote X10 signal \'C1 off\' is received, play the Star Spangled
+Banner .wav file, then turn off the TV set.  Users outside the USA
+can substitute a .wav file for "O Canada", "God Save the Queen", or
+whatever TV station signoff music is usual in their country. :-)
+.br
+
+Note: The \'::\' (two colons) is a mandatory separator between the
+launch condition (e.g. \'C1 off\') and the command line.
+.br
+
+Unless redirected elsewhere, any text output from a launched script
+will be written to the log file.
+
+.PP
+Address scripts are similar to normal scripts but the keyword \'address\'
+is substituted in place of any and all function names.  Example:
+.PP
+  SCRIPT A1 address anysrc :: mysound.sh volumeup
+.br
+  SCRIPT A2 address anysrc :: mysound.sh volumedown
+
+.PP
+For powerfail scripts the simple SCRIPT format is:
+.br
+   SCRIPT -powerfail :: <command line>
+.PP
+Example:
+.br
+   SCRIPT -powerfail :: heyu on night_lights
+
+.SH ADVANCED SCRIPTS
+.PP
+Define for Heyu a script to be launched and the conditions for
+launching it with a SCRIPT directive in your configuration file.
+Any number of SCRIPT directives may appear in the configuration
+file. 
+.PP
+The format is:
+.br
+   SCRIPT [-l label] <launch conditions> :: [options] <command line>
+.PP
+<launch conditions> tell Heyu under what conditions the script is
+to be launched.  See the section LAUNCH CONDITIONS below for full
+details.  <launch conditions> may alternatively (or additionally)
+be specified with a LAUNCHER directive in the configuration file.
+.PP
+Launch conditions are tested in the order they appear in the
+configuration file.  The command line will be executed for the
+first (and only the first) set of launch conditions which are satisfied,
+i.e., only one command line can be executed per X10 signal or special
+condition. 
+.PP
+The script label is optional so long as all the launch conditions
+are specified in the SCRIPT directive.  If omitted, Heyu will create a
+label for display purposes of the form \'Script_NN\', where NN is the
+line number of the SCRIPT directive in the configuration file.
+If script labels are provided, they must be unique for each SCRIPT
+directive.
+.PP
+A script label is mandatory when any launch conditions are separately
+specified with a LAUNCHER directive - Heyu needs it to match up
+the launcher with its corresponding script.  But most users probably
+won\'t bother with the LAUNCHER directives.
+.br
+
+The symbol \'::\' (two colons) is mandatory, to tell Heyu when
+the list of launch conditions ends and the command line begins.
+.br
+
+When a script is launched, Heyu provides additional environment
+variables containing information from Heyu\'s record of the state
+of each module, plus a few other variables to simplify writing
+the script.  The script options allow some variation in the
+type and format of these environment variables.
+
+.PP
+Script options are:
+.PP
+\fI-xtend\fP (or simply \fI-x\fP)  - Provide an environment compatible with Xtend scripts.
+.PP
+\fI-rawlevel\fP (or simply \fI-r\fP) - Include native dimlevel of modules instead of
+percentage of full On level in the Heyu environment, i.e., for standard
+modules 0-210; for preset modules 1-32; for extended code modules 0-62; for VDATA
+modules 0-255.  This option is incompatible with the -xtend option.
+.PP
+\fI-noenv\fP (or simply \fI-n\fP) - Provide no environment variables beyond those
+which already exist in the user\'s environment.
+.PP
+\fI-quiet\fP (or simply \fI-q\fP) - Heyu will normally display the script label
+along with the full command line in the log file when a script is launched.
+This option directs Heyu to display only the script label - useful if you
+have a very long command line and don't want to clutter your log file.
+.PP
+\fI-qquiet\fP (or simply \fI-qq\fP) - This option directs Heyu suppress
+display of even the script label in the log file when a script is launched.
+It may be useful when you have a bunch of interrelated SCRIPT directives
+and having the launching of all of them displayed in the log file is more
+confusing than instructive.  However please use this only after you have
+confirmed that your scripts are working correctly and reliably.
+.PP
+Script options must be placed between the \'::\' separator and the
+start of the command line.
+.PP
+Example:
+.br
+  SCRIPT  D1 off :: -x  myxtend.sh
+.PP
+See the section SCRIPT ENVIRONMENT below for a description of these
+environment variables.
+.PP 
+
+.SH LAUNCH CONDITIONS FOR NORMAL SCRIPTS
+The launch conditions tell Heyu under what conditions a script is
+to be launched.  Each time an X10 function is sent or received (or
+a power-fail signal is received - more about this in the next section),
+Heyu will test to see which (if any) of the conditions are satisfied.
+The testing is performed in the order in which the conditions are
+specified in the configuration file, and stops once the conditions
+are matched and a script is launched. 
+.PP
+For normal scripts, each set of launch conditions specifies the
+affected housecode|units, the function or functions, optional
+function mode keywords, the allowed source(s) of the functions,
+and optional flag conditions.
+.br
+  HU functions [keywords] [sources] [flags]
+.PP
+The housecode|units string \'HU\' must always come first and must always include
+a units list even when a function like \'alloff\' (all units off) is specified.
+Using an asterisk (\'*\') in place of a units list, \'H*\', will launch on any unit
+1-16 but in the context of a launch condition will launch even when no units are
+addressed, so can be used when it is desired to specify a launch when one of the 
+specified functions is received for that housecode regardless of unit addresses.
+.br
+
+An alias may be used in place of a housecode|units string.  Functions,
+keywords, and sources may appear in any order after that.
+.PP
+Whether included within the SCRIPT directive or separately in LAUNCHER
+directives, multiple launch conditions for the same script may be
+continued on the same line by separating each group of conditions with
+a semicolon (\';'\'), i.e.,
+.br
+  HU functions [keywords] [sources] [flags]; HU functions [keywords] [sources] [flags]; ...
+
+.PP
+Functions which can be specified in a launch condition are any of the 
+native X10 functions: on, off, dim, bright, lightson, lightsoff,
+alloff, preset, extended, hail, hail_ack, status, status_on,
+status_off, data_xfer.  Also functions allon, xpowerup, and vdata.
+The general functions \'anyplc\' or \'anyfunc\' in a launch condition
+will match any of the above.
+.br
+
+RF signals received from X10 security remotes and sensors via the
+heyu_aux daemon provide the additional functions disarm, arm, alert,
+clear, panic, slightson, slightsoff, sdusk, and sdawn.  The general functions
+\'anysec\' or \'anyfunc\' will match any of these.
+.br
+
+RF signals from RFXSensor 1-Wire temperature, humidity, and barometric pressure
+sensors which can be used in launch conditions are rfxtemp, rfxtemp2,
+rfxrh, rfxbp, rfxlobat, rfxvad, rfxpot, and rfxvs. The general functions
+\'anyrfx\' or \'anyfunc\' will match any of these.
+.br
+For more details see man page x10rfxsensors(5).
+.br
+
+RF signals from RFXMeter power, water, gas, and pulse meters and counters
+which can be used in launch conditions are: rfxpower, rfxwater,
+rfxgas, rfxpulse, and rfxcount.  The general functions
+\'anyrfx\' or \'anyfunc\' will match any of these.
+.br
+For more details see man page x10rfxmeters(5).
+.PP
+RF signals from Oregon sensors which can be used in launch conditions are:
+oretemp, orerh, orebp, and orewgt.
+.br
+For more details see man page x10oregon(5).
+
+.PP
+RF signals from DigiMax 210 Thermostats which can be used in launch
+conditions are: dmxtemp, dmxon, dmxoff, and dmxsetpoint.
+.br
+For more information see man page x10digimax(5).
+
+.PP
+The \'allon\' function is Heyu-defined
+and in reality is just the \'on\' signal when sent to
+all 16 unit codes on a housecode. (Note: \'allon\' as used in Heyu 1.xx
+is the same as \'lightson\', which is not the case here.)
+.br
+The \'xpowerup\' function is sent by X-10 2-way modules like the LM14A and
+AM14A at power-up following an AC power interruption of at least a few seconds
+duration.
+
+.PP
+Heyu also defines three \'generic\' functions: gon, goff, and gdim.
+.PP
+The generic \'gon\'  encompasses any of: on, lightson, allon, preset level 32, or
+extended preset level 62 or 63.
+.PP
+The generic \'goff\' encompasses any of: off, lightsoff, alloff, preset level 1,
+or extended preset level 0.
+.PP
+The generic \'gdim\' encompasses any of: dim, bright, or any preset or extended preset
+levels between the limits specified for \'gon\' and \'goff\'.
+.PP
+One or more functions can be specified in each launch condition.  The logic
+used when the HU contains more than one unit and/or there is more than one
+function is illustrated in the following example:
+.PP
+   SCRIPT  A1,3  on  off  flag4  notflag7 :: myscript.sh
+.br
+is equivalent to:
+.PP
+IF (A1 is addressed OR A3 is addressed) AND 
+.br
+   (function On is received OR function Off is received) AND
+.br
+   flag4 is set AND flag7 is not set
+.br 
+THEN
+.br
+   Execute myscript.sh
+
+.PP
+KEYWORD \'trigemu\'
+.PP
+If a macro is uploaded to the CM11A EEPROM memory and a powerline
+trigger (e.g., "A1 on") is defined for it, the macro will
+only be triggered when the powerline address signal immediately precedes
+the powerline On function, with no intervening address or function
+signals. Inclusion of the \'trigemu\' keyword in the launch conditions
+emulates this behavior.
+.br
+Example: If the sequence "Addr A1, Addr A2, Addr A3, Func On A" is
+received in that order, a script will be launched with the launch condition:
+.br
+  A2 on 
+.br
+but not with the launch condition:
+.br
+  A2 on trigemu
+.br
+because the Addr A3 signal intervened between the Addr A2 and the 
+Func On A signals.
+.br
+
+Note: the \'trigemu\' keyword is ignored for lightson, lightsoff,
+alloff, and extended functions in the launch conditions.
+.PP
+KEYWORD \'module\'
+.PP
+In the default \'signal\' mode, whether or not a script is launched 
+depends only on reception of the function at the housecode|unit as
+specified in the launch condition and is independant of the module
+at that address.
+.PP
+Inserting the keyword \'module\' in the launch conditions results in
+X10 signals being \'filtered\' by the attributes of the modules before
+the launch conditions are tested. For example, a script otherwise
+programmed to be launched when the \'dim\' signal is received would
+not be launched if the module at the particular housecode|unit happened
+to be an appliance module (as defined in the ALIAS directive).
+.PP
+KEYWORD \'changed\'.
+.PP
+Inserting the keyword \'changed\' in the launch conditions inhibits
+launching a script unless the function causes a change in the major
+state of the module, i.e., if it\'s in the Changed state.  For example,
+the launch condition \'A1 off changed\' will not launch the script
+if the module at A1 is already in the Off state when the \'off\' function
+is received.
+.PP
+In the case of RF signals received from the auxiliary input daemon heyu_aux
+(source RCVA), any difference in the data from the previous transmission
+at the same housecode|unit address is considered a change.  (The difference
+in the data for it to be considered changed may be configured for Oregon
+sensors.)
+.PP
+The keyword \'changed\' automatically implies the filtering otherwise performed
+when the keyword \'module\' is specified and doesn\'t require separately
+specifying it.
+.PP
+KEYWORD \'continue\'.
+.br
+KEYWORD \'break\'.
+.PP
+See section "SCAN MODE" below for the usage of these keywords.
+.PP
+
+SOURCES
+.PP
+By default, a script is launched only when the X10 function is received
+over the AC power line (rcvi) by the CM11A interface.  This can be extended
+to other sources by including one or more source keywords in the launch
+conditions.  For example, \'A1 on sndc\' would launch the script if
+the function is either received over the power line (per the default rcvi)
+or sent from the Heyu command line.
+.PP
+The source keyword \'anysrc\' can be used to represent the sources
+sndc, sndm, sndt, sndp, snda, rcvi, rcvt, rcva.  It excludes the source \'snds\'.
+.PP
+The source \'snds\' can be separately specified if
+you really have to use it, but ONLY when you have verified that its
+use won\'t result in a script loop.  A script loop WOULD result
+in the following simple (and obvious) case:
+.br
+   SCRIPT  A1 on rcvi snds  ::  heyu turn A1 on
+.PP
+however the possibility of a script loop may not be quite so obvious when you
+have multiple and/or more complex SCRIPT directives.
+.PP
+Note that the default source or sources can be changed with the
+LAUNCHER_SOURCE directive in the configuration file.
+.PP
+One can disallow default sources by prefixing the source with \'no\',
+e.g., \'norcvi\', \'nosndm\'.  The keyword \'nosrc\' has a special use - it has
+the function of cancelling out all of the default sources.  It must
+always be accompanied by one or more actual source keywords if a script is
+to be launched.
+.PP
+Warning: Functions with sources \'sndm\' or \'sndt\' are processed by Heyu
+at the time it receives the signal from the CM11A that a macro has been 
+executed, which may be some time - seconds or even minutes depending on
+the length of the macro - before the functions are actually transmitted
+by the CM11A.  Thus the state of the modules as recorded by Heyu will
+be incorrect before the functions are actually transmitted.  In addition,
+the CM11A will not accept further commands while it\'s in the process
+of transmitting the macro commands, so an attempt to send another command
+may time out.  To avoid these problems, the \'heyu wait\' command can be used
+to defer execution of a launched script until all macro commands have been
+transmitted.
+.br
+Example: 
+.br
+   SCRIPT A1 on sndm :: heyu wait; (($X10_B2 & $isOn)) && heyu on C3
+.PP
+FLAGS
+.PP
+Flags which may be tested as part of the launch conditions are: state flags
+which reflect the corresponding state of a module (see heading STATE FLAGS
+below); common software flags flag1...flagNN set or cleared by Heyu state
+commands; the counter-zero flags czflag1...czflagNN; the timer-zero flags
+tzflag1...tzflagNN;
+the global security flags disarmed, armed, notarmed, armpending, home, and away;
+the flags night, dark, and their negations notnight and notdark; plus the
+"local flag" security switch or low battery condition swhome, swaway, swmin,
+swmax, and lobat transmitted by security remotes and sensors.  (When
+used by themselves, home or away imply armed.)  RFXMeter sensors set
+a testable \'rollover\' local flag at the first signal after the counter
+rolls over from its maximum value (0xFFFFFF) to zero. A local \'rollover\'
+flag is also set for other sensors which store and transmit cumulative
+data, e.g., Oregon rain sensors.
+.PP
+The common flag "true-if-set" keywords are flag1, flag2, ... , flagNN.  The
+flag "true-if-clear" ("true-if-reset") terms are notflag1, notflag2, ... ,
+notflagNN. Similar "true-if-clear" keywords are recognized for counter-zero
+and timer-zero flags, e.g., notczflag1, nottzflag10;
+.PP 
+Inclusion of one or more of the flag keywords in the launch condition
+means that each and every flag state must be TRUE in order for the
+script to be executed.  In other words, the flag state is AND\'d with
+all the other launch conditions.
+.br
+Examples:
+.br
+   SCRIPT B1 on rcvi flag4 flag6 notflag8 :: my_command
+.br
+In the above, my_command will be executed when the B1 On signal is received
+only if flags 4 and 6 are set and flag 8 is not set (clear).
+.br
+   SCRIPT back_door alert armed rcva :: heyu on siren
+.br
+In the above, the module controlling a siren is turned on when the 
+back door is opened and the door/window security sensor on that door
+transmits the alert signal while the system is armed. 
+.br
+   SCRIPT motion_sensor on night :: heyu on porch_light
+.br
+The above will turn on the porch_light only if the On signal
+from the motion_sensor is received between Dusk and Dawn.
+.br
+   SCRIPT motion_sendsor on dark :: heyu on porch_light
+.br
+The above is similar to the previous one, but the condition
+is that the motion_sensor signal is received between
+Dusk+Offset and Dawn-Offset, where Offset is defined by the
+config directive ISDARK_OFFSET.
+.PP
+STATE FLAGS
+.PP
+State flags are global and can be used in the launch conditions for any
+script.  They are TRUE when the corresponding state or flag state of a Hu
+address is TRUE.  Their use can simplify Heyu SCRIPT directives by making
+it unnecessary to use shell logic to check the state of a module.
+.br
+Up to 32 state flags may be used in a launch condition and each must be
+TRUE for the script to be launched.
+.PP
+The format for a state flag consists of the state and Hu address separated
+by a colon (\':\') with no embedded spaces, e.g., "on:B7" or "on:Porch_Light".
+Like other flags, state flags are not case sensitive _except_ for an
+alias label (like "Porch_Light") if used, since alias labels are always
+case sensitive. If an alias label is used, it must be for a single unit alias. 
+.PP
+The list of states which can be included in a state flag follows, but run
+\'heyu stateflaglist\' to make sure you have the current list.  In the following,
+Hu is the Housecode|single_unit address or Alias label.
+.br
+Prefixing a flag with "not" is the negation for all state flags.
+.PP
+  on:Hu         Hu is in the On state
+.br
+  off:Hu        Same as noton:Hu
+.br
+  dim:Hu        Hu is in the Dimmmed state
+.br
+  alert:Hu      An Alert signal has put Hu into the alert state.
+.br
+  clear:Hu      A Clear signal has put Hu into the clear state.
+.br
+  auxalert:Hu   An AuxAlert signal has put Hu into the auxalert state.
+.br
+  auxclear:Hu   An AuxClear signal has put Hu into the auxclear state.
+.br
+  sdusk:Hu      An sDusk signal has put Hu into the sdusk state. (GB10, DM10)
+.br
+  sdawn:Hu      An sDawn signal has put Hu into the sdawn state. (DM10)
+.br
+  valid:Hu      A supported signal has been received since start.
+.br
+  active:Hu     A valid signal has been received before INACTIVE_TIMEOUT.
+.br
+  inactive:Hu   No valid signal has been received before INACTIVE_TIMEOUT. 
+.br
+  addr:Hu       The X10 module at Hu is in the addressed state.
+.br
+  tamper:Hu     The tamper flag has been raised for sensor Hu.
+.br
+  chg:Hu        The last signal on H resulted in a change of state for Hu.	
+.br
+  lobat:Hu      The low battery flag has been raised for sensor Hu.
+.br
+  rollover:Hu   The rollover flag is raised for sensor Hu.
+.br
+  swmin:Hu      The swMin flag has been raised for sensor Hu.
+.br
+  swmax:Hu      The swMax flag has been raised for sensor Hu.      
+.br
+  tmin:Hu       The Tmin flag has been raised for sensor Hu.
+.br
+  tmax:Hu       The Tmax flag has been raised for sensor Hu.
+.br
+  rhmin:Hu      The RHmin flag has been raised for sensor Hu.
+.br
+  rhmax:Hu      The RHmax flag has been raised for sensor Hu.
+.br
+  bpmin:Hu      The BPmin flag has been raised for sensor Hu.
+.br
+  bpmax:Hu      The BPmax flag has been raised for sensor Hu.
+.br
+  main:Hu       The Main flag has been raised for sensor Hu.
+.br
+  aux:Hu        The Aux flag has been raised for sensor Hu.
+.br
+  heat:Hu       The DigiMax Heat flag has been raised.
+.br
+  set:Hu        The DigiMax Setpoint Temperature Set flag has been raised.
+.br
+  init:Hu       The DigiMax Initialazation Init flag has been raised.
+.PP
+Please note that for sensor signals in particular, the flag negation
+does not necessarily imply an opposite state, e.g., until a valid
+signal is received, both alert:Hu and clear:Hu may be FALSE, so that
+notalert:Hu does not imply clear:Hu.
+.PP
+Similarly, after a start and until the first valid signal is
+received or until an initial INACTIVE_TIMEOUT interval, both active:Hu and
+inactive:Hu will be FALSE. 
+
+.SH SCAN MODE
+When a signal is received by the heyu_engine daemon, Heyu by default
+scans the list of SCRIPT launch conditions and executes the command
+line for the first one where its launch conditions are satisfied.
+.pp  
+As there are occasions when it would be convenient to have more than
+one SCRIPT command line be executed upon receipt of a signal, this
+default behavior can be modified with a combination of the configuration
+directive LAUNCHER_SCANMODE and launch condition keywords \'continue\'
+and \'break\'.
+.PP
+The config directive LAUNCHER_SCANMODE can take the parameters BREAK
+or CONTINUE, with the default being BREAK.  The parameter BREAK provides
+the default behavior described above.  With parameter CONTINUE, Heyu
+will execute the command line for all SCRIPTs where the launch conditions
+are satisfied.
+.PP
+The scan mode specified by LAUNCHER_SCANMODE can be overridden for
+individual SCRIPTs by including the keyword \'continue\' or \'break\'
+in the launch conditions.  Following are some simple (trivial) examples.
+.PP
+Example:
+.br
+  LAUNCHER_SCANMODE  BREAK
+.br
+  SCRIPT -l DimLights A1 on rcvi continue :: heyu turn B1,2,3 dimb 10
+.br
+  SCRIPT -l TurnOnTV  A1 on rcvi :: heyu turn tv_set on
+.br
+  SCRIPT -l TurnOffTV A1 on rcvi :: heyu turn tv_set off
+.PP
+In the above example, receipt of signal "A1 On" results in the command lines
+for both DimLights and TurnOnTV being executed.  TurnOffTV is not
+executed because the scan mode reverts to BREAK when TurnOnTV is executed.
+.PP
+Example:
+.br
+  LAUNCHER_SCANMODE CONTINUE
+.br
+  SCRIPT -l DimLights A1 on rcvi :: heyu turn B1,2,3 dimb 10
+.br
+  SCRIPT -l TurnOnTV  A1 on rcvi break :: heyu turn tv_set on
+.br
+  SCRIPT -l TurnOffTV A1 on rcvi :: heyu turn tv_set off
+.PP
+The above works the same as the first example - the \'break\' keyword
+in TurnOnTV tells Heyu to stop scanning once its launch conditions are
+satisfied.
+.PP
+Tip: In most cases users will find it more convenient and less confusing
+to keep the default "LAUNCHER_SCANMODE BREAK" and use the \'continue\'
+keyword where required.
+.PP
+It\'s ESSENTIAL to understand what happens in Heyu when using the
+continue and break features.
+.br
+When a signal is received by heyu_engine, Heyu starts scanning the list
+of launch conditions and tags those where the conditions are satisfied.  
+It stops scanning when a launch condition is satisfied and the scan mode
+is BREAK.  Heyu then goes back and executes in order the command lines for
+all SCRIPTs which were tagged in the first pass.
+.PP
+Several things to keep in mind:
+.br
+When more than one script is executed, the launch condition for subsequent
+scripts may no longer be true if conditions are modified by a preceding
+script, but the script is launched nevertherless.
+.br
+Example:
+.br
+  SCRIPT -l ResetFlag A1 on rcvi flag1 continue :: @clrflag 1
+  SCRIPT -l DoSomething A1 on rcvi flag1 :: something.sh
+.PP
+In the example above, both scripts will be executed if Flag 1 is set
+when signal A1 On is received.  But when script DoSomething is executed, condition
+flag1 will no longer be TRUE since the flag will have been cleared by execution
+of the previous script ResetFlag command line.  This may be important if the shell
+script "something.sh" relies on the value of environment variable $X10_Flag1 or
+calls \'heyu flagstate 1\' to direct its operation.
+.PP
+Secondly, when multiple shell commands or shell scripts are executed, the
+order of actual command execution is determined in part by the operating system,
+with each script getting its multitasking time slices (typically 10 milliseconds).  
+(This does not apply to the internal engine precommands like @clrflag which are
+executed within heyu_engine before shelling out the remainder of the command line.)
+
+
+.SH LAUNCH CONDITIONS FOR ADDRESS SCRIPTS
+Launch conditions are identical to those for normal scripts except the
+keyword \'address\' is used in place of any and all functions.  Neither
+functions nor the keywords \'changed\', \'signal\' or \'module\' may
+be specified for address scripts.  (Likewise, the keyword \'address\'
+may not appear in the launch conditions for normal acripts.)  The launch
+conditions may include sources and flags as for normal scripts.
+.PP
+Note that the launch conditions for address scripts are evaluated each
+time an address signal is encountered and those for normal scripts
+each time a function signal is encountered, so it\'s possible to have
+multiple script launchings for what might appear to be a single X10
+command but which in reality is two separate events.
+
+.SH LAUNCH CONDITIONS FOR POWERFAIL SCRIPTS
+For powerfail scripts, the launch conditions always start with the
+special keyword \'-powerfail\' (note the \'-\' prefix) and may optionally
+be followed with flag conditions.  (Module addresses, functions, and sources
+are not applicable for powerfail scripts.)
+.br
+  -powerfail [flags]
+.PP
+As with normal scripts, each of the specified flag conditions must be TRUE for
+the script to be launched, and the same flag1, flag2, ..., flagNN and
+notflag1, notflag2, ..., notflagNN keywords are valid.  Security flags
+(disarmed, armed, armpending, home, away) may also be tested, however they
+may not be valid if the computer has been powered down during the power
+interruption.
+.br
+In addition there are two special flags, \'boot\' and \'notboot\' which
+are valid only for powerfail launchers.  The boot flag is set by the 
+Heyu relay daemon at the time it is first started and cleared a few 
+seconds afterwards.
+.PP
+If the boot flag is included in the launch condition,
+then the script will be launched only if the powerfail signal is received
+immediately following the startup of the Heyu relay
+daemon, i.e., if the CM11A is polling for a clock update at the time
+Heyu is first started.
+.PP
+Conversely, if the notboot flag is included in the launch condition,
+the script will be launched only if the powerfail signal is received
+after the initial refractory period of a few seconds.
+.PP 
+If neither the boot nor the notboot flag is included, then the script
+will be launched regardless of the time the powerfail signal is received.
+.PP
+Note: A powerfail script can be launched at startup ONLY if Heyu is
+started with the \'heyu engine\' or \'heyu start\' commands, else the
+state engine daemon won\'t be running in time to catch the powerfail
+signal at startup.
+
+.SH LAUNCH CONDITIONS FOR RFFLOOD SCRIPTS
+An RFflood signal is issued with the "started" flag when an RF flood
+is first detected, then again at increasing longer intervals while the
+flood continues.  Another RFflood signal is issued with the "ended"
+flag when the flood ceases.  Either of these two flags can be tested
+in the launch conditions along with any of the other flags.
+.br
+Example:
+.br
+   -rfflood  started
+.PP
+Housecode|unit addresses, functions, and sources are not applicable
+for RFFLOOD script launch conditions.
+
+.SH LAUNCH CONDITIONS FOR RFJAMMING SCRIPTS
+An RFJamming signal is issued with either the "started" or "ended"
+flag as reported by an (older) RFXCOM receiver, and with the "main"
+or "aux" flag depending on whether the signal originated with the
+master or slave RFXCOM receiver.  All of these flags can be tested
+in the launch conditions along with any of the other flags.
+.br
+Example:
+.br
+   -rfjamming  started aux
+.PP
+Housecode|unit addresses, functions, and sources are not applicable
+for RFJAMMING script launch conditions.
+
+.SH LAUNCH CONDITIONS FOR SENSORFAIL SCRIPTS
+
+Sensorfail scripts are deprecated and ignored in favor of the Inactive
+pseudo-signal unless config directive "INACTIVE_HANDLING  OLD" is used.
+If Heyu has not received any signal from a security sensor with a
+heartbeat, either a normal alert or its periodic "alive" signal, in
+the interval specified by the INACTIVE_TIMEOUT directive, it can
+launch a \'-sensorfail\' script. Any of the global flags may be included 
+in the launch conditions.
+.br
+Example:
+.br
+   -sensorfail  armed
+
+.SH LAUNCH CONDITIONS FOR TIMEOUT SCRIPTS
+Heyu can launch a script when a countdown timer set by the user
+reaches zero.  The particular timer must be specified. Any of the
+global flags may also be included.
+.br
+Example:
+.br
+   -timeout  timer2  flag3
+
+.SH LAUNCH CONDITIONS FOR EXEC SCRIPTS
+Exec script launch conditions may include only global flags, i.e.,
+.br
+  State flags, e.g., on:B7, dim:A4
+.br
+  flag1 ... flagNN, notflag1 ... notflagNN
+.br
+  czflag1 ... czflagNN, notczflag1 ... notczflagNN
+.br
+  night, notnight, dark, notdark.
+.br
+  disarmed, armed, notarmed, armpending, home, away, tamper.
+.br
+Example:
+.br
+    -exec  armed away night flag1
+.br
+
+If there are no flags in the launch conditions the "::" separator is
+still required, e.g.,
+.br
+    -exec :: <command_line>
+
+
+.SH LAUNCHERS
+Launchers are an alternative way of specifying the launch conditions
+for a script.  They can be useful when you have multiple or very complex
+sets of launch conditions, otherwise most users will probably find it
+more convenient (and less confusing) to include all the launch conditions 
+in the SCRIPT directive.
+.PP
+The format for a launcher directive in the configuration file is:
+.br
+   LAUNCHER <script_label>  HU functions [keywords] [sources] [flags]; HU functions [keywords] [sources] [flags]; ...
+.br
+where the mandatory script_label (no -l switch is used here) must match
+the label in the SCRIPT directive to which it applies.
+
+.SH SCRIPT COMMAND LINE
+.PP
+The command line can be any valid command line for the OS and shell,
+including shell commands and logic, shell scripts, binary executables,
+and multiple strings of these delimited by semicolons.
+.br
+
+In addition, there are internal engine precommands which can be used
+at the beginning of the command line to set flags and countdown
+timers.  These are processed by the engine before the remainder of the
+line, if any, is actually launched as a child process.  Their use
+guarantees that their functions are carried out in the order the 
+scripts are launched, as opposed to the order in which child
+processes might actually execute them as direct commands when there are
+multiple child processes launched in rapid succession.
+.br
+These precommands are: @arm, @disarm, @setflag, @clrflag, @settimer,
+@setrtimer, @clrtimers, @clrspend, @vdata, @vmdata, @setcount, @inccount,
+@deccount, @decskpz, @decskpgz, @decskpgziz, and @null.  They take the
+same parameters and operate the same as the corresponding direct commands
+without the \'@\' prefix.  (The @null does nothing and can be used as a
+placeholder to serve as an empty command line, which would otherwise
+generate an error message.)  They are not used as parameters to Heyu but
+as stand-alone commands, and must appear in the command line before any
+normal command.
+.br
+Examples:
+.br
+  SCRIPT A1 off :: @settimer 7 0
+.br
+  SCRIPT A1 on :: @setflag 3; @settimer 7 5; heyu on A2
+.PP
+The @decskpz, @decskpgz, @decskpnziz (decrement/skip) precommands and
+@null precommand don\'t have corresponding direct commands.  In addition
+to decrementing the counter, a @decskpxxx also terminates further
+execution of the command line ("skips") when the decrement and skip conditions
+are met.
+.PP
+The \'@decskpz N\' decrements counter N and skips if the result is zero.
+.br
+The \'@decskpgz N\' decrements counter N and skips if the result is greater
+than zero.
+.br
+The \'@decskpnziz N\' decrements counter N and skips if the result is
+non-zero or if the counter is initially zero.  It emulates the similar
+command in computer languages where the counter is a variable which can
+be considered to have negative values.  Insofar as Heyu is concerned, it
+will skip when the result is greater than zero, not skip when the counter
+is first decremented to zero, but then skip on further _attempted_
+decrements since a zero Heyu counter cannot be decremented further. In
+other words its function is to "decrement and skip on non-zero then run
+only the first time the counter goes to zero".
+
+.br
+Examples:
+.br
+If counter 7 has previously been set to the value 3 and we have:
+.br
+  SCRIPT A1 on :: @decskpz 7; heyu on A2; ...
+.br
+then the remainder of the command line following the @decskpz precommand
+will be executed on the first and second "A1 on" signals but ignored for
+subsequent "A1 on" signals.  Conversely, if we start with the same
+counter setting and have:
+.br
+  SCRIPT A1 on :: @decskpnziz 7; heyu on A2; ...
+.br
+then the remainder of the command line will be ignored until the counter
+reaches zero, when it will be executed.  The remainder of the
+command line will also be ignored if the value of the counter is initially
+zero since it can\'t be decremented further.
+
+
+.SH SCRIPT ENVIRONMENT for Heyu scripts
+.PP
+When the -xtend option is NOT specified, Heyu provides a number of
+environment variables which can be used by scripts.  Here is a
+summary - see below for descriptions and examples:
+.br
+X10CONFIG
+.br
+X10_A1 ... X10_P16
+.br
+x10_<alias> ...  (Note lower case prefix \'x10_\')
+.br
+whatLevel, isAppl, isSpend, isOff, isOn, isAddr, isChg, isDim, isAlert, isClear, isAuxAlert, 
+isAuxClear, isValid, isActive, isInactive, isSdusk, isSdawn
+.br
+isLoBat, isRollover, isSwMin, isSwMax, isMain, isAux, isTamper, isTmin, isTmax, isRHmin, isRHmax,
+isBPmin, isBPmax, isSet, isHeat, isInit.
+.br
+X10_Housecode, X10_Unit, X10_LastUnit, X10_Function, X10_function, X10_Source, X10_UnitAlias, X10_Linmap
+.br
+X10_PresetLevel
+.br
+X10_Xfunc, X10_Xdata
+.br
+X10_BrightVal, X10_DimVal, X10_RawVal
+.br
+X10_Flag1, X10_Flag2, ... , X10_FlagNN
+.br
+X10_Timer1, X10_Timer2, ..., X10_TimerNN
+.br
+X10_Counter1, X10_Counter2, ..., X10_CounterNN
+.br
+X10_Year, X10_Month, X10_MonthName,
+X10_Day, X10_Hour, X10_Minute, X10_Second, X10_WeekDay,
+X10_WeekDayName, X10_isDST, X10_DateString, X10_GMT
+.br
+X10_DawnTime, X10_DuskTime, X10_SysTime
+.br
+X10_isNightTime, X10_isDarkTime
+.br
+X10_Vdata, X10_SecLights
+.br
+X10_Disarmed, X10_Armed, X10_ArmPending, X10_Home, X10_Away
+.br
+X10_swMin, X10_swMax, X10_swHome, X10_swAway, X10_LoBat
+.br
+X10_Timer, X10_Sensor
+.br
+helper, bighelper
+.br
+X10_Expire
+
+.PP
+The environment variable X10CONFIG contains the full pathname of
+the configuration file in effect for the Heyu state engine.
+Unless overridden, instances of Heyu executed by a script will
+therefore automatically use the same configuration file.
+
+.PP
+For each housecode|unit \'Hu\', the state variable \'X10_Hu=bitmap\'
+where the bit values in \'bitmap\' are defined by mask variables
+of the form \'isXXX\'.
+.br
+(Run 'heyu masklist' to insure having a current list.)
+
+.br
+  \'whatLevel\'  (Bits 0 through 7 represent the module dim level, or for
+security devices, the security data byte).
+.br
+  \'isAppl\'     Unit has no Dim/Bright attribute.
+.br
+  \'isSpend\'    Status pending bit.
+.br
+  \'isOff\'      Unit is not in the On state
+.br
+  \'isAddr\'     Unit is Addressed
+.br
+  \'isChg\'      Unit is Changed
+.br
+  \'isDim\'      Unit is Dimmed
+.br
+  \'isValid\'    A supported signal has been sent/received.
+.br
+  \'isClear\'    The sensor is in the Clear state.
+.br
+  \'isAlert\'    The sensor is in the Alert state.
+.br
+  \'isAuxClear\' the sensor is in the AuxClear state.
+.br
+  \'isAuxAlert\' The sensor is in the AuxAlert state.
+.br
+  \'isSdawn\'    The security sensor is in the sDawn state.
+.br
+  \'isSdusk\'    The security sensor is in the sDusk state.
+.br
+  \'isActive\'   A signal or heartbeat has been received within
+.br
+                 the INACTIVE_TIMEOUT interval
+.br
+  \'isInactive\' No signal or heartbeat has been received within
+.br
+                 the INACTIVE_TIMEOUT interval.
+.br
+  \'isOn\'       Unit is in the On state.
+.PP
+The module dim level will be either the integer 0 through 100
+representing the percentage of full brightness, or the native
+module level (0-210, 1-32, 0-62, or 0-255) if the -rawlevel script
+option is specified.  (The dim level for an appliance module will
+be either the lowest value if it\'s Off or the highest value
+if it\'s On.)
+.PP
+Note that for states controlled by sensor signals, e.g., Alert/Clear,
+the sensor will be in neither corresponding state following
+start or restart until a Valid signal is received, or in the case
+of Active/Inactive until the INACTIVE_TIMEOUT interval has elapsed.
+.PP
+For each single-unit ALIAS defined in the configuration file, the
+state variable \'x10_<alias_label>=bitmap\', e.g.,
+.br 
+  x10_porch_light=<bitmap>
+.br
+where <bitmap> is as described above. 
+.PP
+For X10 Security and other RF devices, the variables \'X10_Hu_vFlags\'
+and \'x10_<alias_label>_vFlags\'.  These are bitmaps with bits which
+may also be tested with masks.  Run 'heyu masklist' for a complete
+current list, but here are some commonly used ones:
+.br
+  \'isLoBat\'     Low battery flag
+.br
+  \'isRollover\'  Rollover flag.
+.br
+  \'isSwMin\'     Door/Window sensor Min switch
+.br
+  \'isSwMax\'     Door/Window sensor Max switch
+.br
+  \'isMain\'      Main channel of two-channel sensor
+.br
+  \'isAux\'       Aux channel of two-channel sensor
+.br
+  \'isTamper\'    Tamper flag
+.br
+  \'isTmin\'      Min temperature flag
+.br
+  \'isTmax\'      Max temperature flag
+.br
+  \'isRHmin\'     Min Relative Humidity flag
+.br
+  \'isRHmax\'     Max Relative Humidity flag
+.br
+  \'isBPmin\'     Min Barometric Pressure flag
+.br
+  \'isBPmax\'     Max Barometric Pressure flag
+.br
+  \'isSet\'       DigiMax Setpoint temperature is Set mode flag
+.br
+  \'isHeat\'      DigiMax Heat mode flag
+.br
+  \'isInit\'      Digimax Initialation Init flag
+.PP
+Note that the prefix for ALIASes is the lower case \'x10\' to avoid
+possible conflict with the other Heyu environment variables which
+are prefixed with the upper case \'X10\'.  The configuration
+directive ENV_ALIAS_PREFIX can be used to revert to the upper case
+prefix for compatibility with existing scripts if absolutely
+necessary but is deprecated.
+.PP
+Mask variables are used to test the state variables without
+having to remember the bitmap values.
+.PP
+Example: In the bash shell, the construct
+.br
+  (($x10_porch_light & $isOn)) 
+.br
+will return TRUE ( > 0 ) if the module aliased to porch_light
+is in the On state, and
+.br
+  level=$(($x10_porch_light & $whatLevel)) 
+.br
+will recover the brightness level of the module aliased to porch_light.
+.PP
+Note: The bash construct above is compact and convenient, but is not
+defined by POSIX.  Other shells will have to use the POSIX compatible
+construct:
+.br
+  [ $(($x10_porch_light & $isOn)) -ne 0 ]
+.br 
+to test the state of the module.
+.PP
+The mask variables should always be used instead of the
+numeric values for testing the state of a module.  The numeric
+values (for the Heyu environment) may change in a future release
+of Heyu.  (The bit representing \'On\' is however guaranteed to
+always have the highest numeric value, so that a test for \'On\'
+like the example in the Xtend documentation $X10_B4>=128 will
+continue to work so long as the mask is used rather than the
+numeric value, i.e., $X10_B4>=$isOn.)
+.PP
+Details of the function which launched the (normal) script:
+.br
+\'X10_Housecode\' (A-P)
+.br
+\'X10_Unit\' (1-16)
+.br
+\'X10_LastUnit\' (1-16)
+.br
+\'X10_UnitAlias\'
+.br
+\'X10_Linmap\'
+.br
+where \'X10_Unit\' is the last unit _in X10 order_ of the
+addressed units which resulted in launching the script, while
+\'X10_LastUnit\' is the last addressed unit for that housecode
+(which may or may not have resulted in launching the script).
+\'X10_UnitAlias\' is the label of the alias corresponding to
+the address \'X10_Housecode\' and \'X10_Unit\'.
+.br
+\'X10_Linmap\' is a bitmap of all the addressed units which resulted
+in launching the script, with 1 = unit 1, 2 = unit 2, 4 = unit 3,
+8 = unit 4, etc.
+.br
+
+\'X10_Source\' (<signal_source>)
+.br
+where signal_source is "rcvi", "rcva", "sndc", etc. (Without the quotes.)
+.br
+
+\'X10_Function\' (<func>)
+.br
+where <func> is one of the following (as appears in the Heyu
+monitor and/or logfile):
+.br
+AllOff, LightsOn, On, Off, Dim, Bright, LightsOff,
+Extended, Hail, HailAck, Preset,
+DataXfer, StatusOn, StatusOff, StatusReq, AllOn,
+xPowerUp, vData, vDataM, Panic, Arm, Disarm,
+Alert, Clear, Test, sLightsOn, sLightsOff, secTamper,
+sDusk, sDawn,
+rfxTemp, rfxTemp2, rfxRH, rfxBP, rfxVad, rfxPot, rfxVs,
+rfxLoBat, rfxOther, rfxPulse, rfxPower, rfxWater, rfxGas,
+rfxCount, dmxTemp, dmxOn, dmxOff, dmxSetpoint,
+oreTemp, oreRH, oreBP, oreWgt
+.br
+
+\'X10_function\' (<func>) 
+.br
+As above, but <func> is lower case and where applicable can
+be used as a Heyu command, e.g., \'heyu $X10_function Hu\'.
+(Note that the leading "X10_" remains upper case.)
+.br
+
+And only when <func> is \'Preset\':
+.br
+   \'X10_PresetLevel\' (1-32)
+.PP
+And only when <func> is \'Extended\':
+.br
+   \'X10_Xfunc\' (0-255)
+.br
+   \'X10_Xdata\' (0-255)
+.PP
+And only when <func> is \'Dim\' or \'Bright\':
+.br
+   \'X10_RawVal\' (2-210)  (Unsigned for both Bright and Dim)
+.br
+   \'X10_DimVal\' (2-210)  (+ for Dim, - for Bright)
+.br
+   \'X10_BrightVal\' (2-210) (+ for Bright, - for Dim)
+.PP
+And only when <func> is \'Arm\':
+.br
+   \'X10_swHome\' Logical (0 or 1)
+.br
+   \'X10_swAway\' Logical (0 or 1))
+.PP
+And only when <func> is \'Arm\' or \'Alert\' or \'Clear\':
+.br
+   \'X10_swMin\' Logical (0 or 1)
+.br
+   \'X10_swMax\' Logical (0 or 1)
+.PP
+And only for -timeout scripts:
+.br
+   \'X10_Timer\'  (= timer number 1-NN which launched script, or "armtimer")
+.PP
+And only for -sensorfail scripts:
+.br
+   \'X10_Sensor\' (= Housecode|Unit of sensor)
+.PP
+For RF data from X10 security, entertainment, RFXSensor, RFXMeter,
+Digimax, and Oregon transmitters:
+.br
+   \'X10_Vident\' (0-255)
+.br
+   \'X10_Vdata\' or \'X10_vData\' (0-255)
+.PP
+Temperature data from RCS compatible thermostats and remote thermometers
+as X10_H0_Temp and x10_<alias_label>_Temp.
+.PP
+For RF data from RFXSensor 1-wire temperature, humidity, and barometric
+pressure sensors: X10_Hu_Temp, X10_Hu_Temp2, X10_Hu_RH, X10_Hu_BP, X10_Hu_Vs,
+X10_Hu_Vad, X10_Hu_Vadi, and X10_Hu_Pot.  Also the alias versions of these
+variables, i.e., x10_<alias_label>_Temp, etc.
+.PP
+For RF data from RFXMeter Power, Water, Gas, and Pulse meters and counters:
+X10_Hu_Power, X10_Hu_Water, X10_Hu_Gas, X10_Hu_Pulse, and X10_Hu_Count.
+Also the alias versions of these variables, i.e., x10_<alias_label>_Power, etc.
+.br
+The variable X10_rollover has the Boolian value 1 or 0 depending whether or 
+not the \'rollover\' local flag was set in the meter or counter signal which
+launched the script.
+.PP 
+For RF data from Oregon Temp/RH/BP sensors: X10_Hu_oreTemp, X10_Hu_oreRH,
+X10_Hu_oreBP.  For BP sensors which transmit a weather forecast: X10_Hu_oreForecast.
+Also the alias versions of these variables, i.e., x10_<alias_label>_oreTemp. etc.
+.PP
+For RF data from Electrisave and CM113 power monitors: X10_Hu_elsCurr and
+X10_Hu_elsPwr, and the alias version of these variables.
+.PP
+For RF data from Owl CM119 power monitors: X10_Hu_owlPower, X10_Hu_owlEnergy,
+and the alias version of these variables.
+.PP  
+Note: None of the environment variables relating to a housecode|unit
+and function which launches a script exist for Powerfail, Sensorfail, RFFlood,
+RFJamming, or Timeout scripts.
+.PP
+The flag environment variables, X10_Flag1 ... X10_FlagNN have values
+1 or 0 when the corresponding flags are respectively set or cleared.
+.PP
+The user coundown timer environment variables, X10_Timer1 ... X10_TimerNN,
+have the remaining times in seconds before timeout.
+.PP
+Variable X10_ArmPendingTimer has the time in seconds before the ArmPending
+state will become the Armed state.
+.PP
+The counter environment variables, X10_Counter1, ..., X10_CounterNN have
+the values 0-64K in those counters.
+.PP
+The Calendar/Clock variables for today\'s date and time:
+.br
+\'X10_Year\' (e.g., 2004), \'X10_Month\' (1-12), \'X10_MonthName\' (Jan, Feb, etc.),
+\'X10_Day\' (1-31), \'X10_Hour\' (0-23), \'X10_Minute\' (0-59),
+\'X10_Second\' (0-59), \'X10_WeekDay\' (0-6), \'X10_WeekDayName\' (Sun, Mon, etc.).
+.br
+\'X10_isDST\' is a logical variable which is TRUE if Daylight Saving Time is
+currently in effect.
+.br
+\'X10_DateString\' is an ASCII string with the date and time formatted as
+displayed with events in the Heyu monitor and log file.
+.PP
+The variables \'X10_DawnTime\', \'X10_DuskTime\', and \'X10_SysTime\', which
+have the values for today\'s Dawn and Dusk time and the current system time.
+All are expressed as seconds after 0:00:00 Civil (wall-clock) Time, although
+Dawn and Dusk are computed by Heyu only to the nearest minute.
+.br
+
+(Dawn and Dusk are defined by default to be synonymous with sunrise and sunset,
+although this definition may be changed with the configuration file
+directive DAWNDUSK_DEF.  Their calculation require that the LONGITUDE
+and LATITUDE of the user\'s location be defined in the configuration file,
+otherwise these variables will be undefined.  They will also be undefined
+when there is no actual Dawn or Dusk event, as in polar latitudes during
+various seasons of the year.)
+.PP
+The logical variable \'X10_isNightTime\' which is TRUE between the
+times of Dusk and Dawn.
+.br
+
+The logical variable \'X10_isDarkTime\' which is TRUE between the
+times of Dusk and Dawn offset by +/- the number of minutes defined by
+the configuration directive ISDARK_OFFSET.  The default is 30 minutes,
+meaning this variable will be TRUE between Dusk + 30 minutes and
+Dawn - 30 minutes.
+
+.PP
+Example:
+  SCRIPT motion_detector on :: ( (($X10_SysTime > $X10_DuskTime)) ||
+(($X10_SysTime < $X10_DawnTime)) ) && heyu turn outside_lights on
+.br
+
+will result in turning on the modules aliased to \'outside_lights\'
+when the motion detector module sends the \'on\' function, but only
+between Dusk and Dawn.  Note: This must all be written on one line.
+.br
+Somewhat simpler in this case however is the equivalent:
+.br
+  SCRIPT motion_detector on :: (($X10_isNightTime)) &&
+    heyu turn outside_lights on
+
+.PP
+The variables \'helper\' and \'bighelper\'.  These have the same format
+as the command line argument passed to the heyuhelper script when the
+directive SCRIPT_MODE HEYUHELPER is chosen, e.g., a1Dim.  They allow
+an existing heyuhelper script to be run under SCRIPT_MODE SCRIPTS by
+specifying the command line in the SCRIPT directive as 
+.br
+  SCRIPT <launch condition> :: heyuhelper $helper
+.br
+or
+.br
+  SCRIPT <launch condition> :: heyuhelper $bighelper
+.PP
+This difference is that \'bighelper\' will supply the housecode|unit
+for every affected unit as successive command line arguments, whereas \'helper\'
+will supply the housecode|unit only for the last affected unit, the
+same as in the heyuhelper feature of Heyu 1.xx.
+.br
+For bighelper, the affected unit arguments will appear in reverse
+X10 unit order, i.e.,
+.br
+  10, 2, 8, 16, 12, 4, 6, 14, 9, 1, 7, 15, 11, 3, 5, 13 
+.br
+so the first script argument will be the same for either helper or
+bighelper. 
+
+.PP
+The environment variable \'X10_Expire\' contains the number of
+days (0-365) before expiration of an uploaded schedule, or a
+negative number with the following meaning:
+.br
+   -1  SCHEDULE_EXPIRED  (Schedule must be reloaded)
+.br
+   -2  NO_EXPIRATION     (Schedule contains no timers)
+.br
+   -3  NO_RECORD_FILE    (No schedule has been uploaded)
+.br
+   -4  BAD_RECORD_FILE   (File x10record is corrupted.)
+.br
+
+(These are the same numeric values which would be displayed upon
+execution of \'heyu upload cronstatus\'.)
+
+
+.SH SCRIPT ENVIRONMENT for Xtend scripts
+.PP
+Xtend (http://www.jabberwocky.com/software/xtend/) by David Shaw
+is an auxilliary program for launching scripts based on
+received X10 power line signals.  Heyu now provides internally all the  
+same functionality (and more) and Xtend is no longer needed.
+.PP
+The additional functionality of Heyu requires changes in the 
+environment provided for the script which make it incompatible
+with scripts written for Xtend.  For compatibility with existing
+Xtend scripts, the -xtend script option tells Heyu
+to instead supply the more limited but Xtend-compatible environment,
+as follows:
+
+.PP
+The environment variable X10CONFIG contains the full pathname of
+the configuration file in effect for the Heyu state engine.
+Unless overridden, instances of Heyu executed by a script will
+therefore automatically use the same configuration file.
+
+.PP
+The state variables \'X10_Hu=xtend_bitmap\' for each housecode and
+unit \'Hu\', where the bits in xtend_bitmap now have these values (which
+correspond with Xtend\'s):
+.br
+
+   32  Unit is addressed.
+.br
+   64  Unit is an appliance module i.e., has no Dim/Bright attributes.
+.br
+  128  Unit is On.
+
+.PP
+The three mask variables \'isAddr\', \'isAppl\', and \'isOn\', with values
+appropriate for Xtend.
+
+
+.SH AUTHORS
+Charles W. Sullivan (cwsulliv01@heyu.org)
+
+.SH SEE ALSO
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10cm17a(5)

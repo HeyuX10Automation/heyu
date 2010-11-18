@@ -1,0 +1,53 @@
+
+BACKWARD COMPATIBILITY ISSUES FOR HEYU VERSION 2
+
+Configuration file
+------------------
+Heyu version 2 can use an existing Heyu configuration file
+from version 1 (~/.x10config or /etc/x10.conf) provided
+it is renamed and moved to the new location where Heyu 
+version 2 expects to find it - either "~/.heyu/x10config"
+or "/etc/heyu/x10.conf" (notice the 'dot' changes).
+There are a number of new configuration options for
+version 2 that the user may then want to add, which are
+explained in both the x10config.5 man page and in the
+example file "x10config.sample" provided.  Of course
+for some users it may be more convenient to simply rename
+and modify the "x10config.sample" file.
+
+In operation, Heyu version 2 must write some files in
+the same directory as the configuration file, so this
+directory must be writeable.
+
+Schedule file
+-------------
+In most cases an existing schedule file used for Heyu 
+version 1 will work in version 2, however dawn/dusk
+related events are now handled directly by the Heyu
+program and the old 'makesched' utility is no longer
+used.  The default name for the schedule file is now
+x10.sched and Heyu version 2 will expect to find it
+in the same directory as the configuration file.
+(Its name can be changed via the configuration file.)
+
+Under Heyu version 2, the CM11A clock is maintained
+on Local Standard Time throughout the year.  Events
+in the schedule file are assumed to be Local Civil
+Time (i.e., Wall Clock Time) and Heyu automatically 
+adjusts them during periods of Daylight Saving Time.  
+Heyu version 2 automatically sets the CM11A clock
+to the correct time (derived from the system clock)
+when a schedule is uploaded or when the 'heyu setclock'
+command is executed.
+
+
+Warning
+-------
+Users running a dual-boot system with MS-Windows
+should read the warning in the x10config.5 man page
+about running X10's ActiveHome software while booted
+into Windows if the CM11A has been programmed under 
+Unix/Linux by Heyu with certain configuration options.
+
+
+

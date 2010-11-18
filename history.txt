@@ -1,0 +1,398 @@
+CM11/HEYU History.
+Ver 0.0
+   ported from the Linux version of the Larry Campbell source to x10.
+
+Ver 0.9
+   Initial release.
+
+Ver 1.0
+   Added protocol.txt to tar file.
+   Added version number that's visible when no arguments are given.
+   Added clear flag to setclock.
+   Changed info to show readable status bits.
+   Added history file to tar file.
+
+Ver 1.1  Internal
+
+Ver 1.2
+    Added UUCP style lock file for the tty device.
+    
+Ver 1.3  Internal
+
+Ver 1.4
+    Has a status command that works with RR501 remote RF receivers.
+
+Ver 1.5
+    The macro address should be  12 bits. (per section 5.4.3)
+    Changed X10 to use version.h
+    Changed status to display Iseconds, etc instead of the raw bytes.
+    Added extra check4poll in status.c for when a status is waiting.
+    Changed the xread to wait a FULL second using setitimer.
+
+Ver 1.6
+    Initial version that uses a relay daemon to allow monitor to
+    run while turning lights on and off.  The 'stop' is used to 
+    stop the daemon.
+
+Ver 1.7
+    Ver 1.6 could build a large history file.  This version moves the
+    getinfo req to the daemon, thus satisfying the CM11 immediately.
+
+Ver 1.8
+    The monitor now handles transmitted as well as received bytes.
+Ver 1.9
+    I was concerned about two things:  The monitor took up too much
+    CPU time, and the commands felt sluggish because of the timeouts
+    waiting for characters to come in from the interface.
+
+    The solution is to only do a read from the FIFO when it's changed
+    since the last read, IE the file pointer has changed.
+
+    The protocol.txt file was also updated to incorporate recent changes
+    to the version available from www.x10.com.
+
+    The relay daemon was not deleting the fifo when the daemon was killed.
+    This worked OK until the file ended up owned by root :-(
+    The file is now deleted upon SIGINT and SIGTERM.
+Ver 1.10 - 1.12
+    Aborted test versions that were never released.
+Ver 1.13
+    The default directories I chose were not standard in all Linux
+    distributions, so I've changed them to use /var/tmp instead.
+
+    The CM11A output messages for macros are now interpreted correctly.
+Ver 1.14
+    The default lock files for Red Hat were different,  causing the 
+    daemon to malfunction.  I've changed the logging so that most
+    errors log via the syslog functions.
+
+    The daemon now uses a timer to ensure that the powerfail indicator
+    is not part of the normal data stream.
+
+    The RI (Ring Indicator) modem line is looked at to avoid trying to
+    talk to the CM11 while it's talking.  Unfortunately, the CM11 does
+    not have anyway to prevent the reverse.
+
+    Changed x10.c, stop.c and relay.c so that a ps(1) command will show
+    that the relay daemon is heyu_relay.
+
+    It was kind of unkind to let unsuspecting people untar the archive into
+    their current directory.  The file now untars to the directory heyu.dir
+
+Ver 1.15
+    Corrected the blank line handling for x10config (thanks to David Dee)
+
+    Added the includes needed by the new redhat glibc, supplied by
+    Michael Fulbright (msf@redhat.com)
+
+Ver 1.16
+    Corrected the error message that reports spool file failure.  Thanks to
+    Paul Chamberlain for the report AND the fix.
+
+    Corrected the condition that kept the 'stop' command from working
+    in some cases.
+
+ver 1.17
+    Finally added code that would make the X10 retry commands multiple
+    times (three, in fact) when the interface interrupts an RS232 command
+    transmission due to a macro activation or powerline transmission.
+    This has reduced failures to virtually 0.
+
+Ver 1.18
+    The program exits if it's in monitor mode and the spool file goes away.
+
+    The program was (sometimes) core dumping if two instances of the program
+    finished and 'info' at the same time (quit function).
+
+    The lock file was moved to /var/lock in keeping with the FHS (filesystem
+    hierarchy standard).  Thanks to Peter Kim for the pointer to the FHS.
+    The define for LOCKDIR was moved up into x10.h
+
+    The defines for nextstep 3.3 were added to the make file.
+
+    Added help and version options.
+
+Ver 1.19
+    Added defines for Solaris 2.5
+
+Ver 1.20
+    Added patches submitted by erv@cne.dynip.com, jruschme@exit109.com and
+    rdiamond@cisco.
+
+    There should be better information in the system logs when the spool file
+    or TTY can't be opened.
+
+    It should handle signals a little cleaner
+
+    The all off and all on were reversed.
+
+    It should compile a little better with Redhat's configuration.
+
+    The firmware version nibble was being misused.  This caused problems
+    for the early adopters with beta versions of the CM11.  It now reports
+    the firmware version.
+
+Ver 1.21
+    Cleaned up the errors that show when CC is invoked with -Wall.
+
+    Ian! D. Allen reported a bug (introduced in 1.20) in xread that
+    was causing monitor to report 'Poll received unknown value' after
+    sending a command.
+
+    Added code to lock the tty before writing.  This prevents programs from
+    stepping on each other.
+
+Ver 1.23
+    Moved some error messages around.
+
+    The configuration file defaults to /etc/x10.conf if all else fails.
+
+    Added error checking code if the spool files can't be opened.
+
+Ver 1.25
+    Added preset dims from code donated by Gregory Gulik.
+
+    Fixed an 'fclose' in tty.c that shouldn't have been there.
+
+    Added stricter checking for lock directories.
+
+Ver 1.28
+    Added presets to the man page.
+
+    Added timers and macros to the program and man page.
+
+    Added a man page for the timer/macro schedules.
+
+    Set up a sample .x10sched.conf file.
+
+    Fixed a memory leak that was causing the monitor mode to grow
+    by 1K with each event it saw.
+
+    Added define for freebsd to makefile.
+
+    Added the hidden command qerase to try to revive locked up CM11.  
+    It's been tested once when teh CM11 locked up.  It worked that time.
+
+    Added the Julian date to the 'info' printout.  The julian now matches the
+    documentation.  In previous versions it was offset by 1.  This only 
+    affected downloaded timers that are date range sensitive.
+
+Ver 1.28a
+    I found that I could cause a core dump by using a trigger with an
+    undefined macro.  A call to find_macro() fixed it.
+
+    This version was made public 45 minutes after version 1.28.  SIGH!
+
+Ver 1.28b
+    An array boundry was exceeded on macro labels, causing core dump.  The
+    tr_count was also not initialized, causing false 'prom out of memory'
+    errors.  Thanks to James Gurganus (james@gurganus.net) for reporting it.
+
+Ver 1.28c
+    Cleaned up the garbage that 'monitor' displayed when the power fail
+    routine ran.
+
+    Changed the format of the monitor output slightly to better tell the
+    difference between a macro trigger and a timer.  This only shows if
+    the flag NEWFORMAT is in the .x10config file.
+
+    Added special units lightson, lightsoff, hail allon and alloff so you 
+    can do heyu turn lightson and heyu hail
+
+    Ready for beta???
+
+Ver 1.28d
+    I found that the CM11A does NOT like it when I initialize unused space to
+    Zero.  It caused many spurious triggers.  I changed the initialization to
+    all 1's and the macros and timers work great!
+
+    Changed the day of the week to month/day in the monitor mode if 'newformat'
+    is set.
+
+    Added correction for macros that dim (thanks to Scott Hassan for the patch)
+
+    This version was released as a 'beta' for 1.29
+
+Ver 1.28e
+    Two weeks of beta without failures.  Thanks to brianc@palaver.net for
+    finding a bug in the sched parser that improperly checked the macro 
+    pointer.
+
+    Changed the names for loading macros to 'upload' and the validate flag
+    to 'check'.
+
+    Updated the man pages for sched, x10config and heyu.
+Ver 1.28f
+    bug fix.  The status argument was always using the same unitcode. Thanks
+    go to Mace Moneta (mmoneta@qsun.mt.att.com) for spotting this.
+
+Ver 1.28g
+    Compatibility fix:  long != time_t on openbsd.  I fixed it in date.c and
+    in setclock.c
+
+    Corrected the printf() in monitor.c so that heyu monitor | tee ds
+    would work logically.  It previously had a mixture of stdout and stderr.
+    The fflushes were added for quicker response.
+
+Ver 1.28h
+    Multiple reports of heyu monitor eating up all available CPU.
+    This version is 1.28f with the 'hasselect' commented out of the
+    Makefile.
+
+Ver 1.28i
+    Multiple reports of heyu monitor eating up all available CPU.
+    The select function call in monitor.c was reurning immediately, causing
+    a tight loop checking for incoming characters in the spool.  This was
+    changed to use select as a 1/2 second timer instead.
+
+    Moved the check for a blank line back to the right spot.  This prevents
+    trailing blank lines from complaining "Some macros are missing..."
+    It also fixed a problem that caused complaints of 'incomplete macros.'
+
+    Moved the file lock to the start of the process, providing a lock that
+    persists until the process is finished.  The relay function is the
+    only one that does not honor a lock.
+
+    Fixed date output.  It was 01172309 0  instead of 0117230900
+
+    Added new option to the .x10config file:  MACROXREF is the name of the
+    file in which to store the eeprom locations.
+
+    Added the macro names when in monitor.
+
+    Added the alias names to the display when in monitor.
+
+    Updated x10config.5
+
+    Updated sample x10config file.
+
+    Relay will die gracefully if the spoolfile exceeds 1 Meg.
+
+    Integrated the patches for OSF1 (alpha) from Christopher R. Wren 
+    (cwren@media.mit.edu)
+
+Ver 128.i1
+    Beta release bug fix.  egcs compiler used in red hat uses a sscanf
+    that behaved differently than GCC when misused.  This caused loaded
+    macros to fail to load the bright/dim values if compiled under redhat.
+    EGCS scanf does not allow you to write to the same variable that
+    you are reading from.
+
+    Fixed the include in tty.h for Solaris. (thanks to Dan Malone) 
+    Changed the makefile to use CC
+
+Ver 1.28.i2
+    Added the code to do hail requests.  
+
+    Changed the algorithm of the relay to assume that it is in the 
+    proper syncronized state after 5 seconds of quiet.  This allows much
+    faster responses to incoming messages.
+
+    Relay now reports and responds to hail requests.
+
+    Added the hidden option to select the date and time to which the
+    CM11A is set.  It expects MMDDhhmm (not finished yet).  This will be 
+    used for debugging.
+
+
+Ver 1.29
+    No one has complained about 1.28i2, SO it is released as 1.29
+
+Ver 1.pre30_1 through _3
+    Added make file options for SCO and NetBSD.  The Makefile has been
+    reconfigured a touch to make it clearer what needs to be done for each
+    OS.
+
+    Turn was accepting invalid option as in heyu turn allaskljas.  It now
+    complains and exits.
+
+    Thanks to Robert E. Laughlin for beta testing the SCO changes.
+
+Ver 1.pre30_4
+    Found bug in scanning the macros. (thanks to David Pointer)
+
+Ver 1.pre30_5
+    Dan Eble reported a bug (or feature) that allows chaining macros
+    with delays.  I've fixed the bug but not enabled the feature.
+
+Version 1.pre30.6
+    Makesched utility created.  This utility pre-preocesses a file in the
+    x10sched format and sends a revised version to standard output with the
+    strings "dawn" and "dusk" expanded to appropriate values.
+
+    Cleaned up some error messages to give feedback when the locks fail.
+
+    Added a configure script to customize the makefile
+
+    Added a post install script to check for directory permissions and such.
+
+Version 1.30
+    No changes from the beta.
+
+Version 1.31
+    Changed default for Configure to /bin/sh, as it should have been all along.
+
+Version 1.31_1
+    Changed the Configure script to delete leading tabs in the make file
+
+Version 1.31_2
+    Changed the default Makefile to one that calls configure.
+
+Version 1.31_3
+    A coding error was causing the dates in the schedule loader to be off
+    in some cases.  Thanks to Charles Sullivan for finding and reporting
+    the bug and it's fix
+
+Version 1.32_2
+    Added a few compiler flags to allow freebsd to compile without changes.
+    Tested against freebsd 4.2, Linux and Solaris
+
+    The use of just the -v option caused a sigfault.  The errant code
+    was corrected in x10.c main().
+
+Version 1.33
+    No bugs reported on the 1.32_2 beta.  Releasing as stable.
+
+Version 1.34
+    Final release in the heyu 1.xx series.  Added support for multiple
+    CM11A units on the same system.
+
+Version 2.00 (Beta 1)
+    Heyu was forked as heyu2 and went through five interim releases
+    designated as heyu2 alphas, with many new features added at each
+    release.  The end result is now merged with the original as heyu
+    version 2.00 with the following enhancements.
+
+    Major enhancements for uploaded timers and macros.  A new mode
+    of operation is introduced whereby the CM11A clock/calendar is offset
+    from the usual January 1st starting date, thus allowing unattended
+    operation (unplugged from the computer if desired) for 366 days
+    beginning with the date of upload.  The CM11A clock is maintained
+    on Standard Time the year around (transparent to the user), the
+    uploaded timers having been adjusted for Daylight Time as required.
+
+    Dawn/Dusk-relative timer event handling is now integral with
+    heyu, obsoleting the "makesched" script of version 1.  An
+    iterative routine optimizes the timer date ranges to minimize
+    daily dawn/dusk error subject to the constraint of available EEPROM
+    memory.  The period of operation may be shortened from 366 days at the 
+    user's option to further reduce the error.
+
+    Heyu now supports all X10 functions of which the CM11A interface is
+    capable, both from the command line and in uploaded macros.
+
+    The heyu state engine background process is introduced, which to the
+    extent possible keeps track of the off/on/brightness status of each
+    module.  The state engine can also launch scripts or shell commands
+    based on X10 power line signals received or sent and the states of
+    modules.
+    
+    The heyu monitor now displays in human-readable form all X10
+    signals received or sent, regardless of whether from the command
+    line or from a triggered or timed macro.
+
+    Heyu now supports user-defined 'scenes' and 'usersyns', which in
+    effect are like macros executed from the command line.
+
+
+    

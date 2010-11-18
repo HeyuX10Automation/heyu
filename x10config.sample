@@ -1,0 +1,239 @@
+# Example Heyu configuration file.  Copy this to file 'x10config' in
+# directory $HOME/.heyu/ and modify as required. This example uses
+# features which are new to heyu version 2
+# and which will not be recognized by heyu version 1.xx.
+
+# Note: This example file describes only a few of the most commom
+# configuration directives.  For the complete list see man page
+# x10config(5).
+
+# Anything on a line between a '#' character and the end of the line is
+# treated as a comment and ignored by Heyu, as are blank lines.
+# The various configuration directives in this file can be in any order
+# except that ALIAS directives must appear before any other directive
+# which references the alias label in place of a housecode|unit address.
+# See 'man x10config' for additional information and directives. 
+
+# Serial port to which the CM11a is connected. Default is /dev/ttyS0.
+
+TTY		  /dev/ttyS0       # [serial port device]
+
+# If you have an X10 compatible RF receiver connected to a second
+# serial port, use the TTY_AUX directive to specify the serial port
+# and model of receiver.  Supported receivers are W800RF32, MR26A,
+# and RFXCOM.  There are no defaults.
+
+# TTY_AUX  /dev/ttyS1  W800RF32
+
+# Base housecode.  The default is A.
+
+# HOUSECODE	  A                # A B C D E F G H I J K L M N O P
+
+# Aliases:
+# Format:  ALIAS  Label  Housecode|Unitcode_string  [Module_Type]
+#
+# The label is limited to 32 characters in length and is case-sensitive,
+# e.g., Front_Porch and front_porch are treated as different labels.
+# Each alias may reference a single unitcode or a multiple unitcode
+# string (no embedded blanks), but is limited to one housecode.
+#
+# The optional Module_Type is the general type or specific model number
+# of a module currently supported by Heyu. (Knowing the characteristics
+# of a module allows Heyu to track changes in its On/Off/Dim state
+# as X10 signals are sent or received.)  The most commonly used modules
+# are the standard X10 lamp module (StdLM) and standard X10 appliance
+# module (StdAM).  Other modules currently supported by Heyu are listed 
+# in x10config(5).  A standard X10 lamp module (StdLM) is the
+# default (changeable with the DEFAULT_MODULE directive)
+# for housecode|units which are not defined in an alias directive.
+# A module_type should normally not be defined for mutiple-unit
+# aliases, just for the single-unit aliases.  (The module characteristics
+# are associated with the housecode|unit, however referenced.)
+# 
+# Some examples:
+
+# ALIAS  front_porch        A1   StdLM
+# ALIAS  back_porch         A2   StdLM
+# ALIAS  porch_lights       A1,2
+
+# ALIAS  tv_set             A3   StdAM
+# ALIAS  living_room        A4   LM14A
+
+# ALIAS  patio_landscape    A8   StdAM
+# ALIAS  patio_lamppost     A9   StdLM
+# ALIAS  all_patio_lights   A8,9
+
+# Note: Prior versions of Heyu used a different format for 
+# aliases - no ALIAS directive and the Housecode and Unitcode_string
+# were separated by a space, e.g., simply:
+#  front_porch  A  1
+# Heyu will continue to accept this older format for compatibility,
+# but its use is discouraged as modules cannot be specified.
+
+# Scenes and Usersyns (User-defined synonyms):
+# Format:  SCENE   Label Command1 <args> [; Command2 <args> [; ...
+# Format:  USERSYN Label Command1 <args> [; Command2 <args> [; ...
+# The label is limited to 32 characters and is case-sensitive.
+# Scenes and Usersyns are both semicolon-separated lists of
+# commands with their arguments which can be executed or used
+# in macros as if their labels were ordinary Heyu commands.
+# See 'man x10config' for the features and limitations of Scenes
+# and Usersyns.  
+# (In the current version of heyu, the ONLY distinction between
+# scenes and usersyns is the 'show' menus in which they appear.)
+# Some examples:
+
+# SCENE  blinker  on A1; off A1; on A1; off A1
+# USERSYN normal_lights  on front_porch; on back_porch
+# SCENE   tv_on   on tv_set; dimb living_room 10
+
+# Scene and usersyn definitions can include positional 
+# parameters, e.g., $1, $2, which are replaced by actual
+# parameters supplied when the scene/usersyn is run.
+
+# USERSYN night_lights dimb front_porch $1; dimb back_porch $1
+ 
+# Define the (writeable) directory where the Heyu state engine daemon 
+# (started with 'heyu engine') is to write its log file 'heyu.log.<tty>'.
+# The default is 'NONE', indicating no log file is to be written.
+
+# LOG_DIR  NONE
+
+# The entries in the log file are similar to those which appear in
+# the heyu monitor, but in addition will include an entry when
+# a script is launched, and unless redirected elsewhere, any
+# text output from that script.
+
+# Note that the log file will continue to grow.  Manually delete
+# or trim it from time to time, or configure a Unix utility like
+# 'logrotate' to manage this task automatically.
+
+# If the Heyu state engine is running, Heyu can launch scripts
+# (or any Unix commands) when it sees specified X10 signals.
+# The format is:
+#
+#  SCRIPT [ -l label ] <launch conditions> :: [options] <command line>
+#
+# where label is an optional label, <launch conditions> tell
+# Heyu under what conditions to launch the script, and 
+# <command line> is the script command to be executed.
+# The '::' (two colons) separator is mandatory since the launch
+# conditions can be quite complex.
+# See x10scripts(5) for details, but here's a simple example
+# (with no label):
+#
+# ALIAS  doorbell  B1
+# SCRIPT  doorbell on :: play $HOME/sounds/barking_dog.wav
+
+# Users have the option of running either 'heyuhelper' in a manner
+# similar to heyu 1.35 or general scripts as above with the 
+# following directive.  The default is SCRIPTS, to run general scripts.
+
+# SCRIPT_MODE  SCRIPTS       # SCRIPTS  HEYUHELPER 
+
+# (With the choice 'HEYUHELPER', a script named 'heyuhelper' on
+# the user's path is run every time any X10 signal is received
+# by heyu over the power line, assuming the heyu state engine
+# daemon is running.)
+
+###  The following directives apply when a schedule is ###
+###  is uploaded to the CM11A interface.               ###
+
+# The file name of the user's X10 schedule file in the Heyu base
+# directory. The default is 'x10.sched'.  If you regularly use
+# more than one, list them here and just comment/uncomment as
+# appropriate, e.g.,
+
+# SCHEDULE_FILE    x10.sched
+# # SCHEDULE_FILE   normal.sched
+# # SCHEDULE_FILE   vacation.sched
+
+# The MODE directive - Heyu's two modes of operation:
+# In the default COMPATIBLE mode, the schedule uploaded to the
+# interface is configured to begin on Jan 1st of the current
+# year and # is valid for 366 days - through Dec 31st of the
+# current # year or Jan 1st of the following year, depending
+# whether # the current year is a leap or common year.
+# COMPATIBLE mode is the default.
+#
+# In HEYU mode the schedule uploaded to the interface is
+# configured to begin on today's date and is valid for
+# the number days of provided by the PROGRAM_DAYS directive.
+# WARNING: The mere execution of X10's ActiveHome(tm) program
+# under MS-Windows, or having its resident driver running, when 
+# the interface has been programmed by Heyu in HEYU mode can 
+# cause problems.  See 'man x10config' for details.
+
+# MODE              COMPATIBLE      # COMPATIBLE  HEYU
+
+# Number of days for which the interface is to be programmed
+# when running in HEYU mode.  It is ignored in COMPATIBLE mode.
+# (A shorter period can yield more accurate values for dawn 
+# and dusk.)  The default is 366 days.
+
+# PROGRAM_DAYS       366            # [number of days 1 to 366]
+
+# Should Heyu combine events having the same date range, time, etc.,
+# by concatenating the macros for similar events?   The default is YES.
+
+# COMBINE_EVENTS    YES              # YES  NO
+
+# Should Heyu compress uploaded macros by combining unit codes for the same
+# housecode and command and eliminating duplicates?  E.g., 
+#  (on A1; on B2; on A3, on B2) ==> (on A1,3; on B2)
+# The default is NO 
+
+# COMPRESS_MACROS   NO               # YES  NO
+
+# The user's Longitude and Latitude, needed for dawn/dusk calculations.
+# There are no defaults.  Don't use these examples - put in values
+# for your own location.
+
+# LONGITUDE         W079:49      # [degrees:minutes East or West of Greenwich]
+# LATITUDE          N36:04       # [degrees:minutes North or South of equator]
+
+# For dawn/dusk related times, Heyu breaks up the schedule date intervals
+# into subintervals, each with a constant value of dawn or dusk time.
+# These directives instruct Heyu what value of dawn/dusk time to use.
+# The default value is FIRST, i.e., that on the first day of the subinterval,
+# which is most convenient for comparing Heyu's computations with actual.
+
+# DAWN_OPTION       FIRST         # FIRST  EARLIEST  LATEST  AVERAGE  MEDIAN
+# DUSK_OPTION       FIRST         # FIRST  EARLIEST  LATEST  AVERAGE  MEDIAN
+
+# The following times allow bounds to be placed on the times of Dawn
+# and Dusk computed by Heyu. For example, setting the value for
+# MIN_DAWN to 06:30 will ensure that an event scheduled to be 
+# executed at Dawn will occur at 06:30 during summer hours whenever
+# the actual computed value of Dawn is earlier than that time.
+# The value for these directives are specified as hh:mm Legal 
+# (i.e., wall-clock) time, or the directives may be disabled with
+# the word OFF, which is the default.
+#
+# Timer options DAWNLT, DAWNGT, DUSKLT, DUSKGT used in the Heyu
+# schedule file will usually eliminate the need for these directives.
+# See man page x10sched(5) for details.
+
+# MIN_DAWN         OFF           # OFF or [hours:minutes 00:00-23:59]
+# MAX_DAWN         OFF           # OFF or [hours:minutes 00:00-23:59]
+# MIN_DUSK         OFF           # OFF or [hours:minutes 00:00-23:59]
+# MAX_DUSK         OFF           # OFF or [hours:minutes 00:00-23:59]
+
+# Directory to write reports and files other than the critical files
+# The default is to write them in the Heyu base directory.
+
+# REPORT_PATH  ./                  # [127 characters max.]
+
+# Replace events having delayed macros with new events and new 
+# undelayed macros when possible. (The purpose is to avoid pending
+# delayed macros, which are purged when a new schedule is uploaded.)
+# The default is YES.
+
+# REPL_DELAYED_MACROS      YES     # YES  NO
+
+# For test purposes, Heyu can write some additional files when
+# the command 'heyu upload check' is executed.  This directive
+# instructs Heyu to write these files.  The default is NO.
+
+# WRITE_CHECK_FILES  NO           # YES  NO
+

@@ -1,0 +1,2981 @@
+
+         Release notes for Heyu 2.9.1
+                03 Sept 2010
+
+What's New
+----------
+Added module type RS114 for the ACT model RS114 Appliance Module.
+With this module, support for AllUnitsOff, AllLightsOn, and
+AllLightsOff signals is user programmable.  Module type parameters
+AUF, ALO, and ALF match Heyu's support with the module's programming.
+This module type was requested by Chris Francois and Janusz
+Krzysztofik
+
+Added module type RF234 for the ACT module RF234 Appliance Module
+which is similar to but not identical with the RS114.  This
+module type was requested by Janusz Krzysztofik.
+
+For 2-way module types which can be configured to automatically
+respond with a StatusOn/Off when turned On/Off, the module type
+parameter "DEFER" instructs Heyu not to update the stored states
+of the module with the On/Off signal but let the ensuing StatusOn/Off
+signal do it. (Otherwise the changed state following the StatusOn/Off
+would always be unchanged.)
+
+Added module type RAIN8II for the WGL model Rain8II 2-way irrigation
+controller which can be configured to automatically respond with a
+StatusOn/Off signal when turned On/Off.  Thanks to Brandt Daniels
+for bringing this device to our attention.
+
+Added (experimental) command 'heyu status_emu Hu' which can be
+executed by a script to emulate the response to a received Status
+Request by a module which has no status reporting capability,
+e.g., any 1-way module.  If the state of module Hu as recorded
+by the Heyu engine is is ON, the command sends a StatusOn signal,
+otherwise a StatusOff signal.  (There are third-party X10 transmitters,
+e.g., some ACT transmitters, which send a Status Request and always
+expect a response.)  Thanks to Janusz Krzysztofik for requesting
+this feature.
+
+Added direct command 'heyu null', which does nothing. It's intended
+for use in a user-program which generates a command for execution
+by Heyu, when the conditions are such that nothing is to be done.
+
+Added configuration directives "LAUNCHPATH_PREFIX <pathspec>" and
+"LAUNCHPATH_APPEND <pathspec>" to prefix and/or append an additional 
+directory or directories to the existing $PATH in the environment
+provided for Heyu scripts. (This works only for shells where the
+path separator is a semicolon.)  Thanks to Johan Helsingius for
+requesting this feature.
+
+What's Changed
+--------------
+For module types which support Status Requests, the StatusOn/Off
+signals will affect only the state of the Hu for the last unitcode
+received and only when the StatusOn/Off is received over the
+powerline (RCVI).
+ 
+What's Fixed
+------------
+The On/Off (1/0) values of environment variables $X10_dmxStatus and
+$X10_Hu_dmxStatus were reversed.
+
+Added config directive "FIX_STOPSTART_ERROR YES" to work around the
+CM11A EEPROM bug "Stop Time = Start Time" which is occasionally
+encountered when uploading specific schedules.  It should be used
+(generally as a "config" line in the schedule file) only when needed
+as it results in less efficient use of the EEPROM memory space.
+Thanks to Cyril Duveau for providing a test schedule exhibiting
+the problem and testing the fix.
+
+A discrepancy between RFXSensor signals displayed in the Monitor
+and in the logfile has been resolved.
+
+Countdown timers were being reset to zero at a 'heyu restart'.
+
+
+
+============================================
+Release notes for previous heyu2/heyu 2 releases,
+in chronological order.
+============================================
+
+            Release Notes for Heyu2 Alpha-1
+                   3/10/2003
+
+The ALPHA release of HEYU Version 2 is now available
+at http://heyu.tanj.com/heyu2 as the compressed tar file
+heyu2.alpha.tgz (143 KB) containing the source code.
+
+Heyu is open source free software which runs under 
+Unix/Linux to control the operation of the CM11A computer 
+interface manufactured by X10.
+
+Heyu Version 2 provides greatly enhanced capability
+over Version 1 for timers and fast macros uploaded to
+the CM11A computer interface.
+
+(There are some enhancement patches which have been 
+submitted by users against Version 1 stable releases 
+which have not yet been implemented in this ALPHA 
+release.)
+
+After downloading this file, running the command:
+  tar -zxf heyu2.alpha.tgz 
+will unpack the source code into subdirectory
+./heyu2.alpha.dir under the current working directory.
+
+See the file INSTALL there for instructions on
+how to compile and install this release.
+
+Users currently running an earlier version of heyu
+should see the file README2 for a discussion of
+backward compatibility issues.  
+
+*** Note in particular that the ALPHA executable has 
+temporarily been given the name 'heyu2' instead of 
+'heyu', so both the existing and this new ALPHA
+versions can coexist for testing purposes.
+
+And of course all users should read the man pages
+heyu(1), x10config(5), and x10sched(5), which
+explain all the existing and new features.
+
+Questions, comments, or other issues which arise 
+with this ALPHA release may be posted to this group.
+
+============================================
+
+            Release Notes for Heyu2 Alpha-2
+                   4/4/2003
+
+A new build of the heyu version 2 ALPHA release is
+now available on website http://heyu.tanj.com/heyu2
+
+The file name is heyu2.alpha-2.tgz.  It will unpack 
+into the same directory (heyu2.alpha.dir) as the
+original alpha release, so it would probably be a good 
+idea to delete, rename, or 'make clean' the original
+alpha directory, especially if you've done any fiddling
+with the source.
+
+As with the original ALPHA release, the executable has
+been temporarily named heyu2.
+
+Changes from the original alpha release are as follows:
+
+  A bug with wrap-around ("reverse") dates, i.e. 
+  end MM/DD < start MM/DD, and leap years has been corrected.
+
+  The uploadable macro "dim" command is now compatible 
+  with heyu version 1 and with the "dim" issued from 
+  the command line.  The uploadable macro command "dimb"
+  has been added which dims after first brightening to
+  100%.  In short, what was previously "dim" is now "dimb"
+  and what was previously "dim!" is now "dim".  Note
+  that the "dim" issued from the command line is unchanged,
+  and that "dimb" is not yet implemented for the command line.
+
+  A bug with case-sensitivity of aliases defined in the
+  configuration file has been fixed.  Aliases are now
+  properly case-sensistive.
+
+  (Thanks to Tom for pointing out the above 3 problems.)
+
+  A code bug which caused the compile to fail on
+  some non-Linux compilers has been corrected. 
+
+  (Thanks to Chuck for reporting the above.  Note: some
+  further suggestions by Chuck have been temporarily 
+  deferred for additional study.)
+
+  A code bug with the potential for causing heyu2 run-time 
+  problems with uploadable macros under some circumstances
+  has been discovered and fixed.
+
+  The extended code preset dim command (for LM14A/PLM21
+  2-way lamp modules) is now available for uploadable
+  macros as command "xpreset".  It is not yet implemented
+  for command line operation.  Note: this is different 
+  than the existing "preset" command line command.
+
+
+==============================================
+
+            Release Notes for Heyu2 Alpha-3
+                     8/22/2003
+
+The third heyu2 alpha release is now available for 
+download on the Heyu website (http://heyu.tanj.com)
+as 'heyu2.alpha-3.tgz'.
+
+It will un-TAR into directory './heyu2.alpha-3.dir'
+(which is different from the two prior alphas).
+
+As always, feedback and bug reports from users are
+welcomed. Thanks in advance to our testers/users for
+giving this release a thorough workout.
+
+What's New:
+----------
+Heyu2 can now execute a number of new commands directly
+from the command line.  The order of the arguments is 
+similar to that used for elements of uploaded macros, e.g.,
+
+   heyu2  dim  b1,2  5
+
+Available commands include _all_ native commands the CM11A
+is capable of sending to the power line, including a lot
+most users will never care about.  But they're there - 
+run 'heyu2 help' to see the list.
+
+Many commands have synonyms, which some users may find
+easier to remember or type than the original command name.
+Run 'heyu2 syn' to see them. 
+
+Two of the original heyu commands, 'preset' and 'status',
+were recoded along with the other new commands.  The
+original code is still accessable for comparison purposes
+by prefixing the commands with an underscore, i.e.
+'_preset' and '_status'.
+
+A few "higher level" commands have been added, including
+the 'address' and 'function' commands requested by
+several users (and available in heyu version 1.35).
+Also a couple of others I thought _someone_ might come
+up with a use for - please let me know.
+
+What's Fixed:
+------------
+This version will hopefully now compile without errors
+or warnings on FreeBSD systems. (FreeBSD users - please
+confirm or refute.)  Thanks to users Jim and TJ for
+reporting this problem.
+
+An array overflow condition which occurred when a
+very large number of timers was specified in the schedule
+file has been corrected.
+
+Another array overflow condition which ocurred when
+a macro with a very large number of elements was specified
+in the schedule file has been corrected.
+
+Macro names longer than about 20 characters were being
+truncated even though the allowable length is 31 
+characters.  Thanks to user Steve for reporting this
+and identifying the line of bad code.
+
+The CM11A legal date reported by heyu2 was off by one
+day when both: 1. No schedule was uploaded to the
+CM11A EEPROM and 2. The local time was between 00:00 and
+01:00 hours during Daylight Savings Time.  It's now been
+fixed.  Thanks to TJ for spotting this. 
+
+The 'preset' command will now flag an error if the user
+attempts to set the dim level to 0.  (Legal values are
+1 through 32 inclusive.)  Thanks to TJ for reporting
+this.
+
+BTW, if anyone has a device which responds to this
+old-style 'preset' (not extended preset) command and is
+willing to run a few special tests, please email me at
+'cwsulliv@triad.rr.com'. (X10 is not known to have ever
+released any modules which responds to this command, but
+it's used by some other manufacturers for things like 
+thermostats.)
+
+Known Bugs:
+----------
+The section of heyu2 code for the direct commands is not
+yet fully merged with the code for uploading macros.
+(And is by no means yet integrated with Daniel's changes
+in heyu versions 1.34 and 1.35).  There are some direct
+commands which are not yet available for uploaded macros,
+but will be.  (There are some other direct commands which
+cannot be programmed as uploadable macros - at least without
+a kluge - but that's a limitation of the CM11A rather
+than the code.)
+
+During testing I discovered that standard X10 lamp 
+modules do not respond to the 'lightsoff' (all_lights_off)
+command.  I've tried both new and quite old (mid-1980s
+vintage) modules with the same result.  Two-way modules
+like the LM14A do respond to this command.
+Both standard and two-way lamp modules respond to the 
+'lightson' (all_lights_on) and 'alloff' (all_units_off)
+commands.  So this would appear to be module hardware
+bug/feature.
+
+================================================
+
+            Release Notes for Heyu2 Alpha-4
+                    11/09/2003
+
+The fourth heyu2 alpha release is now available for 
+download on the Heyu website (http://heyu.tanj.com)
+as 'heyu2.alpha-4.tgz'.
+
+It will un-TAR into directory './heyu2.alpha-4.dir'
+(which is different from the prior alphas).
+
+*** Note: the man pages for heyu2 alpha have now been
+given a '2' suffix so they won't overwrite Daniel's man
+pages for heyu 1.35.  So when looking for info on
+heyu2, run 'man heyu2', 'man x10config2', or 'man x10sched2'.
+(Once heyu and heyu2 have been integrated as heyu version 2,
+we will revert to the old names - I hope this doesn't cause
+confusion for anyone.)  The configuration and schedule files
+for heyu and heyu2 alpha have always been stored in different
+locations so there's no conflict there.
+
+As always, suggestions, feedback, and bug reports from users
+are welcomed. Thanks in advance to our testers/users for
+giving this release a thorough workout.
+
+What's New:
+----------
+The command line and macro upload features of heyu2
+have now been merged, so that all commands executable
+from the command line are now also usable in uploaded
+macros (to the extent the CM11A firmware supports these
+commands in macros - for example, there's no way I know
+of to make an uploaded CM11A macro send only addresses
+without functions.)
+
+SCENES and USERSYNS:
+Heyu2 now supports scenes and usersyns (user-defined
+synonyms).  A user can define a sequence of semicolon-
+delimited commands as either a "scene" or a "usersyn"
+in the configuration file, then execute the whole
+sequence by entering the scene or usersyn label as if
+it were a normal Heyu command.  Or the scene or
+usersyn can be used in a macro in a schedule file.
+
+There is currently no difference between scenes and
+usersyns except the menus in which they appear when
+the 'heyu2 show' command is run.  This will probably
+change in the future, based on suggestions and
+feedback from users.  Perhaps the use of dummy
+parameters (see below) ought to be restricted to
+usersyns, but that is a choice users can make
+for themselves.
+
+Both scenes and usersyns support the use of aliases
+and dummy positional parameters, which are replaced
+by actual parameters at the time of execution. 
+
+Example: The user could define in the configuration
+file:
+  alias porch_light a1
+  usersyn  blinker  on $1; off $1; on $1; off $1
+
+and then enter at the command line either:
+  heyu2  blinker a1
+or
+  heyu2  blinker porch_light
+
+and watch the porch light blink on and off.
+
+The rules for defining and using scenes and usersyns are
+described in 'man x10config2'.
+
+MACROS
+Macros in a schedule file can now refer to aliases, as
+well as to scenes and usersyns.  (The report.txt file
+will continue to display the actual x10 commands and 
+housecode|unit addresses.)
+
+"SHOW" COMMAND
+The new command 'heyu2 show [alias scene usersyn]' will
+display aliases, scenes, and/or usersyns defined in
+the user's config file.  This is more convenient than
+pulling up the x10config file and searching it for
+these entries.  
+
+TEMPERATURE REPORTING
+Having acquired a new toy, a TempLinc 1625 remote
+thermometer, I added the capability for Heyu2 to
+decode and display the temperature (encoded
+in a Preset command) based on the conversion algorithm
+used by the TempLinc.  (The RCS TX-15B thermostat 
+uses the same encoding.)  See the description of
+the config directive RCS_TEMPERATURE in 'man x10config2'
+and of the command 'temp_req' in 'man heyu2'.
+
+ADDRESS COMMAND
+The heyu2 'address' command now supports sending 
+multiple address bytes (housecodes can be mixed) at
+a time. (I'm surprised no SwitchLinc users suggested
+this improvement to the previous alpha release.
+Is anyone bothering to try out these releases?)
+
+MAN PAGES
+The man pages heyu2(1), x10config2(5) and x10sched2(5)
+have been updated.
+
+
+What's fixed
+------------
+The installation script has been upgraded to 
+hopefully reduce confusion, and also fix a bug
+which omitted creation of the ~/.heyu directory.
+Thanks to user Dave Crosby for reporting this
+problem.
+
+When a 'status' command was issued for some
+SwitchLinc modules, Heyu2 was timing out before 
+the status reply from the module could be reported
+on the command line (although it appeared in the
+Heyu2 monitor).  A config directive, STATUS_TIMEOUT
+has been added to enable increasing this time from the
+the default of 2 seconds.  Change it to 3 if 
+necessary.  Thanks to Marko Ruokonen for reporting
+this problem.
+
+A bug with previous heyu2 ALPHA releases allowed
+uploaded macros to be executed at the wrong time
+under some circumstances.  This has now been fixed.
+Thanks to user Steve Wallace for raising the issue.
+
+An undocumented "feature" of the CM11A was discovered:
+If the "start" and "stop" events within a given uploaded
+timer have the same time, then the "stop" macro is
+never executed.  Heyu2 now reassigns events between
+timers necessary to prevent this situation.
+
+The name displayed in the monitor when the function
+All_Lights_On is received by the CM11A over the power
+line has been changed from "All On" to All Lights On".
+This is to avoid confusion with the Heyu2 command
+'allon', which in fact does turn on all units, not
+just lights.
+
+The 'dimb' and 'brightb' command-line commands were
+duplicating the address transmissions between the
+'bright to 100%' and 'dim'/'bright' commands.  This
+has been fixed.
+(Note: the 'dimb' command-line command emulates the
+native CM11A macro 'dim' command with the 'brighten
+before dimming' bit set.  The 'brightb' command is
+pretty much worthless, and is defined only because
+it's native to the CM11A.)
+
+==============================================
+
+            Release Notes for Heyu2 Alpha-5
+                    3/02/2004
+
+The fifth heyu2 alpha release is now available for 
+download on the Heyu website (http://heyu.tanj.com)
+as 'heyu2.alpha-5.tgz'.
+
+It will un-TAR into directory './heyu2.alpha-5.dir'
+(which is different from the prior alphas).
+
+*** Note: the man pages for heyu2 alpha have been
+given a '2' suffix so they won't overwrite Daniel's man
+pages for heyu 1.35.  So when looking for info on
+heyu2, run 'man heyu2', 'man x10config2', 'man x10sched2',
+and now, 'man x10scripts2'.
+(Once heyu and heyu2 have been integrated as heyu version 2,
+we will revert to the old names - I hope this doesn't cause
+confusion for anyone.)  The configuration and schedule files
+for heyu and heyu2 alpha have always been stored in different
+locations so there's no conflict there.
+
+As always, suggestions, feedback, and bug reports from users
+are welcomed. Thanks in advance to our testers/users for
+giving this release a thorough workout.
+
+
+What's New:
+----------
+MAC OS X
+Alpha support has been added for the Macintosh running OS X.
+Thanks to user Tom S. for the information on how to get
+this working.  See the notes at the bottom of the INSTALL
+file.
+
+STATE ENGINE
+Heyu2 can now keep track of the state of the various
+modules on the user's system with its "state engine",
+a background process which is optionally started (or
+restarted) by running 'heyu2 engine'. The attributes
+of the specific modules on the user's system are
+provided to Heyu by appending the model type to the
+ALIAS directive for its housecode|unit in the configuration
+file. See 'man x10config2' for a list of the supported
+model types. (The default for unspecified model types is
+the standard X10 Lamp Module.)
+
+Whenever changes are made to the configuration file,
+re-run 'heyu2 engine'.  This will stop and restart the
+state engine with the changes incorporated.
+
+SCRIPTS
+The heyu2 state engine can launch scripts (or any Unix
+commands) when it sees specific X10 signals, in a manner
+similar to David Shaw's Xtend software but with many
+enhancements.  There is however an option to create an
+environment compatible with that used by Xtend.
+
+There is also an option to run 'heyuhelper' in a manner
+similar to heyu 1.35.  See the new man page
+'man x10scripts2' (x10scripts2(5)) and the 'man x10config2'
+configuration directive SCRIPT_MODE for details.
+
+LOG FILE
+If the user specifies a (writable) directory with the
+directive LOGFILE_DIR in the configuration file, the
+state engine will write the file 'heyu.log' there.  The
+entries will be similar to those which appear in the
+heyu2 monitor, with one addition: the log file will
+have an entry when a script is launched.  The default
+is to not write a log file.
+
+Note that the log file will continue to grow.  Either
+manually delete or truncate it from time to time, or
+use 'logrotate' or the equivalent utility software
+to manage it.
+
+MONITOR
+The heyu2 monitor now displays both sent and received
+X10 signals in human-readable form. It also displays
+the detailed X10 signals sent when an uploaded macro
+is executed.  Sources of signals are identified with
+the following codes:
+  sndc  Sent from the heyu2 command line
+  snds  Sent from the heyu2 command line when heyu2
+        is executed by a script launched by the heyu2
+        state engine.
+  sndm  Sent from an uploaded macro executed by a Timer.
+  sndt  Sent from an uploaded macro executed by a Trigger.
+  rcvi  Received over the AC power line.
+  rcvt  The trigger signal which executed the uploaded macro.
+
+Note: A CM11A reports neither the details of a macro
+execution nor the received trigger signal which executed it,
+only the fact that a macro at EEPROM location XXX has been
+executed.  Heyu2 saves a copy of the EEPROM memory image
+as binary file "x10image" in the heyu2 base directory when
+a schedule is uploaded to the CM11A, and from that determines
+the detailed command info.
+
+MONITOR FORMAT
+Heyu2 alpha-5 no longer supports the two older display formats
+in the monitor.  The directive NEWFORMAT is now obsolete and
+is ignored (with a warning message) if encountered in the
+configuration file.
+
+SHOW COMMAND - changed
+The heyu2 show command now has a lot more options, including
+displaying the state of the system in various formats.
+Run 'heyu2 show' with no parameters for a description of
+the options.
+
+COMMAND LINE OPTIONS
+Users can now specify the pathnames of the configuration
+and/or schedule files at the command line by using the
+'-c <pathname>' and/or '-s <pathname>' options, if those
+files are not in the standard places with the standard
+filenames.
+
+Also new are the command line options '-0' ... '-9'
+which indicate to heyu2 that the configuration file
+is to be found in subdirectory '/0' ... '/9' of the
+standard places, e.g., $HOME/.heyu/3/x10config or
+/etc/heyu/3/x10.conf.  So you can have quick access
+to up to 10 different configuration files. (I hate
+typing long pathnames.)  Note that these options are
+incompatible with the '-c' option.
+(The primary intended use for this option is in the
+future, when heyu2 will have heyu version 1.35's
+capability to simultaneously run multiple CM11As on
+different serial ports.)
+
+The config file pathname could in the past (and can still)
+be specified with the X10CONFIG environment variable.
+If the the config file is specified on the command line
+with either the '-c' or '-0' ... '-9' options, its full
+pathname is put back into the environment as X10CONFIG
+when a script is launched by the state engine in case
+that script needs to execute heyu2.
+
+SCHEDULE FILES - configuration
+A subset of the configuration directives can now be 
+put into a schedule file by prefixing them with
+the word 'config', e.g.,
+  config  MODE COMPATIBLE
+and will override those same directives (or their defaults)
+in the configuration file when the schedule is uploaded.
+
+The only directives which can be used in this manner are those
+which govern how heyu2 processes the timer, trigger, and
+macros in the schedule file to create the EEPROM image.
+See 'man x10sched2' for a list.
+
+This feature is intended for use if you frequently upload
+different schedules requiring different configuration
+directives.  Most users will want to forego this feature
+and rely only on the directivies in the configuration file.
+
+SCHEDULE FILES - timers
+For testing a proposed schedule without having to
+wait around all day, heyu2 will accept the word 'now'
+or 'now+NN' in place of a clock time in a timer, where NN
+is in minutes.  Heyu2 will replace 'now' with the current
+system time rounded up to the next whole minute, with a
+minimum of 15 seconds allowed for the actual uploading.
+A message will alert you to the exact time the first
+of these will occur.
+
+(Once you're satisfied that the macros in the schedule
+are doing what you expect, go back and change the 'now's
+to the actual times.)
+
+SCHEDULE FILES - duplicate timer or trigger warning.
+Heyu will issue a warning message if duplicate timer
+or trigger commands are found in a schedule file.
+
+UPLOADED SCHEDULE - report.txt
+The hexadecimal EEPROM addresses of uploaded timers,
+triggers, and macros are now displayed in the report
+('report.txt') generated when a schedule is uploaded.
+
+A detailed summary of the EEPROM usage has been added
+at the end of the report.
+
+NEW COMMAND - "catchup"
+This command will read the copy of the EEPROM image saved
+in file 'x10image' when a schedule is uploaded and 
+immediately execute in chronological order each macro
+scheduled for execution between 00:00 hours and the current
+system time on today's date.  This will put the modules in
+your house in the same state as if you had uploaded the schedule
+at 00:00 hours (Standard Time).  If your schedule is anything
+like mine, there will be a lot of lights blinking on and off
+as the macros are executed. :-) 
+
+Included are any delayed macros which would be executed
+before the current system time, but not those delayed macros
+initiated by a timer but with an execution time delayed beyond
+the current system time. "Security" events are executed
+at their nominal times.
+
+MAXIMUM LABEL LENGTH
+The maximum length of all labels - aliases, macros, scenes,
+scripts, etc., has now been set at 32 characters.
+
+ACKNOWLEDGE HAILS
+The heyu2 state engine daemon can be instructed to 
+send a hail_ack whenever it receives a hail signal
+over the power line.  Set config directive ACK_HAILS
+to YES to enable this feature.
+
+What's Fixed
+------------
+The previous version choked when mixed-case alias, scene,
+or usersyn labels were used in the schedule file.
+
+A check wasn't being made for maximum alias label length.
+
+An error check for the LONGITUDE config directive was
+buggy.
+
+The configuration directive REPORT_PATH was erroneously
+listed as REPORT_FILES in the man page x10config2(5).
+
+Regards,
+Charles Sullivan  (cwsulliv01@triad.rr.com)
+==============================================
+
+        Release notes for Heyu 2.0-Beta
+                 01/02/2005
+
+HEYU2 finally becomes HEYU Version 2.0 (Beta)
+
+File heyu-2.0beta.tgz will un-TAR into directory
+'heyu-2.0beta'.  (The '.dir' extension to the installation 
+directory name used in prior heyu and heyu2 releases is being
+omitted for consistancy with common Linux practice.)
+
+Please note these IMPORTANT CHANGES if you are currently
+running heyu 1.xx or heyu2:
+
+1. A number of new environment variables have been added
+for use by scripts.  In order to avoid possible confusion
+with user aliases, the prefix used for alias environment
+variables has been changed from the upper case "X10_" to
+lower case "x10_". Thus if you've defined the alias:
+  ALIAS porch_light A6
+in your configuration file, the environment variable supplied
+for heyu scripts will now be named "x10_porch_light" instead 
+of "X10_porch_light".  The variable for the housecode|unit
+itself (and other variables) will remain upper case, e.g.,
+"X10_A6".
+
+2. If you have been running heyu 1.xx or heyu2 on your
+system, run 'heyu stop' or 'heyu2 stop' to terminate the
+heyu_relay and/or heyu engine background processes before
+installing heyu 2.0 Beta.
+
+3. The names of the heyu executable and man pages no longer
+have the '2' suffix.  Run 'heyu' instead of 'heyu2'. The man
+pages are now heyu(1), x10config(5), x10sched(5), and
+x10scripts(5).  If your script has been executing heyu2,
+remember to change it to heyu.
+
+What's New:
+----------
+MULTIPLE CM11A SUPPORT
+Heyu version 2.0 supports simultaneous use of multiple CM11A's
+(connected to different serial ports) on the same computer.
+
+Except for communication over the AC power line, the operation
+of each CM11A is independant of the others.  The configuration
+file for each CM11A must be stored in a separate directory,
+most conveniently in subdirectories ./0 through ./9 under
+the usual $HOME/.heyu/ or /etc/heyu/ base directory. (Then
+the specific CM11A can be accessed with the heyu command
+line switch -0 through -9.)  Of course if you have only one
+CM11A you can maintain the configuration file in the same
+directory as previously.
+
+The most noticeable difference for the average user
+is that Heyu's log file now has an extension indicating
+the serial port to which the CM11A is connected, e.g.,
+"heyu.log.ttyS0".  Check the FILES section of manpage heyu(1)
+for other filenames.
+
+
+PRESET COMMAND FOR MACROS
+The command 'mpreset' has been added which implements the
+very limited (old-style) Preset Dim support for uploaded
+macros by the CM11A's firmware.  Only two preset levels are
+supported, and the specific level is inseparably linked to
+the housecode, e.g., levels 7 and 23 are supported only on
+housecode A and levels 6 and 22 are supported only on
+housecode D.  (The two supported levels always differ by 16.)
+
+This is obviously not a very flexible command but it's the
+best we can do given the CM11A's firmware limitation, and
+it may suffice for some situations when SwitchLinc and
+other similar lamp modules don't respond reliably to the
+standard dim or bright signals.  (The normal 'preset' command
+doesn't have these limitations but is only available from
+the Heyu command line.)
+
+See the heyu(1) manpage for a table listing the supported
+levels for each housecode.
+
+TIMER OPTIONS
+The user can now specify in the schedule file the clock time
+limits for Dawn and/or Dusk within which any specific event
+will be executed.  For example you may want a lamp to turn
+ON at Dusk and OFF at 9 PM.  But if in the middle of the 
+summer Dusk falls after 9 PM at your latitude, the lamp
+would ordinarily stay on all night and through most of the
+following day.  The new timer options allow you to specify
+that neither event will be executed unless Dusk falls earlier
+than 9 PM.  See manpage x10sched(5) for details.
+
+Note: Users employing this new feature will usually want
+to set the MIN_DAWN, MAX_DAWN, etc, directives in the
+configuration file to OFF.
+
+SCRIPT ENVIRONMENT
+As mentioned above, environment variables for user-defined
+aliases will have the lower case 'x10_' prefix.  The
+configuration directive 'ENV_ALIAS_PREFIX UPPER' can be used
+in the short term to revert to the previous behavior but
+is deprecated.
+
+A fairly complete set of calendar/clock environment
+variables has been added, e.g., X10_Month, X10_Hour, etc.
+See man page x10scripts(5) for the complete list.
+
+Two new logical variables have been added:
+  X10_isNightTime has the value TRUE if the time is between
+    Dusk and the following Dawn.
+  X10_isDarkTime has the value TRUE for times from 30 minutes
+    after Dusk until 30 minutes before Dawn. (This default
+    offset from Dusk and Dawn can be changed with the config
+    file directive ISDARK_OFFSET.)
+
+Either of these can be used in place of more cumbersome
+expressions, e.g., (($X10_isNightTime)) can be used in place of
+( (($X10_SysTime > $X10_DuskTime)) ||
+                   (($X10_SysTime < $X10_DawnTime)) )
+
+The variable X10_Expire contains the number of days before
+expiration of an uploaded schedule, or an error code.
+Its value is the same as would be obtained by running
+'heyu upload cronstatus'.
+
+EXPANDED SUPPORT FOR RCS THERMOSTATS
+Heyu will now translate into human-readable form the other
+status reports in addition to temperature available from
+RCS 2-way thermostats, e.g. Fan On/Off.
+
+What's Changed:
+---------------
+The DAWN_SUBSTITUTE and DUSK_SUBSTITUTE configuration
+directives have been obsoleted and will be ignored if
+encountered in the config file.  They didn't actually work
+as intended anyway.  Instead, heyu creates a ficticious
+Dawn and/or Dusk when necessary for polar latitudes, at
+the hours 00:01 or 23:58 as the situation dictates.
+
+What's Fixed:
+-------------
+A few bugs in heyu2.alpha-5.0 (which were fixed in the
+interim releases alpha-5.1 and 5.2.)
+
+Added the state file pathname to the error message 
+displayed when that file cannot be opened by heyu.
+
+When a script is launched, the heyu engine would
+previously create an alias environment variable only
+for the first instance of a multiply-defined alias
+for a specific housecode|unit.  Now it will create
+a separate variable for each instance.
+
+The code for launching scripts was revised to avoid
+leaving zombie processes under NETBSD and probably
+other systems.  Thanks to Ari Reen for spotting this
+and supplying the patch.
+
+An array overflow resulted in the wrong starting date
+for uploaded schedules. This became evident only for
+some compilers.  Thanks to Will McCown for identifying
+the problem an supplying the patch.
+
+Updated man pages.
+
+Regards,
+Charles Sullivan
+
+==============================================
+
+         Release notes for Heyu 2.0-Beta.2
+                 01/13/2005
+               (Bugfix Release)
+
+File heyu-2.0beta.2.tgz will un-TAR into directory
+heyu-2.0beta.2
+
+What's Fixed:
+-------------
+A missing declaration for variable 'envp' resulted 
+in a fatal compilation error on non-POSIX systems.
+Thanks to Charlie Murray for reporting this.
+
+An error message was not displayed when the general
+extended code 'xfunc' command was issued without
+specifying a unit code with the housecode. (heyu
+would return normally but no code was transmitted.)
+
+The (new) command 'rcs_req' wasn't recognized as a
+valid heyu command.
+
+Under some circumstances heyu could attempt to
+display the individual commands comprising a timed
+or triggered macro in the monitor using the wrong
+x10image file for reference (usually resulting in
+many screens full of gibberish commands).
+
+Incorrect checksums were displayed in the monitor
+when a schedule was being uploaded.
+
+Fixed 'target' module REMOTE6 (and added REMOTE4).
+See man config(5) for new info on these.
+
+==============================================
+
+         Release notes for Heyu 2.0-Beta.3
+This was a private release.  Changes are included
+in the release note for Beta.4
+
+==============================================
+
+         Release notes for Heyu 2.0-Beta.4
+                 01/20/2006
+
+File heyu-2.0beta.4.tgz will un-TAR into directory
+heyu-2.0beta.4
+
+What's Changed:
+---------------
+The heyu spoolfile and statefile are now maintained in
+subdirectory 'heyu' of their previous location.  E.g., for
+Linux in /var/tmp/heyu/ instead of /var/tmp/
+
+The heyu executable is installed with group ownership
+'root' instead of 'sys'.
+
+The various Heyu state commands, e.g., onstate, dimstate,
+etc., formerly (and usually unnecessarily) updated the state
+file on the hard drive each time they were called.  Since
+the state file is automatically updated whenever an X10
+function signal is sent or received, there was no need to
+do this under most circumstances.  So it's no longer done
+_except_ for state or show commands which return a value which
+includes the addressed state of a module or modules, to wit:
+the 'addrstate', 'heyu_state', 'xtend_state' 'show housemap H',
+and 'show others' commands.  A new configuration directive,
+"AUTOFETCH NO", allows the update to be disabled for these
+commands also, and a new command 'fetchstate' allows manually
+updating the state file if necessary.
+(Some users are interrogating Heyu hundreds or thousands
+of times a day for state information, thus causing the spool
+file to rapidly reach its maximum size.  Most users should
+not have to be concerned.)
+
+The state commands 'onstate', 'dimstate', 'chgstate', and 
+'addrstate' have been changed.  They now display only 1 or 0
+when entered with a housecode|unit instead of the "heyuhelper"
+style token. When entered with only the housecode, they display
+a decimal integer which is a bitmap for all 16 units on that
+housecode.  (For compatibility, the configuration directive
+"STATE_FORMAT OLD" allows reverting to the previous behavior.)
+
+Removed SIREN module type, which cannot be adequately
+modeled due to multi-command and timing issues.
+
+The delay time for macro definitions in schedule files
+may optionally be omitted if it is zero.
+
+Keywords and day-of-week mask in schedule files are
+now case-insensitive, e.g., TIMER, timer, tiMer are
+now equally acceptable.
+
+The internal code for starting or restarting the Heyu state
+engine with the 'heyu engine' command has been simplified.
+A noticeable difference is that the state engine daemon will
+now appear in the process table as 'heyu engine' rather
+than 'heyu monitor -engine'.
+
+Found (to my chagrin) that standard X10 wall switch dimmers
+do in fact respond to the lightsoff (All_Lights_Off) command
+even though standard plug-in lamp modules don't.  The note
+in the Heyu help menu has been revised.
+
+What's New:
+-----------
+Added optional support for the X-10 CM17A "Firecracker", a
+small serial dongle which can transmit X10 commands via RF
+to a transceiver plugged into your power line.  The CM17A
+and CM11A coexist on the same serial port - no additional
+serial port is required.  Some Heyu users may find this
+useful for actuating modules on a branch of their power line
+when there's not a good signal path from the CM11A.
+See the new man page x10cm17a(5) for details.
+
+(Note: The CM17A is only available in North America.  There
+is no equivalent device which operates at RF frequencies
+used for X10 transceivers in other parts of the world and
+a compile option is available to compile Heyu without
+CM17A support.  See the file INSTALL in the distribution
+directory.)
+
+Added REMOTE3 'target' module type.
+
+Added AMEXC4, AMEXC8, and AMEXC16 module types for
+appliance-type modules with exclusive addressing, such as
+X10's camera power supplies and the WGL Rain8 irrigation
+controller. (An on command to these modules turns On only the
+last unit addressed within its group of 4, 8, or 16 units,
+e.g., 1-4, 5-8, 9-16, while all other modules of the same
+module type within the same group on the same housecode turn
+themselves Off.)
+
+Added LM15A module type for the X-10 Socket Rocket, a screw-in
+lamp module which has no dimming capability.
+
+Added module type WS/StdWS/WS467 for X10 wall switches which 
+support the lightsoff (All_Lights_Off) command.
+
+Added command 'logmsg' to add a time-stamped user
+comment to the Heyu log file and monitor screen.  This
+is primarily intended for making notes while testing
+and may or may not play well if executed in the midst
+of heavy X10 activity.
+
+Added command 'readclock' to display the date and time
+from both the CM11A and System clocks in an easy-to-compare
+format.
+
+Added built-in support for the CM10A interface, an early
+version of the IBM Home Director without clock or battery
+backup.  (Support is limited to direct commands - uploaded
+trigger macros are not supported.) See man page heyu(1) and
+directive TTY in x10config(5) for configuration instructions.
+
+Some purists have argued that the usual definitions of Dawn
+and Dusk are not Sunrise and Sunset.  So a configuration file
+option has been added to globally change the definitions
+of Dawn and Dusk from the default Sunrise and Sunset
+to the times of Civil, Nautical, or Astronomical Twilight.
+See directive DAWNDUSK_DEF in man page x10config(5).  The
+'heyu utility suntable' command has options to tabulate
+any of these times in an appropriately named file.
+
+The state table now also maintains a cumulative ("sticky")
+map of X10 housecode|unit addresses received over the power line.
+The map is displayed with the command 'heyu show o[thers]'
+and cleared only after either the command 'heyu initothers'
+or 'heyu initstate'.  This may be useful for distinguishing
+whether unexpected lighting or appliance activity is caused
+by actual X10 signals (e.g., from a neighbor's house) or by
+the effect on modules of random noise or spikes on the power
+line.
+
+Added state command 'heyu statestr H' to display the complete
+state for all units in a housecode as a 16 character ASCII
+string.  Each character in the string is a hexadecimal digit
+which is a mini-bitmap with bits indicating the On, Dimmed,
+Changed, and Addressed states of the corresponding unit.
+
+Documented some new and some heretofore undocumented old
+commands and configuration directives in the heyu(1) and
+x10config(5) man pages, in sections near the end labeled
+"EXPERIMENTAL STUFF".
+
+What's Fixed:
+-------------
+The buffer size for some pathnames was too short,
+possibly causing a crash on some non-Linux systems.
+
+An empty command in a scene or usersyn could
+cause a crash. Thanks to Neil Tiffin for reporting
+this.
+
+An unwritable log directory caused the Heyu engine
+to crash.  Heyu now checks for this.  Thanks to user
+Ben for reporting this problem.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.5
+                 02/23/2006
+
+File heyu-2.0beta.5.tgz will un-TAR into directory
+heyu-2.0beta.5
+
+Reminder: When upgrading from a previous release of
+Heyu, be sure to run 'heyu stop' with the previous
+release before installing the newer release.
+
+What's Changed:
+---------------
+The lock directory for FreeBSD has been changed from
+the default /var/lock to /var/spool/lock at the request of 
+Michael Stowe, the Heyu port maintainer for FreeBSD.
+
+For compatibility with other software (e.g., minicom),
+the <tty> suffix for Heyu lock, spool, and state file
+names for multi-level device names now uses just the last 
+component of the name.  E.g., the lock file for device
+/dev/usb/ttyUSB0 is now LCK..ttyUSB0 instead of the
+previous LCK..usb.ttyUSB0
+
+What's Fixed:
+-------------
+Compilation of Heyu with GCC 4.0.2 under FC 4 generated
+a large number of compiler warnings about "signedness".
+Although the warnings appear to be harmless, the code
+was fixed to eliminate them.  Thanks to Richard Millard
+for reporting this problem.
+
+What's New:
+-----------
+Added the command 'heyu wait' to allow determining when
+execution of an uploaded macro by the CM11A has been
+completed.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.6.1
+                 07/10/2006
+
+File heyu-2.0beta.6.1.tgz will un-TAR into directory
+./heyu-2.0beta.6.1
+
+Note: 2.0beta.6 was replaced to fix a minor bug which
+showed up within about 10 minutes after its release
+on the website.
+
+What's New:
+-----------
+Added 16 software boolean flags (numbered 1-16) to the
+state table which can be set or cleared with the new
+'heyu setflag n[,n...]' and 'heyu clrflag n[,n...]'
+commands.  Tests for these flags can be included in the
+launch conditions to determine whether a script or shell
+command is to be launched by the Heyu state engine daemon.
+The values of the flags are also included as environment
+variables provided when scripts are launched by the Heyu
+state engine daemon.  See man page x10scripts(5) for
+details.
+
+Also added are the commands 'heyu flagstate n' for testing
+a flag by an external script and 'heyu show flags' for a
+human-readable display of all 16 flags.
+
+Added a special "status-pending" software flag for each
+unit. This flag is automatically set by a status or
+xstatus command and reset when the StatusOn, StatusOff,
+or xStatusAck signal is returned by a 2-way module.
+(A flag which remains set for a 2-way module after the
+expected response time is an indication that something
+has gone wrong, like a tripped circuit breaker perhaps.)
+A new state command 'heyu statusstate H[u]' will return the
+state(s) of the status-pending flag(s) and the direct
+command 'heyu clrstatus H[U]' will reset them if necessary.
+
+A new state command 'heyu enginestate' can be used by
+external scripts to determine whether the state engine
+daemon is running.
+
+The Heyu state engine daemon now has the added capability
+of launching scripts under two new types of launch
+conditions: the first when only an address signal is
+encountered; the second when the CM11A reports an
+interruption of AC power.  See the information about
+"ADDRESS" scripts and "POWERFAIL" scripts in man pages
+x10config(5) and x10scripts(5) for details and options.
+X10 signals sent by powerfail scripts are identified in
+the monitor and log file as having source SNDP.  The
+address-only launch conditions were requested by user
+simon_seys2000.
+
+Added extended code type 0 commands for shutters and
+shades and the module type SHUTTER (SW10) to track these
+commands.  Although Marmitek keeps it a secret, these
+commands are supported at least in part by their SW10
+Shutter Controller.  Since this module is available only
+for 230 Volt, 50 Hz operation and no other module is
+known to support the extended type 0 commands, an option
+is available to compile Heyu without support for these
+commands or module type.  See the file INSTALL in the
+distribution directory. (I don't own or have personal
+access to one of these controllers, so this support must
+be considered "Alpha".)
+
+Added an option for Heyu RF commands sent by the CM17A
+enabling them to be transceived by the TM751 and RR501
+without affecting the built-in appliance module switch.
+(If you are using these devices strictly as transceivers
+with nothing connected to this switch and are disturbed
+by the audible 'click' of the switch, you'll appreciate
+this option.)  Note: Whereas the TM751 switch responds
+only to RF signals, the RR501 switch also responds to
+powerline signals - this option does not affect its
+response to powerline signals.  See the RF_NOSWITCH
+directive in man page x10config(5) for details.
+
+Added the direct command 'xpowerup' which is the
+extended code signal sent by X-10 2-way modules like the
+LM14A when AC power to them is first applied or has
+been interrupted for more than a few seconds.  There's
+usually little need to ever send this command - its
+primary reason for existance in Heyu is so that the
+function can be used in the launch conditions for normal
+scripts. (Use of this command in normal scripts is
+unrelated to powerfail scripts.)
+
+When a script is launched, the log file normally displays
+the script label and the command line which is executed.
+With a new script option '-quiet', only the script label
+is displayed.  This is useful if you have a frequently-
+executed very long command line which tends to clutter up
+the log file.
+
+For lamp and shutter module types which have a memory,
+i.e., support a "resume" or "onlevel" or "limit" feature,
+new state commands 'heyu memlevel Hu' and 'heyu
+rawmemlevel Hu' can be used to recover the "remembered"
+percent brightness and native levels which Heyu stores in
+the state table for these module types.  This command is
+intended primarily for testing purposes.
+
+Added keyword "SECTION" which can be used in both schedule
+and configuration files.  Lines beginning with this keyword
+are like comment lines and totally ignored by Heyu.  The use
+to which this feature is put is completely up to the user.
+
+Added command 'heyu trigger Hu on|off' which emulates a
+trigger signal received over the powerline.  Using the
+files x10image and x10macroxref saved when a schedule is 
+uploaded, Heyu looks up the commands which would be executed
+from the CM11A memory if an actual powerline trigger were
+received and immediately executes them as direct commands.
+
+What's Changed:
+---------------
+Code changes were made to resolve a specific CM11A
+quirk which resulted in "Poll received unknown value ..."
+messages appearing in the monitor and log file. Note
+however that these messages can appear for reasons 
+other than this particular quirk (or bug perhaps - it isn't
+well understood).
+
+The 'heyu show launchers' display format has been revised
+to make it easier to see more than one launcher on the
+screen at a time.  And it can now be run without 
+specifying a housecode and will display all the 
+launchers defined in the configuration file, including
+powerfail launchers.
+
+The state file (a binary table of the On/Off/Dim
+states of modules) has been moved into the Heyu base 
+directory (either home or system-wide) and renamed
+'x10state'.  (It was previously named heyu.state.<tty>
+and maintained in the spool directory, SPOOLDIR.)
+
+The Heyu state engine daemon will now appear in the
+process status table ('ps aux') as 'heyu_engine' instead
+of 'heyu engine'.
+
+FreeBSD - Changed the Heyu system-wide base directory
+for this OS from /etc/heyu to /usr/local/etc/heyu as
+requested by Michael Stowe, the Heyu port maintainer
+for FreeBSD.
+
+The 'heyu list' command will now additionally display the
+definition of the system-wide base directory (SYSBASEDIR)
+as compiled into Heyu.  (Its appearance does not imply
+the directory necessarily exists or the configuration file
+is necessarily located there instead of in the home base
+directory - that's strictly up to the user.)
+
+The term "Legal Time" in man pages and when displayed on
+the screen has been changed to the more familiar "Civil Time".
+Both were/are intended to be synonymous with wall-clock
+time, i.e., reflecting periods of Daylight Time
+(AKA Summer Time).  Despite the terminology change, Heyu
+continues to maintain the CM11A clock on Standard Time
+throughout the year and merely adjusts the displayed
+times during periods of Daylight Time.
+
+The Dawn/Dusk table generated by 'heyu utility suntable'
+has been changed by default to a more convenient 80 column
+format and the times are displayed as Civil Time instead
+of the previous Standard Time throughout the year.
+The versions with Standard Time and wide format remain
+available with suntable switches -s and -w respectively.  
+ 
+What's Fixed:
+-------------
+Scripts were not being launched when the signal source
+was SNDS (sent by a script launched by the Heyu state 
+engine daemon).  Thanks to user Jean-Charles Pernot for
+reporting this bug.
+
+Heyu was erroneously attempting to interpret macro
+commands when an "_Unknown_" macro was reported by the
+CM11A, usually resulting in many lines of false 'sndm'
+or 'sndt' messages in the monitor and log file.  Thanks to
+user Fred Foss for bringing this problem to light.
+
+Added note to the x10config(5) man page that an ALIAS
+directive in the configuration file must be defined before
+any other directive (SCENE, USERSYN, SCRIPT, etc.) which
+references that alias in place of a Housecode|Unit
+address.
+
+The module type LM15A for the X-10 "Socket Rocket" did not
+correctly model this device's response to all_lights_on
+or all_lights_off commands.
+
+The module types for the X-10 camera power supplies
+included a response to the all_units_off command, which
+these supplies do not support.
+
+Fixed some problems with the CM10A (IBM HD16) controller
+initialization. Many thanks to user Steve Sykes for
+donating his old HD16 to the Heyu project so that the
+code could be properly debugged.
+
+The 'heyu stop' command would fail if there were errors in
+the configuration file.  This command now searches the
+file only for the directives it needs for the task.
+
+The first address or function sent following a 'heyu wait'
+command was being ignored by the CM11A.
+
+Heyu would crash once the spool file reached a certain
+large size limit.  The spool file size will now be
+checked during idle periods and the file rewound if the
+limit is reached.  For testing purposes, the default
+size limit of 1000000 bytes can be changed with the
+configuration file directive SPOOLFILE_MAX.  (For changes
+in this directive to become effective, Heyu must be
+stopped and restarted).
+
+Heyu would previously double-count sent dim commands for
+certain combinations of housecode and dim level. 
+
+If timer options resulted in no timers at all, Heyu was
+not skipping these timers.  Additionally, skipped timers
+were not correctly listed in the report.txt file.  Thanks
+to user Doug Latornell for reporting this problem.
+
+Blocks of EEPROM memory with checksum 0x5A were not being
+uploaded correctly. Thanks to Fred Foss and Gary Toth for
+submitting config and schedule files which allowed
+reproducing this problem on my system.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.6.2
+                 07/22/2006
+
+File heyu-2.0beta.6.2.tgz will un-TAR into directory
+./heyu-2.0beta.6.2
+
+What's Fixed:
+-------------
+When the configuration file contained an error, the
+error message erroneously indicated that the pathname
+of the configuration file was that of the state file.
+
+Heyu would flag an error if an ALIAS label contained
+the hyphen ('-') character.  (An ALIAS label may not
+_begin_ with a hyphen but it's allowed within the
+label string.) Thanks to K. McWhirter for reporting
+this and the previous bug.
+
+Compilation of the file x10state.c failed under some
+non-Linux operating systems, notably FreeBSD.  Thanks
+to Michael Stowe for reporting this.
+
+Heyu wasn't properly reorganizing the timers in a
+schedule, possibly resulting in the assigned daily
+times of Dawn or Dusk differing by a few minutes for
+different timer events in the same schedule.  (This
+bug was fixed in Heyu 2.0beta.6.1 but with no explanation
+in the release notes.)
+
+
+==============================================
+
+         Release notes for Heyu 2.0beta.7.1
+                 11/25/2006
+
+File heyu-2.0beta.7.1.tgz will un-TAR into directory
+./heyu-2.0beta.7.1
+
+(beta.7.1 fixed a one line compile error in beta.7 on
+some non-Linux OSes.)
+
+Reminder: When upgrading from a previous release of
+Heyu, be sure to run 'heyu stop' with the previous
+release before installing the newer release.
+
+
+What's New
+----------
+Added support for the AT&T SysV r4 operating system.
+Thanks to Michael Grigoni for supplying the required
+patch.  Note that this configuration has thusfar been
+tested only on a CM10A (IBM HD16).
+
+Added keyword TRIGEMU for script launch conditions to
+emulate the conditions under which an uploaded macro
+will be triggered by a powerline signal.  See the
+x10scripts(5) man page for a more detailed explanation.
+
+The 'heyu show launchers' command now displays the 
+script command line.
+
+Added experimental command 'heyu powerfailtest boot|notboot'
+to emulate interruption of AC power to the CM11A.  This
+allows testing of -powerfail scripts without actually
+interrupting the power.  For details see the EXPERIMENTAL
+STUFF section of man page heyu(1).
+
+Added function 'vdata' and a virtual module type VDATA. The
+command will store a data byte 0-255 in that module as if it
+were a brightness level. (Nothing is sent to the CM11A.)
+
+Added Alpha support for OpenBSD to the Configure file
+thanks to inputs from Julien Touche.  (This is as yet
+untested with actual hardware.)
+
+What's Fixed
+------------
+Removed the superfluous declaration of the write()
+library function in module setclock.c which caused
+a build failure on an AMD 64 bit system under FreeBSD
+(and probably under other operating systems as well).
+Thanks to Michael Stowe for reporting this.
+ 
+Removed a cable connection test for the CM10A which
+fails on versions of the CM10A which use a 4-pin
+modular handset connector (as on the CM11A) rather
+than the 6-pin RJ12 connector on the CM10A version
+available for Heyu development.
+
+Increased the timeout on some state functions which
+failed on slow systems.
+
+Removed a disfunctional Ring Indicator (RI) serial line
+check for incoming X10 signals from the serial port
+write function.  This had the effect only of greatly
+slowing down Heyu commands on systems where the serial
+port does not support modem control lines.
+
+Thanks to Michael Grigoni for reporting this and the
+previous two problems.
+
+Added a RI check for incoming X10 signals in higher level
+sending functions which should help prevent collisions
+between incoming and outgoing X10 data. (It should not
+do anything if the serial port does not support the RI
+line, but the config file directive 'CHECK_RI_LINE NO'
+is available to disable this check in case of problems.)
+Known BUG: Either the hardware or Linux support is
+buggy for USB-Serial adapters using an older Prolific
+chip - the RI line appears to be stuck in the active
+state.
+
+Fixed a large number of compiler warnings which were
+displayed when building with some compilers.
+
+Intervals of Daylight and Standard Time were not being
+correctly determined for schedules when the ASIF_DATE
+configuration directive (used for testing) specified a
+year other than the current year.
+
+The header file linux/serial_reg.h included in four of
+the Heyu source modules seems to have been dropped from
+later Linux kernels, e.g., 2.6.18-1.2798.fc6  supplied
+with the Fedora Core 6 distro. Its removal appears to
+have no effect for kernels at least as early as 2.4.20,
+so it was removed from the Heyu code.
+
+The installation script failed because it tried to set
+the group ownership for heyu to 'root', which group
+does not exist on some operating systems. The group is
+now customized for each OS.  Thanks to Henry Butz,
+Brian Holmes, and Michael Stowe for identifying and
+helping resolve this problem.
+
+Fixed a problem with USB->Serial adapters on Linux
+systems which became evident in the Heyu monitor, which
+displayed a very high percentage of 'Poll received
+unknown value" messages.
+
+Fixed a problem with Mac OS X (and probably other
+non-Linux systems) when using a USB->Serial adapter.
+If the adapter was unplugged from the USB port, Heyu
+would go into an endless loop.  (Now Heyu will
+terminate.)  Thanks to Henry Butz for reporting this.
+
+Replaced strcpy() and strcat() functions in several
+files with the more secure strncpy() and strncat()
+functions.  Thanks to Julien Touche for his inputs
+regarding this matter.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.7.2
+                 12/01/2006
+
+File heyu-2.0beta.7.2.tgz will un-TAR into directory
+./heyu-2.0beta.7.2
+
+What's Fixed
+------------
+Schedule file timers with timer options were not being
+being correctly processed for uploading to the CM11A
+EEPROM.  Thanks to Roy Badami for reporting this and
+providing the fix.
+
+The 'heyu upload croncheck' command was not honoring
+an override of the MODE directive in the schedule
+file.
+
+What's New
+----------
+Added experimental commands 'heyu ri_disable' and
+'heyu ri_enable' for disabling or enabling the Ring
+Indicator (RI) serial line on the CM11A.  For PCs 
+which have a "Start up on Telephone Ring" or "Start
+up on Modem Ring" feature, disabling the CM11A RI line
+prior to shutting down the PC prevents the CM11A from
+inadvertantly starting it up again when an X10 signal
+is received over the AC power line.
+
+Added experimental command 'heyu port_line_test' for
+testing whether a serial port supports the Ring 
+Indicator (RI) input status line and/or other input
+status lines.  The test requires jumpering two pins
+on the serial port connector.  See the instructions
+for this command in the section "EXPERIMENTAL STUFF"
+in man page heyu(1).  This test command was added 
+because the RI line on some USB->Serial adapters using
+an older Prolific chip isn't properly supported (at
+least under Linux).
+
+Added the configuration directive SEND_RETRIES for
+changing the number of times (default is 3) Heyu will
+attempt to transmit an X10 command from the command
+line before giving up.  (This feature was actually
+added in beta.7 but not mentioned in the release notes.)
+
+==============================================
+
+         Release notes for Heyu 2.0beta.8
+               02/27/2007
+
+File heyu-2.0beta.8.tgz will un-TAR into directory
+./heyu-2.0beta.8
+
+There's a lot of new code in this release.  There are
+some known rough edges and a few bugs will undoubtedly
+surface.  Please report any bugs and/or documentation
+clarity problems promptly so thay can be fixed.
+Feature requests to make Heyu more useful are always
+solicited.
+
+What's New
+----------
+Added support for auxiliary input to Heyu from a WGL
+W800RF32A or X-10 MR26A RF receiver connected to a second
+serial port (or USB->Serial adapter). A new background
+process daemon, "heyu_aux", decodes the RF input. See
+the new man page "x10aux(5)" for details.  Note in
+particular that two new sources, SNDA and RCVA, have
+been defined for signals from the auxiliary input device
+and neither is included as a default source for
+launching scripts.
+
+Added module types for several RF transmitters to be
+used with the above.  They're listed along with other
+module types in the ALIAS section of man page x10config(5).
+User inputs will be required to create module types
+for transmitters I don't own, particularly the European
+versions of X-10 security remotes and sensors.  (The
+codes transmitted by these may or may not match those
+transmitted by the US/Canada versions.)
+
+Added support for a minimal "security" system.  Special
+security flags "disarmed", "armed", etc. are controlled
+at the command line by 'heyu arm ...' and 'heyu disarm'
+and also by RF signals from X-10 security remotes via
+a W800RF32A receiver.  The security flags may be tested
+in the launch conditions for a script the same as other
+flags. Applicable configuration directives are described
+in the Security section towards the bottom of man page
+x10config(5).  Applicable new Heyu commands are "arm",
+"disarm", "sensorfault", "show sensors".
+  
+The new command 'heyu start' will start up all Heyu
+daemons which are configured to do so.  For the Heyu
+State Engine, heyu_engine, include in the config file
+the directive:
+  START_ENGINE AUTO
+For the auxiliary input daemon heyu_aux, include the
+directive:
+  TTY_AUX <serial port> <device type>
+
+(The heyu_relay daemon always starts when any Heyu
+command is first entered so isn't specifically
+configured.)
+
+Added command 'heyu restart' which instructs all running
+Heyu processes to re-read the configuration file and
+incorporate any changes made thereto.  Note: changing
+the TTY directive will result in starting a new
+instance of Heyu, the same as previously.
+
+CM17A "Firecracker" commands (except farb and freset)
+may now be used with the 'turn' command, e.g.,
+'heyu turn A1 fon', 'heyu turn A1 fdim 10'.
+
+Added capability to globally disable/reenable launching
+of scripts by the heyu_engine daemon via a config
+file directive "SCRIPT_CTRL DISABLE|ENABLE" and/or at the
+command line with 'heyu script_ctrl disable|enable'.
+
+Added configuration directive "RING_CTRL DISABLE|ENABLE"
+to disable|reenable the CM11A Ring Indicator serial line.
+See man page x10config(5) for the issues involved with
+this directive.  Thanks to user Henry Butz for 
+helpful discussions.
+
+Added configuration directive HEYU_UMASK to allow Heyu
+files to be created with uniform permissions regardless
+of the umask associated with individual user IDs.
+
+Added the experimental command 'heyu port_line_test'
+for testing whether a serial port or USB->Serial adapter
+correctly supports the Ring Indicator serial line.  See the 
+description in the EXPERIMENTAL STUFF section near the
+bottom of man page heyu(1) for instructions on how to
+perform the test.
+
+What's Changed
+--------------
+In previous Heyu releases the Heyu State Engine daemon
+'heyu_engine' was killed and a new one started when
+the command 'heyu engine' was entered to incorporate
+configuration file changes.  This caused problems with
+permissions when Heyu was operated under multiple user
+IDs.  Now the existing daemon is simply reconfigured
+by using the 'heyu restart' command.  Thanks to user
+Gene Heskett for several helpful discussions of this
+issue.
+
+What's Fixed
+------------
+Erroneous message about ignored unit code with the
+CM17A flightson, flightsoff, and falloff commands
+when used in scenes or usersyns with a positional
+parameter.
+
+The file "INSTALL" included in the Heyu distribution
+is overwritten by the "install" shell on some file
+systems like HFS+ which are not case sensitive for
+file names. The INSTALL file is now duplicated as
+README.INSTALL so it will always be available.
+Thanks to user Henry Butz for reporting this problem.
+
+Interrupt code for reading the serial port was 
+augmented to solve problems with some OS versions.
+Thanks to user David O'Connell for reporting this
+problem. 
+
+==============================================
+         Release notes for Heyu 2.0beta.8.1
+              3/3/2007
+
+File heyu-2.0beta.8.1.tgz will un-TAR into directory
+./heyu-2.0beta.8.1
+
+What's Fixed
+------------
+The command 'aux' was not listed in the 'heyu help' menu.
+
+The beta.8 release note referenced a new command
+'sensorstate'.  This should have been 'sensorfault'.
+
+Man page heyu(1) continued to list the obsolete legacy
+commands '_turn', '_preset', and '_status'.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.9
+                3/20/2007
+
+File heyu-2.0beta.9.tgz will un-TAR into directory
+./heyu-2.0beta.9
+
+What's New
+----------
+Added capability to forward standard X10 RF signals received
+by a W800RF32A or MR26A RF receiver to the Heyu Engine daemon
+for processing, as contrasted with transceiving them to powerline
+X10 signals.  This allows an RF signal to launch a script without
+the delay inherent in X10 powerline communication. 
+A new configuration directive RFFORWARD in conjunction with
+the existing TRANSCEIVE directive is used to specify which
+housecodes are forwarded and which are transceived.
+In addition, special module types have been defined for use
+in ALIAS directives to allow overriding the RFFORWARD/TRANSCEIVE
+selections for specific units and functions within a housecode.
+See man page x10aux(5) for details and examples of usage.
+
+The 'heyu help' menu has grown over time to extend over
+several screens.  Individual sections of the menu can now be
+viewed by running 'heyu help <section>', where <section> is
+"options", "admin", "state", "direct", or "cm17a".  Thanks to
+Merv Curley for suggesting this feature.
+
+What's Changed
+--------------
+Added flag -DPOSIX to the FreeBSD compile option for better
+compatibility with newer versions of this OS.  Note: This
+may break compatibility and have to be removed for OS versions
+earlier than FreeBSD 4 (for anyone still using those old
+versions).  Thanks to Michael Stowe for reporting this
+information. 
+
+==============================================
+
+         Release notes for Heyu 2.0beta.10
+
+File heyu-2.0beta.10.tgz will un-TAR into directory
+./heyu-2.0beta.10
+
+What's New
+----------
+Added 16 user-settable countdown timers and a "-timeout"
+launcher which executes a script when the timer countdown
+(specified with the new 'heyu settimer ...' command) has
+reached zero.  The timers have one-second precision and
++0/-1 second accuracy.  See man heyu(1) and x10scripts(5).
+
+Added capability for a "-sensorfail" launcher which will
+launch a script whenever a security sensor hasn't reported
+in the interval specified with the INACTIVE_TIMEOUT config
+directive.
+
+Added function labels 'anyplc', 'anysec', and 'anyfunc'
+which can be used in script launch conditions to match
+any powerline code (anyplc), any security function (anysec)
+or all of the above (anyfunc). 
+
+Added experimental config directive AUTO_WAIT.  See the
+EXPERIMENTAL STUFF section of man x10config(5).
+
+What's Fixed
+------------
+Compiler error under FreeBSD introduced with the -DPOSIX
+flag in the previous release.
+
+What's Changed
+--------------
+The 'heyu show timestamp' command has been changed to
+'heyu show tstamp'.
+
+==============================================
+
+         Release notes for Heyu 2.0beta.11
+                18 June 2007
+
+File heyu-2.0beta.11.tgz will un-TAR into directory
+./heyu-2.0beta.11
+
+What's New
+----------
+Added a module for the Marmitek DS90 Security Door/Window
+sensor.  It's appreciably more complex than the DS10A sensor,
+having dual signal circuitry and a switch which sends a "Tamper"
+signal when the cover is removed.    Thanks to Mark Hindess
+for providing the data and insight required for modeling this
+sensor.  
+
+Added a sticky tamper flag set when a Tamper signal is received
+and a new command 'heyu clrtamper' to clear it.
+ 
+Added module option REVERSE to swap the signals Alert/Clear
+issued by security door/window sensors.
+
+Added the CM17A commands 'farw' and 'ffarw'.  These allow
+sending strings of arbitrary RF commands organized as 16-bit
+hex words.
+
+Also added special purpose CM17A commands 'flux' and 'fflux'
+which are similar to the 'farw' and 'ffarw' but take their
+burst count and post-delay as parameters rather than from the
+config file.
+
+Added support for the RFXCOM RF receiver in W800RF32 emulation
+mode.  Although this is a USB device, it contains a FTDI
+USB->Serial converter chip and looks like a serial port insofar
+as Heyu is concerned.  Thanks to Mark Hindess for suggesting
+this enhancement.
+
+Added flags 'night' and 'dark' (and their negations 'notnight'
+and 'notdark') which can be used in launch conditions as an 
+alternative to first launching the script then checking the
+environment variables X10_isNightTime or X10_isDarkTime.
+(These flags are valid only when both LONGITUDE and LATITUDE
+have been specified in the configuration file and the Heyu
+Engine is running.)
+
+The status of the 'night' and 'dark' flags are included in
+the 'heyu show f[lags]' display.
+
+Added the option 'heyu show da[wndusk]' to display the
+Dawn and Dusk times used by the Heyu State Engine for setting
+the 'night' and 'dark' flags.
+
+Added the option 'heyu show ti[mers]' to display the 
+current countdown times of active timers, i.e., those
+timers which still have time remaining on them.
+
+Added command 'heyu utility dawndusk' for a display of
+today's Dawn and Dusk times which doesn't require the
+Heyu Engine daemon to be running.
+
+Added command 'heyu sleep N.NNN' which is similar to the
+'heyu pause N.NNN' command except that the serial port write
+lock is disabled so that other Heyu commands can be executed
+during the "sleep" interval.
+(The GNU sleep command included with Linux accepts a
+non-integer parameter, e.g., 'sleep .5', however that's not
+the case with the standard Unix sleep.  The addition of this
+new Heyu command allows non-integer sleep values for all OS's
+to which Heyu has been ported.)
+
+Compound Heyu _direct_ commands can now be entered on the
+command line - a command-line macro".  To use this feature,
+delimit the individual Heyu commands with semicolons and
+enclose the entire command list within double quotes. E.g.,
+ $  heyu "on a1; off b3; dim c7 4"
+so that the entire command list is passed to Heyu in a single
+chunk.  Note that this works only with direct commands, i.e.,
+those in the list displayed with 'heyu help direct'.
+
+What's Changed
+--------------
+Added the Status_Pending bit to the X10_Hu and x10_<alias>
+environment variables created for launched scripts.  The mask
+for this bit is "isSpend".  If, as advised, you've been using
+the masks, e.g., isOn, isDim, etc., all along this change
+won't affect your scripts.
+
+The ISDARK_OFFSET configuration directive will now accept
+negative offsets, meaning the interval of "Dark" time can
+now extend inside the Daytime interval.  (This may be useful
+if you have a poorly illuminated room or hallway in your house.)
+
+What's Fixed
+------------
+A large number of compiler warnings under NetBSD.
+Thanks to David Brunell for reporting this issue.
+
+The description of the experimental config directive AUTO_WAIT
+in the x10config(5) man page.
+
+Heyu daemons sometimes failed at a 'heyu restart', as
+evidenced by a flood of "... Poll received unknown value ..."
+messages suddenly appearing in a monitor window and/or in the
+Heyu log file when the restart command was entered.  This
+problem was related to the configuration of -timeout and
+-sensorfail scripts.
+
+The spoolfile read function has been changed to prevent
+excessive CPU usage on some OS's when the data to be read is
+not immediately available.  Thanks to Liam Kenny for 
+identifying this problem.  The change also seems to reduce
+the number of "Poll received unknown value..." messages.  
+
+============================================
+
+         Release notes for Heyu 2.0beta.11.1
+                18 June 2007
+
+File heyu-2.0beta.11.1.tgz will un-TAR into directory
+./heyu-2.0beta.11.1
+
+What's Fixed
+------------
+RF security signals from the Heyu auxiliary daemon (heyu_aux)
+could not launch scripts.
+
+============================================
+         Release notes for Heyu 2.0beta.11.2
+                21 June 2007
+
+File heyu-2.0beta.11.2.tgz will un-TAR into directory
+./heyu-2.0beta.11.2
+
+What's Fixed
+------------
+Some possibly worrysome compiler warnings which
+surfaced on FreeBSD systems.  Thanks to Michael Stowe
+for reporting this.
+
+The 'heyu sleep ...' command was not described in the
+heyu(1) man page.
+============================================
+
+         Release notes for Heyu 2.0.0
+                10 July 2007
+
+File heyu-2.0.0.tgz will un-TAR into directory
+./heyu-2.0.0
+
+What's Fixed
+------------
+Stray compiler warning on FreeBSD.  Thanks to Michael
+Stowe for help with resolving issues like this with
+FreeBSD.
+
+Failure of 'heyu stop' which appeared under Mac OS X.
+Thanks to Tom Stiller for reporting this and patiently
+running test codes to identify the problem (which
+was due to an uninitialized variable).
+
+A few permission irregularities with the installation
+script.
+============================================
+
+         Release notes for Heyu 2.0.1
+                17 July 2007
+
+File heyu-2.0.1.tgz will un-TAR into directory
+./heyu-2.0.1
+
+Whats's Fixed
+-------------
+Config directive 'RF_NOSWITCH YES' didn't work for
+the 'heyu falloff' CM17A command.
+
+When called without a unit in their housecode|unit
+parameter, the onstate, dimstate, chgstate, and
+addrstate commands displayed only 0 or 1 instead
+of the bitmapped state.
+
+A description of the config directive STATE_CTRL
+(which controls the above display) was omitted from
+the man page x10config(5).
+============================================
+
+         Release notes for Heyu 2.1.0
+               25 August 2007
+
+File heyu-2.1.0.tgz will un-TAR into directory
+./heyu-2.1.0
+
+What's New
+----------
+Added module type LM465-1 for the redesigned
+LM465 Lamp Module introduced by X-10 in 2007.
+This 1-way module shares many of the features
+of the LM14A 2-way Lamp Module, including extended
+code commands like 'xpreset' and extended code
+group commands.
+
+Added module type WS467-1 for the redesigned
+WS467 Wall Switch Module introduced by X-10 in 2007.
+This 1-way module shares many of the features
+of the LM14A 2-way Lamp Module, including extended
+code preset (xpreset) and group commands.  One
+significant difference from the original-design WS467
+(and either the original or redesigned LM465) is that
+the Heyu 'dim', 'bright', or 'dimb' commands have no
+effect on this module if it is in the Off state - it
+has to first be turned On.
+
+Added Heyu support for Extended Code Group commands.
+Modules like the LM14A and redesigned LM465 and WS467
+which support Type 3 Extended Code commands can be
+assigned to groups, and a "scene" can then be executed
+with a single command to that group.  See 'heyu help'
+and man page heyu(1) for new commands xgrpadd, xgrpaddlvl,
+xgrprem, xgrpremall, xgrpexec, xgrpstatus, and 'show
+groups'.  Run 'heyu syn' to see shorter synonyms for
+these commands. 
+
+Added Heyu state commands 'nightstate', 'darkstate' and
+'sunstate' for external scripts to determine the state
+of the Heyu night and dark flags.  The first two return
+boolian 1 or 0; the last a bitmap with 1 = night, 
+2 = dark.
+
+What's Changed
+--------------
+The 'heyu xconfig' command insisted on a housecode|unit,
+however this X10 command actually configures extended
+code (2-way) modules for the entire housecode - a unit
+number is superfluous.  The command syntax has been
+changed to 'heyu xconfig H <mode>' instead of
+'heyu xconfig HU <mode>'.
+
+What's Fixed
+------------
+Dim and Bright RF signals from a PalmPad set for
+units 9-16 were not correctly interpreted by the
+heyu_aux daemon.
+
+When Heyu was started or restarted, RF signals
+other than On or Off were being ignored by the
+heyu_aux daemon until after an On or Off RF signal
+was first received.
+
+The internal equivalent of the 'heyu fetchstate'
+command (used in several Heyu 'show' and '...state'
+commands) has been modified. It was intermittently
+failing on at least one system.  Thanks to Francisco
+Martinez for calling attention to this problem and
+patiently running test cases.
+
+============================================
+
+
+         Release notes for Heyu 2.1.2
+              23 September 2007
+
+File heyu-2.1.2.tgz will un-TAR into directory
+./heyu-2.1.2
+
+What's Fixed
+------------
+"Inactive sensor" messages would not appear in the
+Heyu log file following a 'heyu restart' until after
+some other signal appeared there.
+
+Launcher "local" flags, e.g., swmin, lobat, etc.,
+were not being displayed with 'heyu show launchers'.
+
+A very short polling interval in the Heyu Engine and 
+Monitor resulted in seemingly excessive CPU usage
+when idle, especially with some newer kernels.  The
+interval has been increased to a more reasonable
+value.  Thanks to Michael Stowe for bringing this
+issue to light.
+
+============================================
+
+         Release notes for Heyu 2.1.3
+             28 October 2007
+
+What's New
+----------
+Added module type PR511 for X-10 PR511 2-way Motion
+Sensor floodlight.  Thanks to Michael Stowe and
+Mike Phillips for providing the characterization
+data.
+
+Some modules, the X-10 LM15A "Socket Rocket" for one, are
+found to be unaddressed by the 'lightson' (All_Lights_On)
+command. The module attribute for this "feature" has been
+added.
+
+Added experimental capability for running Heyu with no
+CM11A (and no serial port dedicated to it) by using the
+keyword "dummy" instead of a serial device in the TTY
+directive.  Flags, countdown timers, state commands, and
+scripts launched by RF commands forwarded to the Heyu state
+engine by the Heyu auxiliary daemon will continue to
+operate normally.
+
+What's Fixed
+------------
+X-10 modules XPD3 and XPS3 were found not to be
+unaddressed by the 'lightsoff' (All_Lights_Off) command
+and the Heyu module types have been corrected
+accordingly.  Thanks to user 'LieutenantMirth' for
+reporting this information.
+
+============================================
+
+         Release notes for Heyu 2.2.0
+                02 April 2008
+
+What's New
+----------
+Added support for the RFXSensor Temperature/Humidity/Barometric
+Pressure sensor RF transmitters.  A W800RF32 or RFXCOM X10 RF
+receiver is required.  See the new man page x10rfxsensors(5)
+for details.  A Configure switch is provided to compile Heyu
+without this support if desired. (See the INSTALL file in the
+Heyu distribution directory.)
+
+Added support for the RFXMeter Power, Water, and Gas sensors.
+A 433.92 MHz RFXCOM X10 RF receiver is required. See the new
+man page x10rfxmeters(5) for details.  A Configure switch is
+also provided to compile Heyu without this support if desired.
+
+(Thanks to Johan "Julf" Helsingius for suggesting and extensively 
+testing the RFXSensor and RFXMeter features.  Thanks also to
+Bert from RFXCOM Tech Support for patiently answering questions
+and providing test data for these products.)
+
+Added international module types:
+  Marmitek SD90 and SD10 Smoke Detectors.
+  Marmitek MS90 Motion Sensor
+  ElekHomica DS18 Door/Window Sensor
+  ElekHomica EH-CWSD10 Smoke Detector
+  ElecHomica EH-WD210 Water Detector
+(Thanks again to Julf for characterizing and testing these
+module types.)
+
+Added check for duplicated IDs for RF transmitters.  (These
+might not be obvious when a large number of security sensors
+and remotes are configured.)
+
+Two or more instances of Heyu controlling CM11A's on different
+serial ports on the same computer can now share a common
+log file.  Each entry is identified with the subdirectory switch
+(-0 through -9) used when Heyu is invoked. Thanks to Julf
+for requesting this feature.
+
+The Status Pending flag is now set for Type 3 Extended Code
+modules, e.g., LM14A and AM14A, when they receive a command
+which is configured to be acknowledged with an xStatusAck.
+This will be the case for these modules with on, off, dim, or
+bright commands when the "xconfig" mode is 2 or 3, and for the
+xpreset (or xon or xoff) command when the "xconfig" mode is
+1 or 3.
+
+Temperatures decoded from X10 signals from RCS compatible
+remote thermometers and thermostats are now stored in
+the Heyu state tables.  The most recently decoded 
+temperature may be recovered with the 'heyu rcstemp H'
+command (where 'H' is the housecode of the thermometer).
+Scripts launched by Heyu can recover the temperature as
+the value of environment variable X10_H0_Temp or
+x10_<alias-for-H0>_Temp.
+
+Added internal engine precommands for SCRIPT command
+lines.  Run 'heyu help internal' for the list and see
+the SCRIPT COMMAND LINE section of man page x10scripts(5)
+for details. Thanks to Sven Schwyn for bringing up a
+problem which suggested these precommands as a solution. 
+
+Added the variable X10_Source in the environment passed
+to Heyu scripts, with value "RCVI", "RCVA", "SNDC", etc.
+
+The command 'heyu show alias' can now accept an optional
+housecode parameter and display only those aliases for
+addresses with that housecode.
+
+Added the X10Pro model numbers as synonyms for the equivalent
+standard X10 module types. These are functionally the same 
+devices but with a different name, so there's nothing really
+new here.
+
+Add Marmitek model numbers LM12, AM12, LM15, and LW10U,
+which are thought to be electrically equivalent to the North
+American modules LM465, AM468, LM15A, and WS467.  Again there's
+nothing really new here.
+
+What's Changed
+--------------
+An RFXCOM RF receiver is now by default operated in variable
+length packet mode.  (This is necessary for RFXMeter support.)
+The original 32-bit W800 compatible mode remains available if
+problems should develop by specifying the receiver as RFXCOM32.
+
+Using an asterisk ('*') in place of a units list has been (and
+remains) a shorthand for all units 1-16.  However when used as 
+the unit code in a launch condition, e.g., "A*", it now allows
+launching a script based on the function alone, regardless of
+whether or not any units at that housecode are addressed.
+
+The initial check for writability of the spoolfile directory
+(typically /var/tmp/heyu/) has been changed to allow the user
+to set more stringent permissions than are set at the time of
+Heyu installation.
+
+What's Fixed
+------------
+The "armed" flag was not being set in response to an "Arm"
+RF signal under some circumstances.
+
+The Heyu installation script would not accept "dummy" as the
+serial port for the CM11A - a real serial port was required.
+
+============================================
+
+         Release notes for Heyu 2.2.1
+               19 April 2008
+
+What's New
+----------
+Added module type PLCSENSOR for a sensor which transmits
+X10 On and Off signals over the power line and which has a 
+heartbeat, i.e., it periodically retransmits its current
+state.  Thanks to Geo for requesting this enhancement.
+
+Added support for Marmitek GB10 Glass Break sensor (which
+also transmits the "sDusk" function at darkness).  Thanks
+to Dave Schaap for supplying the test data.
+
+Added the module type SVDATA for security RF remotes for
+which a distinct module type has yet to be implemented in Heyu.
+All security signals mapped to this module are reported as
+'vdata' and can be used to launch a script if desired.
+
+Added support for the RF jamming detection feature
+of older firmware versions of the RFXCOM receiver.  (This
+feature was prone to report many false positives and has since
+been removed from the firmware.)  The new Heyu configuration
+directive 'SUPPRESS_RFXJAM YES' causes any such jamming report
+received from the RFXCOM to be classified as RF noise and
+ignored.  However if the jamming detection proves to be 
+useful to you, the signal can launch a "-rfjamming" script.
+Thanks to Dave Schapp for raising the issue and providing a
+patch for the suppression.
+
+
+What's Fixed
+------------
+A fatal compiler error and several compiler warnings under
+Mac OSX.  Thanks to Homer Stanford for quickly bringing these
+to attention and to Tom Stiller for suggesting the fix.
+
+Several compiler warnings under FreeBSD.  Thanks to Michael
+Stowe for reporting these.
+
+============================================
+
+
+        Release notes for Heyu 2.2.2
+               29 April 2008
+
+What's Fixed
+------------
+RFXMeter sensors were erroneously being reported as inactive.
+
+
+============================================
+
+         Release notes for Heyu 2.3.0
+                19 May 2008
+
+What's New
+----------
+Added support for Oregon wireless temperature/humidity/barometric
+pressure sensors with the RFXCOM 433.92 Mhz X10 RF receiver.
+See the new man page x10oregon(5) for details, including a list
+of the specific Oregon model numbers supported.
+
+Added support for the DigiMax 210 wireless thermostat with
+the RFXCOM 433.92 MHz X10 RF receiver.  See the new man page
+x10digimax(5) for details.  Thanks to Dave Schapp for providing
+test data and testing the software.
+
+What's Changed
+--------------
+The display format in the Log file and Monitor has been modified
+to shorten the line lengths.  The words "function", "address", and
+"housecode" have been abbreviated, and the year omitted by default
+from the date.  (The configuration directive "LOGDATE_YEAR YES"
+can be used to put it back again.)  Man pages have been revised
+to reflect this modification.
+
+Heyu by default now uses the 16-bit security ID for
+X10 RF Security sensors when used with the RFXCOM RF receiver
+in its variable length packet mode (the default).  If you have
+a lot of security sensors, the config directive "SECURID_16 NO"
+can be used to revert to the earlier 8-bit scheme until you
+have reconfigured them.
+
+With reference to the above, some X10 sensors, notably the
+Aux channel of the DS90 Door/Window sensor, appear to have a
+firmware bug whereby a parity check fails on alternate RF
+repetitions, although the data itself is valid.  So half of
+the (usually 4) RF repetitions are classified as noise and
+ignored.  The configuration directive "SECURID_PARITY NO"
+instructs Heyu to omit this parity check.  Since the parity
+check is only for the high-order byte of the security ID,
+using this directive is less risky than throwing away half
+of the RF repetitions.  However if you don't have any sensors
+exhibiting the bug, you won't need it.
+
+What's Fixed
+------------
+Several Heyu direct commands which don't require a powerline
+interface were omitted from the list of commands which are
+valid when "TTY dummy" is specified in the configuration
+file.  These are: pause, sleep, vdata, setflag, clrflag,
+settimer, clrtimers, clrstatus, and clrtamper.  Thanks to
+Janusz Krzysztofik for reporting this bug.
+
+The sources RCVA, ANYSRC, and NOSRC were not being recognized
+when specified as default sources with configuration directive
+LAUNCH_SOURCE.  Thanks to Dave Schapp for spotting this.
+
+============================================
+ 
+         Release notes for Heyu 2.3.2
+                01 June 2008
+
+What's Fixed
+------------
+The fix in 2.3.1 for the segfault error has been redone because
+it could generate questionable results.
+
+
+         Release notes for Heyu 2.3.1
+                01 June 2008
+
+What's Fixed
+------------
+A segmentation fault occurred with 'heyu upload' or 'heyu upload
+check' with all version of Heyu compiled under Fedora 9.
+
+The "changed" state was not being properly set for signals from
+the DS90 Door/Window sensor when both the Main and Aux channels
+were mapped to one Housecode|Unit.
+
+What's New
+----------
+Added @vdata as an internal engine precommand.  It takes the same
+parameters and functions the same as the vdata direct command.
+
+Added module type KR15A for the X-10 KR15A "Big Red Button".
+(Experiment with this because it transmits different RF signals
+depending on how long the button is pressed.)
+
+============================================
+
+         Release notes for Heyu 2.4.0
+            31 October 2008
+
+What's New
+----------
+Added an Oregon sensor emulation mode whereby an external
+program can store data in a dummy Oregon module for later
+processing by Heyu, just as if the data were received from
+an actual Oregon sensor.
+Three dummy modules are available: ORE_TEMU, ORE_THEMU, and
+ORE_THBEMU, for respectively temperature, temperature/humidity,
+and temperature/humidity/barometric pressure.  Thanks to
+Charles-Henri Hallard for suggesting this feature.
+
+Oregon sensor IDs may optionally be expanded to 16-bit by
+including the channel code as the upper byte.  The (experimental)
+configuration directive "ORE_ID_16 YES" enables this feature.
+
+Display of the Oregon channel number in monitor, logfile, and
+'heyu show oregon' may optionally be suppressed with the new
+configuration directive "ORE_DISPLAY_CHAN  NO". 
+
+The Oregon channel number is now included in the RFdata entry
+displayed in logfile and monitor before the sensor module is mapped
+to a housecode/unit address.  (The above "ORE_DISPLAY_CHAN"
+directive does not affect this.)  Note: it's important to verify
+that the displayed channel matches that of the channel switch
+inside the sensor enclosure.  (If not, press the sensor's reset
+button until it does.)
+
+Added the capability for displaying date/time in the monitor and 
+logfile as Unix time, i.e., seconds from the 1 Jan 1970 epoch,
+to millisecond precision.  This will hopefully be useful and
+more convenient for measuring intervals between signals.
+The (experimental) configuration directive "LOGDATE_UNIX  YES"
+enables this feature.
+
+Added section "MULTIPLE OREGON SENSORS" to man page x10oregon(5)
+for guidance when using more than one sensor.  Thanks to RFXCOM
+Tech Support for providing insight into this issue.
+
+Added section "HEYU CLEANUP" to man page heyu(1) describing the
+procedure for ridding the system of stale files and processes
+which may prevent an otherwise correctly configured Heyu from
+running properly.
+
+What's Changed
+--------------
+Single channel Oregon sensors with no defined channel field
+(including dummy emulation sensors) are assigned to be Channel 1
+instead of having no channel displayed at all.
+
+What's Fixed
+------------
+Added -DPOSIX flag to Configure for OpenBSD to fix a compiler
+error relating to RFXCOM receivers.  Thanks to Julien Touche
+for reporting this problem.
+
+Scripts launched with sources SNDM, SNDT, or RCVT were causing
+the Heyu Monitor to exit.  Thanks to Bob Laughlin for reporting
+this bug.
+
+Oregon sensors were not being included when allocating space for
+environment variable pointers, causing an internal error.  Thanks
+to user Charles-Henri Hallard for reporting this bug.
+
+A fatal error occurred in localities where Daylight Saving Time
+(Summer Time) is observed in some years but not in others. Thanks
+to Marco Moscardini for reporting this problem.
+
+A crash was occurring with at least the AMD64 version of Ubuntu
+Intrepid.  Thanks to Matthew Wire for reporting this and also
+a number of compiler warnings.
+
+============================================
+
+         Release notes for Heyu 2.5.0
+               25 January 2009
+
+What's New
+----------
+For the convenience of international Heyu users, the format for
+numeric dates can now be specified with the DATE_FORMAT config
+directive.  See man page x10config(5) for details.  Note that
+the order in which month and day are displayed applies also to
+the order of the month and day in the date ranges entered
+for uploaded timers in a schedule file.  See man page x10sched(5)
+for details about this.  Thanks to Richard Kroonen for suggesting
+this enhancement.
+
+Temperature minimum and maximum setpoints can be specified for
+individual Oregon temperature sensors, and flags are raised if
+the setpoints are exceeded.  This feature allows a script to be
+launched only when a setpoint is exceeded rather than launching
+a script at every Oregon transmission to check the temperature.
+See section TEMPERATURE SETPOINTS in man page x10oregon(5) for
+details.
+
+Added a module type ORE_WGT1 for the Oregon BWR102 (BWR101) scale.
+See section SPECIAL BWR102 SETUP in man page x10oregon(5).
+
+Added (experimental) config directive "DISPLAY_SENSOR_INTV YES"
+to optionally append to each Oregon sensor transmission reported
+in the monitor/logfile the elapsed time interval in hh:mm:ss
+from the previous transmission.  Use this to verify that the RF
+transmissions from your sensors are being received on schedule.
+
+Added Heyu environment variables X10_Timer1, ..., X10_Timer16
+with the delay in seconds remaining before timeout.  Also variable
+X10_ArmPendingTimer with the delay in seconds remaining before the
+ArmPending state changes to Armed.  Thanks to Charles-Henri Hallard
+for suggesting this enhancement.
+
+Added 16 counters (1-16) which can be set, incremented, and decremented.
+They can be used to modify a script command line depending
+on the count.  See the description of direct commands and internal
+precommands 'setcount', '@setcount', etc., in man pages heyu(1) and
+x10scripts(5).  The new state command 'heyu counter N' displays the
+current count value in counter N.
+
+Also added are 16 "counter-zero" flags czflag1, ..., czflag16
+(and their negations) which are set when the corresponding counter
+is zero and which can be tested in launch conditions for a script.
+
+Added (experimental) config directive "LOCK_TIMEOUT <seconds>" to
+enable increasing the time (default 10 seconds) a Heyu process will
+spend trying to acquire the writefile lock before timing out.
+
+What's Changed
+--------------
+The format of signals displayed in the monitor/logfile has been
+changed for X10 addresses and for functions which include the
+address, i.e., extended code and sensor functions. Heyu will now
+display "hu Hu" instead of just "hc H" or "hc H unit u".
+
+The module type for the Marmitek SD90 Smoke Detector has been
+modified and a new section "SPECIAL SD90 SETUP" added to
+man page x10aux(5).  (Previously unrecognized was the fact that
+the default factory setting of the SD90 disables several very
+important features of this detector.)  Thanks to Richard Kroonen
+for bringing this problem to light.
+
+The format for output from command 'heyu show sensors' has been
+changed, and it now additionally displays the timestamp of
+the most recent signal from each Security and Oregon sensor.
+Thanks to Richard Kroonen for suggesting this feature.
+
+What's Fixed
+------------
+DigiMax state commands were not listed in man page heyu(1).
+Thanks to Charles-Henri Hallard for reporting this omission.
+
+Ordinary X10 signals sent or received at the same housecode|unit
+address to which RF security and Temp/RH/BP sensors are mapped
+were updating the timestamps for those sensors.
+
+The channel number for the BTHR968 (single channel Temp/RH/BP
+sensor) was improperly computed.
+
+The state command 'heyu orebp Hu' yielded an incorrect value
+for Oregon barometric pressure sensors.  Thanks to Richard
+Kroonen for reporting this bug.
+
+State commands for RFXSensors, RFXMeters, DigiMax, and Oregon,
+e.g., 'heyu oretemp Hu', were reported as invalid commands under
+the config directive 'TTY dummy'.  Thanks to Dave Schaap for
+reporting this bug.
+
+A large number of compiler warnings (and a few real errors)
+generated by stricter compiler checking built into GCC in some
+newer distros have been fixed.  Thanks to Matthew Wire and
+Homer Stanford for reporting these problems and helping with
+the fixes.
+
+The bitmaps returned by the state commands 'heyu heyu_state Hu'
+and 'heyu heyu_rawstate Hu' did not include the status_pending
+bit. (The corresponding environment variables X10_Hu correctly
+included this bit.)
+
+============================================
+
+         Release notes for Heyu 2.5.1
+               05 April 2009
+
+What's New
+----------
+Added module types MS12A, MS13, MS13A, MS14A, MS16A for Standard X10
+RF motion detectors.  These are all similar to the (2 function)
+KEYCHAIN module type and likewise require a parameter TRANSCEIVE,
+RFFORWARD, or RFIGNORE.  However they are defined as "sensors"
+so they'll be listed in the table displayed with 'heyu show sensors'.
+
+Oregon sensor models THGR238 and THN122N have been added to the
+list of sensors in man page x10oregon(5) known to be supported
+by Heyu.  Thanks to users mikheeve (Eugene) and Richard Kroonen
+for risking the purchase of these sensors and reporting back
+their results.  Also added models THC238, AW129, and THWR800
+per rfxcom's list.
+
+Added Oregon sensor module type ORE_T3 with support for the above
+mentioned model THWR800 sensor.
+
+Minimum and maximum setpoints can be specified for Relative
+Humidity and Barometric Pressure for individual Oregon sensors
+which transmit this data.  Flags are raised if the setpoints are
+exceeded.  This feature allows a script to be launched only when
+a setpoint is exceeded rather than launching a script at every
+Oregon transmission to check the value.  See the section
+TEMPERATURE, HUMIDITY and BAROMETRIC PRESSURE SETPOINTS in
+man page x10oregon(5) for details.
+
+Added section "Multiple Transmissions" to man page x10sched(5)
+explaining what X10's ActiveHome software does when this box
+is checked in the ActiveHome timer window and how to replicate the
+behavior in Heyu.  Thanks to Roger Pao for raising the question.
+
+Updated the INSTALL file with additional information for Ubuntu
+Linux users and added a section "SERIAL PORTS" with information on
+selecting a USB-Serial adapter for computers which don't have
+built-in RS232 ports.  Thanks to user Joan for calling attention
+to the serial port issue.
+
+Added (experimental) directive CM11A_QUERY_DELAY to insert a
+short delay between the message from Heyu that it has incoming
+powerline data and Heyu's polling for that data.  See the
+"EXPERIMENTAL STUFF" section of man page x10config(5) for
+details.  Thanks to Karl Pielorz for reporting the problem
+resolved by this directive.
+
+Added directive "ORE_DISPLAY_FCAST YES" instructing Heyu to
+display the "weather forecast" (for what it's worth) transmitted
+by Oregon Barometric Pressure sensors (module types ORE_THB1 and
+ORE_THB2).
+
+What's Changed
+--------------
+Oregon sensor module type ORE_T2 has been updated to add support
+for the Oregon model AW129 sensor.
+
+What's Fixed
+------------
+Oregon sensor module type ORE_THB2 incorrectly reported a
+battery level 0-100%.  (These sensors have only a low-battery
+flag.)
+
+Functionality of the ORE_IGNORE module type was broken.
+
+============================================
+
+         Release notes for Heyu 2.6.0
+            20 April 2009
+
+What's New
+----------
+Added the command 'heyu launch' to provide the capability for
+launching any Heyu script from the command line subject to a
+restricted subset of the script's launch conditions.  The script
+can then have access to the Heyu environment.  See man page heyu(1)
+for important details.
+
+Added script type "-exec".  The launch conditions for this type
+contain only global flags and can therefore be launched only from
+the command line.
+
+Substantial enhancement of the 'heyu webhook' command for greater
+flexibility.  The file "README.webhook" included in the Heyu source
+distribution package has instructions and usage examples. Thanks
+to Cyril Duveau and  Istvan Cebrian for their inputs regarding this
+enhancement.
+
+Added timer flag "armdelay" which can be used in the launch
+conditions of a -timeout script.  This will launch a script at the
+end of the interval (defined by config directive ARM_MAX_DELAY) when
+the security status is changed from ArmPending to Armed.  Thanks to
+Roy Badami for suggesting this feature.
+
+Added European module type MS18E as a clone of the Marmitek MS90
+Security Motion Sensor.  Thanks to Roy Badami for reporting the info
+for this sensor.
+
+If there is more than one set of launch conditions for a script,
+a launcher number (beginning with 0 for each script) is displayed
+in square brackets following the script label in 'heyu show
+launchers".
+
+Added Heyu environment variable X10_UnitAlias with the alias label
+of the housecode|unit address which launched the script. Thanks to
+Charles Hallard for suggesting this feature.
+
+What's Changed
+--------------
+The RF_BURSTS directive now requires all parameters in a single
+directive line, where previously the directive was repeated for each
+CM17A function.
+
+What's Fixed
+------------
+The Heyu engine would not start if Heyu was previously terminated
+by a kill signal, e.g., from 'shutdown', rather than by 'heyu stop'.
+Thanks to user p3ntium (Fco) for reporting this bug.
+
+If there was more than one set of launch conditions for a script,
+there was a mismatch between the launcher and script for the
+second or higher launcher.  Thanks to Roy Badami for tracking down
+this bug and providing a test case to demonstrate it.
+
+============================================
+ 
+         Release notes for Heyu 2.7.0
+              24 June 2009
+
+What's New
+----------
+Added support for Oregon Wind, Rain, and UV sensors.  (Support for
+sensors transmitting with protocols ORE_RAIN3, ORE_UV1, and ORE_UV2
+must be considered "Alpha" as these types have not been tested with
+actual data.)  Thanks to the many users who contributed the funding
+which made this project possible.
+
+Added support for the Electrisave CM113 Electricity Monitor sensor.
+Thanks to Chris Stone for suggesting this feature and especially
+for working out many of the details of its signal encoding.
+
+Added module type KR18 for the Marmitek Security Remote keyfob
+which adds four new button functions AkeyOn/Off and BkeyOn/Off.
+(These signals have functionality with some Marmitek security base
+stations but a Heyu script can do whatever it wants with them.)
+Thanks to Roy Badami for reporting the data bytes transmitted by
+this device.
+
+Added module type KR21 for the Marmitek Security Remote keyfob
+as a clone of the KR10A.
+
+Appending the parameters "SWHOME" and/or "SWMAX" to the alias directive
+for the Security Remote keyfobs KR10A, KR18, or KR21 results in
+the flags transmitted when the Arm button is pressed being decoded
+as swHome and/or swMax instead of the default swAway and swMin.
+Thanks to Roy Badami for suggesting this feature.
+ 
+Appending the parameter "DUMMY" to the alias directive for security
+remote keyfobs KR10A, KR18, or KR21 decodes the signals transmitted
+by the Arm and Disarm buttons as functions Alert and Clear instead of
+Arm and Disarm.  This feature allows these remotes to be used for
+a user-defined purposes unrelated to Arm and Disarm.
+
+The regular 'heyu arm ...' and 'heyu disarm' commands were moved
+from the Admin command group to the Direct command group (meaning
+they can be used in compound command strings).
+
+When the 'heyu arm ...' or '@arm ...' commands are executed, Heyu
+displays a warning if any Door/Window sensors are in the Alert mode,
+i.e., if a door or window is open.  (If not corrected by closing the
+door or window, scripts launched by the "alert" function may be
+launched by the next heartbeat from the sensor.)
+ 
+Added module type SEC_IGNORE for X10 Security sensors and remotes.
+which may not be under your control (e.g., a neighbor's sensors)
+and which are to be ignored by Heyu.
+
+Added command 'heyu modlist' which will display an alphabetized
+list of all Heyu module type labels.
+
+Added command 'heyu conflist' which will display an alphabetized
+list of all Heyu configuration directive labels.
+
+What's Changed
+--------------
+The "RFdata:Type" entry displayed in the monitor/logfile for
+unmapped Oregon and Electrisave sensors is now typically the
+module type to be used in mapping the sensor to a housecode|unit
+address in an ALIAS directive.   
+
+============================================
+
+         Release notes for Heyu 2.8.0
+              11 September 2009
+
+What's New
+----------
+Added command 'heyu show x10security' to provide a tabular display
+of all X10 Security sensors.  Thanks to Jeff Roberts for requesting
+this feature.
+
+Added commands 'heyu delay NNN' and 'heyu rdelay [MIN] MAX', where
+NNN, MIN, and MAX are expressed in integer minutes 0-240.  These
+can be used to insert a delay, either fixed (delay) or random
+(rdelay), in a scene or compound command executed by a script.
+With the optional parameter MIN the delay time will be no shorter
+than MIN (default 0) and no longer than MAX.  Thanks to
+bill_williams (John) for suggesting this feature.
+
+Added command 'heyu setrtimer N [MIN] MAX' (and '@setrtimer ...')
+to set a Heyu timer N (N = 1-16) to a random countdown time,
+where MAX and the optional parameter MIN are times expressed as
+hh:mm:ss, mm:ss, or just seconds. When executed with both time
+parameters, the random countdown time will be no shorter than
+MIN (default 0) and no longer than MAX as for 'rdelay' above.
+
+Added (Beta) support for receiving and processing signals from
+KAKU and HomeEasy remotes.  See the new man page x10kaku(5).
+Thanks to Bernard Willemot for requesting this feature and
+supplying test data.
+
+Added (Beta) support for receiving and processing signals from
+the OWL CM119 Electricity sensor.  Documentation is included
+in man page x10oregon(5).  Thanks to Andres Janno for
+requesting this feature and supplying test data.
+
+What's Changed
+--------------
+The directive RFXCOM_ENABLE is now obsolete and its use superceded
+by a new directive RFXCOM_DISABLE.  Newer RFXCOM RF receiver
+hardware supports a wider array of signal types than previously,
+and by default they are now all enabled.  This new directive
+allows configuring the RFXCOM hardware to ignore signal types
+which would otherwise be obtrusive or appear as noise.  See
+man page x10config(5) for the list. 
+
+What's Fixed
+------------
+Scripts were not being launched for function vdata when received
+as RF, i.e., when mapped with module types SVDATA or SSVDATA.
+Scripts were not being launched for any RFXSensor or RFXMeter
+functions, e.g., rfxtemp, rfxpulse.  Thanks to Dave Schaap for
+reporting these bugs.
+
+Scripts were not being launched for Oregon functions sent to
+emulation modules ORE_*EMU.  Thanks to Janusz Krzysztofik for
+reporting this bug.
+
+Signals from an ORE_T2 Temperature sensor could be confused with
+the ELS_ELEC1 (Electrisave CM113 electricity monitor).  The order
+of testing signals was modified to prevent this, however if you have an
+Electrisave, see the note for ELS_ELEC1 in man page x10oregon(5)
+for a possible reverse confusion.  Thanks to Geo for reporting this
+problem.
+
+The Oregon WTGR800 weather sensor incorporates an ORE_WIND1 wind
+sensor and an ORE_TH5 temperature/humidity sensor which apparently
+share the same RF transmitter and transmit the same ID code.  The
+ID code of the ORE_WIND1 is now tweaked to avoid having two Oregon
+sensors with the same ID.
+
+The install script "install.sh" was modified to (hopefully) make
+it compatible with the various Bourne-type shells used in the
+different operating systems supported by Heyu.  Thanks to Ross Davis
+for reporting the problem encountered under OpenBSD and suggesting
+a fix, and also for supplying updated information for the OpenBSD
+FAQ.
+
+============================================
+
+         Release notes for Heyu 2.9.0
+              17 July 2010
+
+What's New
+----------
+Added module type DS18-1 for the ElekHomica DS18 Security Door/Window
+sensor.  This has 2 channels/circuits and is equivalent to the
+Marmitek DS90.  (The apparently older ElekHomica DS18 is only a
+single channel sensor.)  Thanks to Janusz Krzysztofik for bringing
+this device to our attention.  (And no thanks to X-10 and their
+stooges for again confusing things with the same model number
+for two devices with very different characteristics.)
+
+Added module type BMB-SD18 for the BMB model SD18 Smoke Detector.
+Thanks to Bernard Willemot for supplying test data.
+
+Added variables $X10_Hu_vFlags and $x10_<Hu_alias>_vFlags to
+the Heyu environment for X10 Security and other RF devices.  Also
+added are masks for testing the bits in these variables, e.g.,
+$isLoBat, $isSwMin, etc.
+
+Added command 'heyu masklist' to display the current list of mask
+environment variables for ready reference.
+
+For web interfaces to Heyu, the commands 'heyu webhook maskinfo'
+and 'heyu webhook flagmaskinfo' can be used to import the
+current masks and numeric values in a format usable by the web
+interface software.
+
+Added state command 'heyu validstate H[u]' indicating whether or
+not a signal supported by the module type at H[u] has been
+recorded by the Heyu State Engine as being sent or received
+since Heyu was started.
+
+Added state commands applicable to sensors:
+'heyu alertstate H[u]', 'heyu clearstate H[u]',
+'heyu auxalertstate H[u]', 'heyu auxclearstate H[u]',
+'heyu activestate H[u]', 'heyu inactivestate H[u]',
+'heyu lobatstate H[u]'.
+
+Added command 'heyu sec_emu Hu <func> <flags>' to emulate from
+the command line a signal from the X10 Security sensor or remote
+mapped to address Hu.
+
+Added functions vdatam and @vdatam.  These act similarly to
+vdata and @vdata but store the data in the memory byte for
+the HU addresses rather than the primary byte.  Please note
+that as with vdata and @vdata, these functions affect the
+"changed" state for module types with the Virtual attribute but
+none of the other states.
+
+Added section "MS10A WARNING" to man page x10config(5) regarding
+a potential problem when using this security motion detector.
+
+Added timer-zero flags (TzFlag) which are set when the corresponding
+timer is set to or counts down to 0.
+
+Added the capability for one signal to launch more than one SCRIPT.
+See section "SCAN MODE" in man page x10scripts(5) for details.
+
+Added config directive "ARM_REMOTE  AUTO|MANUAL".  (Default AUTO).
+In the new MANUAL mode, an 'arm' signal received from an RF Security
+remote does not automatically set the global security flags, thus
+allowing a script to customize the arming process.
+
+Added "state" flags which are set when the corresponding state
+condition or VFLAG condition for an Hu address is TRUE, e.g.,
+on:B7, alert:C3, lobat:D3, as well as their negations, e.g.,
+notdim:A5  These can be tested in the launch conditions for scripts.
+See the subsection "STATE FLAGS" in man page x10scripts(5) for
+details.
+
+The command 'heyu stateflaglist' will display the current list
+of state flags for ready reference.
+
+The INACTIVE_TIMEOUT directive in the config file (or its default
+value) can be overridden for a specific sensor having a heartbeat
+by appending the parameter "IATO hh:mm:ss" to the ALIAS directive
+for that sensor.  Thanks to Geo for requesting this feature.
+
+Added internal precommand "@null".  It does nothing, but can serve as
+a placeholder for an empty command line in a SCRIPT directive (which
+would otherwise generate an error message).  Some may find it useful
+in managing scripts.  Thanks to Janusz Krzysztofik for suggesting
+this feature.
+
+Added (Alpha) config directive "PROCESS_XMIT YES|NO" with a default
+of NO.  If set to YES, then RF signals transmitted by a CM17A
+"Firecracker" will update the state tables as if these were PLC
+signals received by a CM11A.  This feature is intended for use
+_only_ on systems with a CM17A but with neither a CM11A nor an RF
+receiver. It blindly assumes that a transceiver like a TM751 or
+RR501 will be sending the PLC command in response to the RF signal.
+
+Added internal precommand @decskpgz N (decrement counter N and skip
+if greater than zero). 
+
+A stanza has been added to the "Configure" file for OpenSolaris and
+a special note about this OS in file "INSTALL".  Thanks to Maurice
+Castro for providing the information.
+
+The initstate command is now 'heyu initstate [H[U]]', i.e., it can
+be used to initialize the states of individual units as well
+as initializing whole housecodes or initializing everything.
+
+The Heyu environment variables X10_CzFlagNN have been removed since
+their function is filled by testing the counter value X10_CounterNN
+for a zero value. 
+
+What's Changed
+--------------
+The "changed" state ("chgstate") has been modified for module types which
+do not represent physical receiver modules, i.e., for sensors, remotes,
+and vdata types.  For these, two additional conditions are now regarded
+as a change: 1) At the first valid signal (i.e., a signal supported by
+the module type) after start; and 2) (for module types with a heartbeat)
+when the module changes from Active to Inactive or vice-versa.
+The "changed" flag used in launch conditions for scripts reflects the
+new chgstate.   
+
+The number of flags, counters, and user-configurable countdown
+timers have been increased from 16 to 32. In addition, build options
+at the Configure stage are available to increase the number of each of
+these to as many as 1024 if required.  See section OPTIONS in file
+INSTALL (or README.INSTALL) included in the distribution directory.
+Many thanks to Janusz Krzysztofik for suggesting this feature and
+providing coding help with the "Configure" installation script.
+
+The output of 'heyu show flags' has been changed to accommodate
+the new numbers of flags, counter-zero flags, and timer-zero
+flags. 
+
+To accomodate web scripts which may previously have had to parse the
+'heyu show flags' output, the 'heyu webhook ...' function now has
+the capability of displaying flags as ASCII strings of 1's and 0's
+of the length necessary for the number of flags, i.e., 32 by default
+or longer if so specified by a Heyu build option
+See the file "README.webhook" in the Heyu distribution directory for
+details.  Until such time as these web scripts can be modified to make
+use of this webhook, the config directive "SHOW_FLAGS_MODE OLD"
+will tell Heyu to continue to display flags/czflags 1-16 in the
+format of heyu-2.8.0.
+
+@settimer setting/timeout and other events originating solely in
+the Heyu Engine are no longer displayed in the Heyu Monitor.
+Doing so led to the loss of some other signals.  Thanks to
+Janusz Krzysztofik for reporting the signal loss and for doggedly
+tracking down its cause.  (Users wanting a real time rolling
+display of all events can use 'tail -f  heyu_logfile_pathspec'
+in an xterm.)
+
+Heyu's handling of inactive sensors is now different.  When a sensor
+is noted as inactive, the system generates a "func Inactive"
+pseudo-signal, as if this signal had been received from the sensor
+(including its RCVA or RCVI source). (The pseudo-signal is displayed
+in the Heyu logfile, but as it originates in the Heyu Engine, it will
+not appear in the Heyu Monitor window.)  The "inactive" function
+can be used in the launch conditions of a normal SCRIPT directive
+the same as any other function.  Whether or not an unchanged Inactive
+function is hidden in the monitor/logfile is determined by config
+directive "HIDE_UNCHANGED_INACTIVE  YES|NO" (with default NO),
+independent of the normal "HIDE_UNCHANGED" directive. "-sensorfail"
+scripts are no longer launched or used and are ignored if defined
+in the config file.
+Setting config directive "INACTIVE_HANDLING  OLD" will revert to
+the previous mode of operation, including using -sensorfail scripts.
+(Users should check out this new handling of inactive sensors by
+using the "IATO" parameter described previously to temporarily set
+a short inactive timeout on one or two sensors.)  
+
+A few updates have been made to the x10cm17a(5) man page regarding
+firmware problems in vintage WGL V572A All Housecode Transceivers which
+have since been fixed by its manufacturer (WGL & Associates) based on
+our feedback to them.
+
+The commands 'heyu statusstate H[u]', 'heyu clrstatus H[U]', and
+'@clrstatus H[U]' have been renamed respectively as 'heyu spendstate H[u]',
+'heyu clrspend H[U]' and '@clrspend H[U]' for compatibility with the
+environment mask "$isSpend". (These commands read or clear the
+status-pending flags.)  The original command names will still work
+but are deprecated.
+
+The internal precommand @decskpnz has been renamed @decskpnziz for
+clarity. (The old name will still work but is deprecated.)  See
+man page x10scripts(5) for an explanation of the difference between
+this precommand and the newly added @decskpgz mentioned above.
+
+The commands 'heyu conflist' and 'heyu modlist' no longer require
+Heyu to be running and will not start up Heyu if it's not running.
+Thanks to user 'crush157' for requesting this change.
+
+The default MIN time in commands 'heyu setrtimer N [MIN] MAX' and
+'@setrtimer N [MIN] MAX' has been changed to 1 second.  With the
+old default of 0 seconds, the expected timeout script would not be
+launched if the random countdown time happened to be 0.
+
+The code for the DigiMax Thermostat has been rewritten to correct
+errors in stored data and flags which occurred under some
+circumstances.  The most obvious change is that the Temperature,
+Setpoint, and On/Off signals now appear in that order in the monitor
+and logfile, and all the local flags are displayed with each signal.
+Please reread man page x10digimax(5) for many new details.
+Thanks to John O'Hare for reporting the problems.
+
+What's Fixed
+------------
+Some X10 RF signals were interpreted as Oregon signals when
+received with an RFXCOM slave receiver.
+
+Multiple script options at the beginning of a SCRIPT command line
+were required to be in a specific order, e.g., specifying
+"-quiet -rawlevel" instead of "-rawlevel -quiet" would cause a
+shell error when the command line was executed.
+
+RF raw and noise data was incorrectly displayed in the monitor
+and logfile for W800RF32 and MR26A RF receivers.
+
+Signals from a neighbor's Electrisave or Owl sensors could not
+be ignored other than by disabling reception of all signals which
+are encoded with Oregon protocols, i.e., the ORE_IGNORE module
+type was not effective with these sensors.
+
+A fatal "convergence error in function get_dst_info()" occurred
+under 64-bit operating systems, in particular NetBSD.  Thanks
+to Andreas Wrede for reporting the problem and verifying the
+fix.
+  
+Files xread.c and tty_aux.c would not compile under NetBSD.
+Thanks to Andreas Wrede for supplying the fixes, and also for
+reporting a few (innocuous) compiler warnings in other files.
+
+============================================
+
+
+
+
+
+
+

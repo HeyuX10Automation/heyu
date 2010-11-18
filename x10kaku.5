@@ -1,0 +1,207 @@
+.TH X10KAKU 5 local
+.SH NAME
+.B x10kaku\^
+- KaKu and HomeEasy receiving support for HEYU
+.SH DESCRIPTION
+.I Heyu
+is an X10 Automation program for Linux, Unix, and Mac OS X.
+See man page \fIheyu\fP(1) for usage information.
+.PP
+.I KaKu and HomeEasy
+remote controls transmit encoded RF signals which operate switch and
+dimmer modules.  When equipped with a compatible RF receiver, Heyu can
+receive and decode this information.
+
+.SH SYSTEM REQUIREMENTS
+Receiving KaKu and HomeEasy signals with Heyu requires a 433.92 MHz RFXCOM X10
+RF receiver and Heyu version 2.8 or greater.
+
+.SH COMPILER OPTION
+Support for KaKu/HomeEasy remotes is compiled into Heyu by default.
+A compiler option can be used to omit this support.  See the file
+INSTALL included in the Heyu distribution source directory for details.
+
+.SH CONFIGURATION
+It is assumed that a working installation of Heyu version 2.8 or
+greater exists on the computer, and that the user has a basic
+familiarity with Heyu.
+.PP
+Include the following directive in the Heyu configuration file:
+.br
+  TTY_AUX  <serial_port>  RFXCOM
+.br
+where <serial_port> is the port where the RFXCOM receiver is connected.
+The RFXCOM receiver connects to a USB port but includes a USB->Serial
+converter chip.  At least under Linux, the serial port will have the
+form /dev/ttyUSBn  where n = 0, 1, 2, etc.
+
+.PP
+Configure your KaKu/HomeEasy receiver modules with the remotes
+according to the user manual.  In general, this involves pressing
+the "Learn" button on the receiver until its LED begins flashing,
+then pressing the "On" key on the remote for the desired unit or
+group until the LED stops flashing, thus pairing the receiver with
+that specific key on the specific remote.
+.PP
+Each receiver module has six memory locations and can
+be paired with up to six keys on the same remote or on different
+remotes.  (To remove a key and free the corresponding receiver memory
+location, press the receiver "Learn" button as above and then press
+the "Off" key on the remote.)
+
+.PP
+Stop and start Heyu with \'heyu stop\' and \'heyu start\', then open
+another xterm window and run \'heyu monitor\' in it to start the
+Heyu Monitor.
+
+.PP
+For each receiver module, press each key (either On or Off) on the
+remote (or remotes) which has been paired with the module.  In the
+Heyu Monitor window you will see entries like:
+.br
+  rcva func  RFdata : Type KAKU_S ID xxx Cmd <cmd> Key n
+.br
+where n = 1-16, or for remotes with a Group key:
+.br
+  rcva func  RFdata : Type KAKU_S ID xxx Cmd <cmd> Grp X
+.br
+where X = A-P
+.PP
+
+The xxx in each case in a very long hexadeximal integer which is unique
+for each remote.
+.br
+Examples:
+.br
+  rcva func  RFdata : Type KAKU_S ID 0x020f4a2 Cmd kOn Key 3
+.br
+  rcva func  RFdata : Type KAKU_S ID 0x020f4a2 Cmd kOff Key 3
+.br
+  rcva func  RFdata : Type KAKU_S ID 0x020f4a2 Cmd kGrpOn Grp A
+.br
+  rcva func  RFdata : Type KAKU_S ID 0x020f4a2 Cmd kGrpOff Grp A
+.PP
+
+For most remotes with a Group key, the Group letter is fixed and
+will probably always be \'A\'.  Similarly, for remotes with less than
+16 button funtionality, the Key numbers may be fixed.
+.br
+Note that the Group letter and Key number are completely independent
+of X10 Housecode and Unit.
+.PP
+Map each KaKu/HomeEasy receiver module with its paired remote(s) to an X10
+Housecode|unit address (Hu) with an ALIAS directive in the Heyu configuration
+file:
+.br
+  ALIAS <label>  Hu  KAKU_S  <ID> <KG>  [<ID> <KG> [...]]
+.br
+where the module type is KAKU_S and <KG> may be a Key number, a Group
+letter, or a concatenation of the two as a shortcut (which still occupies
+two memory locations in the receiver).
+.br
+Examples:
+.br
+  ALIAS LivingRoom B7 KAKU_S 0x020f4a2 3  0x020f4a2 A  0x009d9a0 10
+.br
+  ALIAS LivingRoom B7 KAKU_S 0x020f4a2 3A  0x009d9a0 10
+.br
+(The above two directives are equivalent.)
+.PP
+Two or more receivers may be mapped to the same remote Key and/or Group.
+.br
+Example:
+.br
+  ALIAS PorchLight     K7  KAKU_S 0x009d9a0  10
+.br
+  ALIAS SidewalkLight  C5  KAKU_S 0x009d9a0  10
+
+.PP
+Then when a mapped button on a remote is pressed, e.g., for the above
+remote, there will be displayed in the Monitor:
+.br
+  rcva       kAddress : hu K7 (PorchLight)
+.br
+  rcva       kAddress : hu C5 (SidewalkLight)
+.br
+  rcva func       kOn : key 10
+
+.SH PRESET LEVELS
+Some KaKu/HomeEasy transmitters can transmit brightness preset level
+signals to which paired lamp modules will respond and go immediately to
+the specified brightness level 0-15.  In this case, the RF signal will
+appear in the Heyu Monitor as type KAKU_P.
+.br
+Examples:
+.br
+  rcva func RFdata : Type KAKU_P ID 0x02048d2 Cmd kPreset Key 3 Level 6
+.br
+  rcva func RFdata : Type KAKU_P ID 0x02048d2 Cmd kGrpPreset Grp A Level 10
+
+.PP
+Any KaKu/HomeEasy lamp module can be mapped to an Hu address using the
+KAKU_P module type regardless of whether the user owns a transmitter
+capable of sending the kPreset and kGrpPreset signals, since this Heyu module
+type also supports the kOn, kOff, kGrpOn, and kGrpOff signals.
+
+.SH MODULE QUIRKS
+The KaKu Door/Window sensor has a bizarre design.  If the magnetic switch
+is opened very rapidly, NO signal is transmitted.  If opened very slowly
+the RF signal is repeated a great many times for as long as several seconds,
+which can result in corruption (and loss) of signals from other sensors
+which happen to be transmitted during this interval.
+.PP
+The KaKu Motion sensors are reported to have the same problem.
+
+.SH STORED DATA
+The Heyu Engine will store the state of a Kaku/HomeEasy module
+in its state tables at the Housecode|unit (Hu) address where it is mapped
+by the ALIAS directive.  The state can accordingly be recovered with Heyu
+state commands as if the module were a standard X10 module, e.g., with
+commands \'heyu onstate Hu\', \'heyu dimstate Hu\', \'heyu chgstate Hu\', etc.
+.PP
+Note: KaKu and HomeEasy lamp modules can be dimmed by successive presses
+of the On button of a remote as described in the user manual.  However
+as the desired dim level is determined by visual feedback to the user,
+it cannot be modeled by Heyu, and the state of a module is recorded
+only as On or Off.  The native raw brightness levels for KaKu and HomeEasy
+modules are 0 for Off and 15 for On.
+
+.SH HEYU SCRIPTS
+Heyu scripts can be launched by the functions "kon", "koff", "kgrpon",
+"kgrpoff", "kpreset", and "kgrppreset" the same as any other Heyu function.
+The launch conditions in the SCRIPT directive must include the source keyword
+"RCVA" and may optionally include the keyword "changed", any of the
+16 common flags, 16 counter-zero flags, and the global security flags.
+.br
+Examples:
+.br
+  SCRIPT  K7 kon rcva :: my_kaku.sh
+.br
+  SCRIPT  PorchLight kon kgrpon flag3 changed rcva :: my_kaku.sh
+
+.SH SCRIPT ENVIRONMENT
+Any Heyu script has access to the stored Kaku/HomeEasy state values
+through environment variables linked to the housecode|unit (Hu) and its
+alias (note lower case x10_) mapped to each unit, just as if the script
+was launched by a standard X10 signal.
+.br
+  X10_Hu     x10_<Hu_alias>
+
+
+.SH CONFIGURATION DIRECTIVES
+In addition to the ALIAS directives mentioned above, the following
+will also affect KaKu data.  See man page x10config(5).
+.PP
+Directive HIDE_UNCHANGED YES - Display transmission in the Monitor
+and Logfile only when there\'s a change from the previous transmission.
+
+
+.SH AUTHORS
+KaKu/HomeEasy support was added to Heyu by Charles W. Sullivan using the
+protocols gratefully provided by RFXCOM.
+
+.SH SEE ALSO
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5),
+x10cm17a(5), x10rfxsensors(5), x10rfxmeters(5), x10digimax(5)

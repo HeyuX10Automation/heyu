@@ -1,0 +1,674 @@
+.TH X10SCHED 5 local
+.SH NAME
+.B x10sched\^
+- layout of the x10.sched file for the  X-10 CM11A serial interface
+.SH DESCRIPTION
+.I heyu
+supports uploading a schedule of events to your CM11A interface.
+The schedule file (by default named "x10.sched") allows you to specify
+when you want X10 commands to be sent to X10 modules throughout your home.
+It also allows you to translate some X10 codes to other codes.  More on that below.
+.PP
+The X-10 CM11A connects to a computer with an RS232 interface.
+It can store about 128 events;  each event can do things like turn on,
+turn off, or dim up to sixteen X10 modules.  The CM11A box has a
+battery backed clock which the computer can read.  The event data is
+stored in EEPROM memory.  After a schedule is uploaded, the CM11A can
+be disconnected from the computer and even plugged in elsewhere in the
+house if desired.
+.PP
+There are three important concepts used in the x10sched file.  They are timers,
+triggers and macros.  They all work together, in fact, the timers and triggers
+execute macros.
+.PP
+The TIMER determines the date and time that a macro will be executed.
+Once a minute the CM11A looks at its internal table (frequently referred
+to as the EEPROM) to see if it\'s time to do anything.  Timers can be
+restricted to certain days of the week or ranges of dates, or both.
+.PP
+The TRIGGER represents real time actions.  When the CM11A sees a powerline
+signal it compares the command with its table of triggers (also known as
+"macro initiators") and executes the appropriate macro.  Triggers can be used
+to cause many actions when one remote control button is pushed.
+.PP
+The MACRO consists of a label, an optional delay and a list of commands.
+Each macro can have up to 255 commands.  The delay can be from 0 to
+240 minutes.  Macro labels can be significant.  They can remind you of
+what it is supposed to do or it can remind you what triggers it.  The label
+turn_c5_on_now leaves nothing to be imagined.
+.PP
+There is no command that will dump the contents of the CM11A EEPROM to the serial port.
+This makes it impossible to alter discrete events or macros unless the entire
+table is known.  This means that we can\'t set the macros using another
+program (ActiveHome(TM), for instance) and then add a new macro from Heyu.
+.PP
+The timers and macros are stored in a file, by default in the same directory
+as the configuration file x10config. (See x10config(5)).  The default file name
+for the schedule file is x10.sched.  You can override the defaults by 
+specifying the filename in the configuration file "x10config" with
+the SCHEDULE_FILE directive. (It must be stored in the same directory 
+as the configuration file.)  You can also override the defaults by
+providing a fully qualified pathname in the environment variable X10SCHED
+or with the "-s" command line switch.
+.PP
+The macro upload function will not work without a schedule file.
+.PP
+Comments and blank lines are allowed in the file to make it more readable.
+White space is normally ignored.
+.PP
+.SH FILE FORMAT
+Refer to the sample file (x10.sched.sample) that came with the source
+code to help in understanding this section.
+.PP
+There is no prescribed order for timer, trigger, macro, and comment
+lines in the schedule file - they may be grouped by type or mixed,
+at the user\'s option.
+.PP
+The following are case-sensitive: X10 commands; macro labels;
+labels for aliases, scenes, and usersyns as defined in the config file.
+.br
+Housecode letters are not case-sensitive, nor is the day-of-week mask
+or any of the keywords used in the schedule file, e.g. TIMER, timer,
+tiMer are all equivalent.
+.PP
+.IP \fBcomment\fP
+As of version 2.0, anything on a line following a pound sign (#) is 
+treated as a comment and is ignored by Heyu.  Note that for versions of 
+Heyu earlier than 2.0, a pound sign anywhere other than as the first 
+character on a line was treated as a normal character and NOT treated
+as beginning a comment.
+.PP
+.IP \fBsection\fP
+Any line beginning with the keyword \fBsection\fR is totally ignored
+by Heyu, just as if it were a comment line.  It is provided to enable
+user-defined breakpoints for external programs or scripts which might
+be devised by the user to reorganize a schedule file, and where use
+of ordinary comment lines for this purpose might be confusing.
+.PP
+.IP \fBblank lines\fP
+Blank lines are skipped over.
+.PP
+.IP \fBtimer\fP
+The timer line consists of 7 required items.  They are: the literal string
+\fBtimer\fR (which is not case-sensitive), a day of week mask, the begin
+and end date range, the start time, the stop time, 
+the start macro and the stop macro.  In addition to these, there are
+several timer options which can be appended to the line.
+.RS 7
+.br
+
+The \fIday of week mask\fR (DOW) is a 7 character field.  Each position
+represents a day of the week when the timer should work.  A timer
+that should execute every day is represented by the string "smtwtfs".
+To deactivate a timer for any chosen day of the week, substitute a period
+\'.\' for the appropriate letter.
+.br
+
+For instance, to activate a timer for Monday, Thursday and Saturday, you\'d
+use the following string: ".m..t.s" (without the quotes).
+.br
+
+The DOW mask is combined with the date when the CM11A checks to see
+if it should execute a timer.  Both date and DOW must match for the timer
+to execute.
+.PP
+
+The \fIbegin-end range\fR is a pair of month and day dates separated by
+a hyphen \'-\' or by a colon \':\'.  The first date represents when to begin,
+and the second represents when to end.  The range is inclusive.
+.PP
+The order in which month and day appear in each date must agree with the
+order specified with config directive DATE_FORMAT (or its default),
+for example with the default \'DATE_FORMAT YMD\', the date range would be
+entered as mm/dd-mm/dd, whereas for \'DATE_FORMAT DMY\' it would be entered
+as dd/mm-dd/mm.  The separator between month and day may any of the
+separators which can optionally be specified with DATE_FORMAT, namely
+\'/\', \'-\', or \'.\'.  It does not have to be the same one.
+.PP
+A single date can be specified by using the same values for the
+begin and end dates.  Older versions of Heyu required that the begin date
+be less than or equal to the end date.  Beginning with version 2.0, Heyu
+will interpret a begin date later than the end date as meaning the
+date range wraps around at the end of the year into the beginning of the year 
+(including the current year).
+.br
+Examples:
+.br
+You would use 01/01-12/31 to indicate a timer that should be run daily.
+.br
+The range 12/01-02/01 is equivalent to the two ranges 12/01-12/31 and
+01/01-02/01
+.br
+With DATE_FORMAT DMY, the above range could be specified as 01-12:01-02,
+01.12-01.02, or 01/12-01/02
+
+For a date range involving the last day of February, see the description of the
+\fIFEB_KLUGE\fR directive in x10config(5).
+.br
+
+Beginning with Heyu version 2.0, the effective date range of an uploaded 
+schedule can be configured to span years.  A schedule uploaded at any 
+time during the year can be configured to operate correctly for a period 
+of from 1 to 366 days beginning on the upload date.  So for example, a schedule 
+uploaded on September 1st can be configured to run correctly and continually 
+through September 1st (or 2nd) of the following year.  For more information, 
+see the descriptions for the \fIMODE\fR and \fIPROGRAM_DAYS\fR directives
+in the x10config(5) man file, in particular "HEYU" mode versus "COMPATIBLE"
+mode.
+.br
+
+Regardless of the above directives, the user would normally program the
+schedule for the entire year.  (Envision the schedule as being repeated for
+each year, past, present, and future.)  When compiling for upload, Heyu
+automatically selects whatever parts of it are to be used in accordance with
+those directives and adjusts dates and times for Leap Years and Daylight
+Saving Time as required.
+.br
+
+As a special case beginning with Heyu 2.0, the date range "mm/dd-mm/dd"
+may optionally be entirely replaced with the expression "expire-dd", where dd 
+represents the range of dd+1 days ending on the last day of validity of 
+the uploaded schedule.  Thus the CM11A can be programmed to execute some 
+macro as a reminder to the user that the schedule will shortly need to be 
+reloaded.  Note that in COMPATIBLE mode, reloading the schedule
+before Jan 1st will not accomplish anything, as the exact same schedule
+will be loaded.  
+.br
+
+The \fIstart\fR and \fIstop\fR times are in hh:mm format
+(hour:minutes 24 hour clock)  You don\'t have to use two digits, 1:5 will
+work just fine for 5 minutes after 1 AM.
+.br
+
+The \fIstart macro\fR and \fIstop macro\fR will be executed when their
+respective time is reached.   Note that these are really unrelated and
+independant timers, and that the start macro is not restricted to turning
+things on and that the stop macro does not have to control the same X10
+modules as the start macro.  Either the start or stop macro can be the
+macro named "null" which is a dummy macro - it\'s never executed and thus
+does nothing.
+.br
+
+The macros referenced in the timer must be defined somewhere in the file.  
+The schedule upload will abort if a macro is missing or mis-typed. (A warning
+will be issued if a macro is not referenced by any timer or trigger.)
+.br
+
+With versions of Heyu prior to 2.0, times for events had to be programmed
+separately for dates when Standard Time and Daylight Time were in effect.
+Beginning with version 2.0, the user programs times for all events in
+legal (i.e., wall clock) time, and Heyu makes the necessary internal
+adjustment for the changeovers from Daylight -> Standard and vice-versa.
+The CM11A clock is maintained on Standard Time year around, transparent
+to the user.
+.br
+
+Also new with version 2.0 is the ability to directly specify times
+relative to Dawn and Dusk. (A separate program was supplied with earlier
+versions to do this.)  Instead of the time expressed as "hh:mm", one can
+now use the format "dawn+mm" or "dawn-mm" or "dusk+mm" or "dusk-mm"
+(or just "dawn" or "dusk"). Heyu calculates the times of Dawn and/or Dusk
+and makes the substitution.  The "mm" represents the number of minutes
+before or after Dawn/Dusk when the macro will be executed.  "mm" can have
+any value, _except_ that the resulting time after resolving the times of 
+Dawn/Dusk must fall within the range 00:00 to 23:59 or Heyu will quit
+with an error message.
+.br
+
+Dawn and Dusk are defined by default to be synonymous with sunrise and
+sunset.  However this definition may be _globally_ changed to one or
+another of the standard twilight times with the configuration file
+directive DAWNDUSK_DEF.  See man page x10config(5).
+.br
+
+When Heyu processes Dawn or Dusk related events, it subdivides the
+programmed date range into a number of unequal-length subintervals,
+each of which is assigned a constant time approximating the time
+of Dawn or Dusk over the subinterval.  The number and lengths of these 
+subintervals are chosen by an iterative procedure which minimizes the
+deviation from actual Dawn/Dusk times subject to the constraint of
+available EEPROM memory in the CM11A. (As a result, if Dawn and/or
+Dusk related event times are programmed, the amount of free EEPROM 
+memory displayed will generally be pretty small.  If more timers
+are added to the schedule they'll fit - within limits of course -
+but the deviation in the Dawn/Dusk times will be higher.)
+.br
+
+The Dawn or Dusk "error" reported by Heyu is the difference in minutes
+between the maximum and minimum times of daily Dawn or Dusk over
+the above-mentioned subinterval.  Whether this error in the constant time
+approximation on any particular day is plus or minus or mixed is determined
+by the DAWN_OPTION or DUSK_OPTION configuration directive.
+.br
+
+Heyu requires that every day have a Dawn and a Dusk, which is not
+the case in polar latitudes when the sun may be above or below the
+horizon all day, or when Dawn or Dusk is shifted into the previous
+or following day.
+.br
+To compensate, Heyu uses a ficticious Dawn and/or Dusk
+at 00:01 or 23:58 hours Standard Time (not necessarily repectively)
+as the situation dictates.  So for example in polar mid-summer, Heyu
+will represent the day as occurring between 00:01 and 23:58, while
+in polar mid-winter, the night will be considered to occur between
+those times.
+.br
+
+To activate the so-called "security" feature of the CM11A, simply append 
+the letter \'S\' to the programmed start or stop time in question.  "12:00s", 
+"dawn+5s", "duskS" are valid examples of this.  The time of the event
+will then vary each day by some random amount within +/- 30 minutes 
+of the programmed time.  Note that the CM11A itself actually applies
+a variation of between +0 and +60 minutes to the programmed time.  Heyu
+subtracts 30 minutes from the programmed event time to get the +/- 30 minute
+variation.
+.PP
+Heyu has to use a few tricks with the security feature when clock times around
+midnight are programmed, in particular when the programmed time is
+between 22:59 and 01:30 (assuming Daylight Time is in effect at some
+time during the year in your locality), since the CM11A must be allowed
+to add a random time between 0 and 60 minutes at any time of the year
+without exceeding 23:59.  To get around this, Heyu changes the programmed
+event time for the timer to 22:59 and creates an appropriately delayed macro.  
+.br
+
+But this solution has its own problem, namely that if a delayed macro does
+not execute until the following day, it will not be executed at all on the 
+day the schedule is uploaded.  To get around this, Heyu uses a non-delayed
+macro and creates a new one-day-only timer event with its own +/- 30 minute
+randomly generated variation around the user\'s original programmed time.
+.br
+
+In order to test the operation of a schedule without having to wait
+around all day, Heyu version 2.0 will acccept the construct "now" or
+"now+NN" (with NN in minutes) in place of a start time and/or stop time
+in a timer.  It will then substitute the current system time rounded up
+to the next whole minute, with a minimum of 15 seconds allowed for 
+uploading the schedule.  NN must be >= zero, otherwise the only restriction
+is that the resolved value of "now+NN" must not exceed 23:59.  The security
+feature may not be used with the "now+NN" construct.  Note that the 
+date range and DOW mask must include today if the macro is actually
+expected to be executed today.  Example:
+.br
+   timer smtwtfs 01/01-12/31  now  now+2  lights_on  lights_off
+.br
+
+Beginning with Heyu version 2.0, the reserved macro label "null" may be
+used as a "do-nothing" place holder in a timer, when neither of the
+timer concepts \fIstart\fR or \fIstop\fR seem logically appropriate. (The null macro
+may be used liberally as required - it will take up no more space in the 
+CM11A\'s EEPROM memory than if the user manually rearranged timer start
+and stop events solely to have something to "fill in the blank".)
+.br
+
+\fItimer options\fR 
+.br
+There are four timer options which can be used to restrict the execution of
+a timer only to days when the actual times of Dawn or Dusk during the year are
+less than (LT) or greater than (GT) the time specified with the option.
+The option keyword and time are appended to the end of the normal timer line.
+.br
+
+  DAWNLT hh:mm  - Execute only on days when Dawn occurs before hh:mm
+.br
+  DAWNGT hh:mm  - Execute only on days when Dawn occurs after hh:mm
+.br
+  DUSKLT hh:mm  - Execute only on days when Dusk occurs before hh:mm
+.br
+  DUSKGT hh:mm  - Execute only on days when Dusk occurs after hh:mm
+.br
+
+where hh:mm is expressed as legal (i.e. wall-clock) time.
+
+Example:
+.br
+  timer smtwtfs 01/01-12/31 dusk 21:00 light_on light_off  DUSKLT 21:00
+.br
+
+This would result in the light being turned ON at dusk, OFF at 9:00 PM,
+but only on days when Dusk occurs earlier than 9:00 PM.  Thus in extreme
+latitudes when Dusk might occur later than 9:00 PM during the summer
+months, the situation is avoided where the light is turned ON at Dusk and
+remains ON all night and all the next day until 9:00 PM.
+.br
+
+The timer options are not restricted to timers which involve Dawn or Dusk
+times.  The above timer could just as well have been programmed as two
+separate timers:
+.br
+
+  timer smtwtfs 01/01-12/31 dusk  00:00  light_on  null DUSKLT 21:00
+.br
+  timer smtwtfs 01/01-12/31 21:00 00:00  light_off null DUSKLT 21:00
+.br
+
+The time argument for the option does not have to be the same as the
+execution time of the timer.  In the above example it might seems silly
+to have the light come ON for only a few minutes on days when Dusk
+started to approach 9:00 PM, so one could use DUSKLT 20:50 to
+ignore the days when the light might otherwise be ON for less than
+10 minutes.
+.br
+
+More than one timer option can be used with a timer - all four in fact
+if deemed appropriate.  Just string them together at the end of the
+timer line.  The string ... DUSKGT 19:00  DUSKLT 21:00 would result
+in the timer being restricted to execute only on days when Dusk occurs
+between 7:00 PM and 9:00 PM.
+.br
+
+Please note that the CM11A interface has no capability for conditional
+logic - Heyu merely compares the option time argument with the calculated
+Dawn or Dusk time for each day of the year and breaks up the date interval
+into multiple intervals.
+.br
+
+.RE
+.IP \fBtrigger\fP
+The trigger line consists of only 4 items.  They are: the literal string 
+\fBtrigger\fR, the trigger unit, the command and the macro.
+.RS 7
+.br
+
+The \fItrigger unit\fR is a combination of house code (a letter from a-p) and
+a unit number (from 1 to 16).  An example is d12.
+.br
+
+The \fIcommand\fR will be either the word on or the word off.  The CM11A will
+not trigger on any other type of X10 signal.
+.br
+
+The \fImacro\fR refers to a macro that will be executed.  The macro must be 
+defined somewhere in the file.
+.RE
+.IP \fBmacro\fP
+.RS 7
+.br
+
+The  \fImacro\fR line consists of 3 or 4 items.  They are:  the literal
+string \fBmacro\fR, the label, an optional delay, and a semicolon-separated
+list of one or more commands or scenes.
+.br
+
+The \fIlabel\fR is plain text of up to 32 characters which must be
+contiguous, and must be of printable characters.  It must not begin with
+the characters \'+\', \'-\' or \'_\', and it must not contain the \'$\'
+character.  The label is used by the timers and triggers to find the
+correct macro.
+.br
+
+When Heyu uploads a schedule, it write the macro names and EEPROM memory
+locations in file "x10macroxref" in the Heyu base directory, i.e., the
+directory where the configuration file is located.  This file is used
+by the Heyu monitor to translate macro memory location to readable
+macro names as they are executed, so should not be deleted.
+.br
+
+The \fIdelay\fR can be from 0 to 240 minutes long.  It is represented by a
+simple cardinal number; no fractions, signs or decimals.  However see
+the section "Problems with delayed macros" below.
+.br
+
+The \fICommands\fR can be of several types; on, off, dim or bright
+being the most commonly used.  The on and off commands have one argument,
+that being the address of the modules to be controlled.  The address
+can be in the format of house code (hc) followed immediately by the unit 
+number or range of unit numbers.  The following are valid: d1  d1,2,3,9 d1-4,6
+.br
+
+.RE
+.IP \fBconfig\fP
+.RS 7
+A limited subset of configuration directives
+may appear in the schedule file when preceded by the word \'config\', and will
+override the values of those same directives in the configuration file (or
+their default values).  This feature is intended for use if you upload
+schedules requiring different configurations on a frequent basis, so you don\'t
+have to keep changing the configuration file every time.  For most users
+however there\'s less chance of confusion by relying only on the
+directives as specified in the configuration file.
+
+.PP
+The subset of directives includes only those which directly influence how
+Heyu processes the timers, triggers, and macros to create the uploaded EEPROM
+image, to wit:  MODE, PROGRAM_DAYS, LATITUDE, LONGITUDE, COMBINE_EVENTS,
+COMPRESS_MACROS, DAWNDUSK_DEF, DAWN_OPTION, DUSK_OPTION, MIN_DAWN, MAX_DAWN,
+MIN_DUSK, MAX_DUSK, ASIF_DATE, ASIF_TIME, DATE_FORMAT,
+WRITE_CHECK_FILES, REPL_DELAYED_MACROS, FEB_KLUGE, RESOLVE_OVERLAP.
+See x10config(5) if necessary for an explanation of these directives.
+Heyu will quit with an error message if directives other than these are
+specified in the schedule file.
+
+.PP
+Configuration directive lines in the schedule file always apply to the
+schedule as a whole regardless of where they appear in the file.  It\'s
+good practise however to put them all at the beginning of the
+file so you won\'t overlook them later on and get confused.
+
+.PP
+Example:
+.br
+  config  program_days 90
+
+.SH COMMANDS
+.PP
+In addition to the on, off, dim, and bright commands, Heyu version 2 
+adds others which can be used for uploadable macros in schedules,
+including Extended commands for modules like the X-10 LM14A 2-way lamp
+module.
+Run \'heyu help\' for a complete list of commands implemented in the
+current version of Heyu.  All the native X10 commands _except_ the
+Preset command may be used for uploaded macros.  (The command \'mpreset\'
+implements the very limited support for Preset in uploaded macros
+provided by the CM11A firmware.)
+ 
+.PP
+Heyu version 2 includes built-in synonyms for many of the commonly used
+commands.  Run \'heyu syn\' to see these synonyms.
+.PP
+Heyu version 2 also includes the ability for users to define their
+own synonyms ("usersyns") and/or compound commands ("scenes") in
+the configuration file, and use them in macros.
+.PP
+X10 commands are generally transmitted over the power line in two
+"chunks", a series of address bytes, one for each unit, followed by
+one or more function bytes.  Both the address byte and the function
+byte reference the housecode (except for the \'preset\' command, which
+has a peculiar function byte format).
+.br
+  
+For some commands, the unit information contained in the address byte
+is superfluous and the address byte will normally be omitted.  Examples
+of commands in this category include the "all" commands like \'lightson\',
+and \'alloff\', the \'hail\' command, and any of the Extended commands (which
+include the unit code within the function structure).
+.br
+
+No unit codes need be appended to the housecode for the "all" commands, e.g.,
+.br
+  lightson A
+  alloff C
+.br
+are sufficient.  If a unit is specified with the housecode, it will normally
+be ignored.  However if for some reason it is desireable for the command to
+be issued along with an address byte, prefix the housecode with a \'+\' sign
+and add the unit string suffix, e.g.,
+  lightson +A4 
+.br
+
+An address byte is not normally sent with the Extended Code commands like
+\'xpreset\' even though the unit must be specified.  But again, prefixing
+the Housecode|Units with a \'+\' sign will instruct Heyu to include an
+address byte in the transmission.
+.br
+
+For the opposite effect, i.e. to suppress transmission of the address byte
+for any command, prefix the Housecode|Units with a \'-\' sign and omit the
+units.  E.g.,
+.br
+  on  -A
+
+.PP
+A few commands warrant additional description:
+.br
+xfunc  <T/F>  HU  <xx>    - general extended command.
+.br
+
+The \'xfunc\' command will transmit any arbitrary extended function <T/F>
+and data byte <xx>, where both are assumed to be hexadecimal bytes (0-0xff).
+.br
+Example: 0x31 is the function code for the extended preset command, and the 
+following commands for setting the extended preset level for module
+c3 to level 26 (decimal) are equivalent:
+.br
+
+  xpreset   c3  26
+  xfunc 31  c3  1a
+.br
+
+The extended command code functions are described in X-10\'s document
+xtdcode.pdf (a replacement for the older XTC798.DOC) which is available
+for download from their website.  The only extended code Types known to
+be applicable to existing modules are the Type 3 for extended code lighting
+and appliance modules and Type 0 for the Marmitek SW10 Shutter controller.
+.PP
+
+Macro commands can be strung together by separating them with a semicolon \';\'.
+This allows one macro to affect several devices.  Consider the commands needed
+to turn on the TV (d1) turn off the stereo (d3) and dim the 4 lights in the
+living room by half( c1, c2, c3 and c4 dim 11).  This macro command string would 
+do it.
+.br
+   on d1; off d3; dim c1-4 11.
+.br
+
+As of Heyu version 2, macros can include scenes defined in the user\'s
+configuration file as if they were standard Heyu commands.  Macros can
+also reference aliases defined in the configuration file in place of
+the Housecode|Units parameter.
+.PP
+.RE
+.SH EXAMPLES
+.PP
+
+In this timer, the macro c5on will be executed once a day at 2:58 PM.  The
+macro c5off will execute at 2:59 PM.
+.br
+The timer is active every day of the week from 2/1 through 12/12.
+.br
+
+timer  smtwtfs  02/01-12/12  14:58 14:59  c5on      c5off
+.br
+
+The next one only runs on Dec 11, and then only if it falls on a Friday.
+.br
+
+timer .....f. 12/11-12/11 23:34 23:35 d6off d6off
+.br
+
+This timer sounds a chime (perhaps a Universal Module UM-506) every day
+at Noon, legal (wall clock) time, Monday through Friday, regardless of 
+whether Standard or Daylight Time is in effect (Heyu ver 2.0 and later):
+.br
+
+timer .mtwtf. 01/01-12/31 12:00 00:00  lunch_chime  null
+.br
+
+This one sounds a chime at 7 AM and 7 PM  3 days in a row before 
+the expiration date and on the final date itself (a total of 4 days) 
+to remind the user that the uploaded schedule will shortly become
+invalid and need to be reloaded.  (Heyu ver 2.0 and later only):
+.br
+
+timer smtwtfs  expire-3  07:00 19:00  chime  chime
+.br
+
+The following two timers turn on an inside hall light 30 minutes before 
+Dusk, dim it after 11 PM, and turn it off 15 minutes after Dawn (Heyu ver 
+2.0 and later):
+.br
+
+timer smtwtfs  01/01-12/31  dusk-30  23:00  hall_on   hall_dim
+.br
+timer smtwtfs  01/01-12/31  dawn+15  00:00  hall_off  null
+.br
+
+The following timer operates decorative lighting between Dusk and 10 PM 
+during the holiday season without quitting on Jan 1st during non-leap 
+years (Heyu version 2.0 and later):
+.br
+
+timer smtwtfs  12/15-01/02  dusk  22:00   xmas_on  xmas_off
+.br
+
+This trigger runs macro c5off when \'c1 off\' is received.
+The net effect would be that the device with the code c1 will be turned off AND
+whatever the macro c5off directs will be done too.
+.br
+
+trigger c1          off              c5off
+.br
+
+In the following, E4 is a dusk sensor (MS13A) outside.  It turns on the
+living room lamps (via the livinroom_on macro), but it does not turn them off.
+I use a timer to do that long before midnight.  If I waited for the MS13A
+they\'d turn off at dawn even if I\'m reading my paper then.
+.br
+
+trigger E4 on livinroom_on
+.br
+
+This next macro is labeled c5off.  It waits 5 minutes, then turns off
+d6 and d7 and turns on e2
+.br
+
+macro c5off 5  off d6,7; on e2
+.br
+
+And this macro includes dimming.
+.br
+
+macro c5on   0  on d7; dim d7 8
+.br
+
+Since the delay is optional, the above can also be written as:
+.br
+
+macro c5on  on d7; dim d7 8
+
+.SH Multiple Transmissions
+If the Multiple Transmissions box is checked for a timer in X10\'s
+ActiveHome software, the timer is duplicated with the same macros but
+with the execution time set 1 minute later.  This is simple enough
+to do manually (and with more flexibility) in the schedule file that
+no attempt has been made to automate this feature in Heyu.
+
+.SH Problems with delayed macros.
+If a new schedule is uploaded between the time a timer or trigger
+is activated and the time a delayed macro is executed, the macro
+will never be executed because pending delayed macros are purged
+when a schedule is loaded.  This is the nature of the hardware 
+and is unavoidable.  It should never be necessary for the user
+to program a delayed macro for a timer, and if Heyu finds one it
+by default attempts to adjust to this situation by creating a non-delayed
+macro and increasing the time of the timer to compensate.  To change
+Heyu\'s behavior, see the REPL_DELAYED_MACROS directive in x10config(5).
+(If the same macro is associated with a trigger, the original delayed
+macro is uploaded for the trigger in addition to the new macro
+for the timer.) 
+.br
+
+.SH ENVIRONMENT
+.br
+X10SCHED - Points to a fully qualified file name of your schedule file (timers, and macros).
+
+
+.SH AUTHORS
+ Daniel B. Suthers (dbs@tanj.com)
+ Charles W. Sullivan (cwsulliv01@heyu.org)
+
+.SH SEE ALSO
+.br
+http://www.heyu.org
+.br
+date(1),  x10config(5), heyu(1), x10.sched.sample

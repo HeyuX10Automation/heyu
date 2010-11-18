@@ -1,0 +1,158 @@
+Heyu Webhook Information
+-------------------------
+Heyu's webhook command allows information about Heyu's configuration to be
+displayed in a variety of user-defined formats which will hopefully
+be useful for writers of web interfaces and other front end software for
+Heyu. 
+
+Usage: heyu webhook <option> -L[fmt] -d|D[fmt] -m|M[fmt] -b[fmt] -ce[list] -nb<path> [category]
+
+Options:
+  pathinfo      Display pathspecs for Heyu config and log files.
+  helpinfo      Display available help menu commands
+  config_dump   Display display configuration file directives.
+  flaginfo      Display flags, czflags, or tzflags as long ASCII bitmap.
+  flagbankinfo  Display flags, czflags, or tzflags as multiple banks of 32.
+  maskinfo      Display masks for environment variable X10_Hu
+  flagmaskinfo  Display masks for environment variable X10_Hu_vFlags
+  fileinfo      Deprecated - use pathinfo
+  menuinfo      Deprecated - use helpinfo
+
+Switches:
+  -L         Prefix with formatted line number in configuration file.
+  -d |-D     Display formatted directive label in lower | upper case.
+  -m |-M     Format multiple directive label numbering beginning with 0 | 1
+  -b         Format body of directive.
+  -ce<list>  Characters in <list> are escaped in SCRIPT command lines.
+  -nb<path>  Substitute <path> for logfile path if none defined.
+          
+The format specification %V must appear once in each format string ([fmt]),
+where it will be replaced as appropriate by the line number, directive label,
+label number, or directive body.
+
+Categories for config_dump:
+  alias
+  usersyn
+  scene
+  script
+  other    (Everything other than the above directives.)
+  <blank>  (Everything).
+
+Categories for pathinfo:
+  conf     Pathspec for Heyu configuration file
+  log      Pathspec for Heyu log file.
+  <blank>  Both of the above;
+
+Categories for flaginfo and flagbankinfo:
+  flags    Common flags.
+  czflags  Counter-zero flags
+  tzflags  Timer-zero flags
+
+The "helpinfo" option displays the individual help menus available,
+which will vary according to the Configure options selected when
+Heyu is compiled.  The help menues will only be of interest for an
+interface which provides a Heyu command line.
+
+The switches can define a format for each of the parts of a directive
+in the configuration file.  Without a format suffix, the switches have
+a default format.  Each defined switch format must contain the symbol
+%V which is replaced at output by the particular part of the directive.
+Note: Format characters which have special meaning to the shell have to
+be escaped, e.g., '"', '$', '(', ')', and probably others.
+
+If no switches are specified, the directive is displayed as the directive
+label in lower case followed by a single-blank separated list of the
+other tokens in the directive as they appear in the configuration file,
+e.g.,
+  heyu webhook config_dump alias
+yields:
+  alias porch_light A7 StdWS
+
+The -L switch prefixes the line with the line number in the configuration
+file, e.g.,
+  heyu webhook config_dump -L alias
+
+yields with the default format "%V: ":
+  26: alias porch_light A7 StdWS
+
+whereas switch -L%V# would yield:
+  26#alias porch_light A7 StdWS
+
+The -d or -D switch determines the case of the directive label, lower or
+upper respectively.  A format suffix allows the displayed label to be
+expanded, e.g.,
+  heyu webhook config_dump -DHEYU_%V alias
+
+yields:
+  HEYU_ALIAS porch_light A7 StdWS
+
+The -m or -M switch appends a sequential number to the directive label
+for those directives which can appear multiple times in the configuration
+file.  The numbering starts with 0 for -m or with 1 for -M.  These switches
+are ignored for directives which can only appear once, e.g., TTY, in the
+config file. The default format is "[%V]", which for:
+  heyu webhook config_dump -m alias
+
+yields:
+  alias[0] porch_light A7 StdWS
+
+whereas:
+  heyu webhook config_dump -M%V alias
+
+would yield:
+  alias1 porch_light A7 StdWS
+
+The -b switch specifies the format for the body of the directive, i.e., all
+that follows the directive label.  The default is just " %V" (which is the
+same as omitting the switch).  However:
+  heyu webhook config_dump -b" = \"%V\"" alias
+
+yields:
+  alias = "porch_light A7 StdWS"
+
+An exception to the single-blank spacing of tokens is the command line
+tail of a SCRIPT directive.  The command line tail is displayed as-is
+since the spaces may be significant.  But certain characters in the 
+command line may need to be escaped to avoid conflict with the body
+format.
+
+The -ce<list> switch ("command-line escape") will result in each
+command line character in the <list> suffix to be escaped.  E.g.,
+for the directive:
+  script a7 on :: echo "Porch Light has been turned ON"
+
+Executing:
+  heyu webhook config_dump -b" = \"%V\"" -ce"\""
+ 
+yields
+  script = "a7 on :: echo \"Porch Light has been turned ON\""
+
+Example:
+  heyu webhook config_dump -L"%V: " -dheyu_%V -m\(%V\) -b=\"%V\" alias
+
+yields:
+ 13: heyu_alias(2)="porch_light A7 StdWS"
+
+The -nb<path> switch ("null body") substitutes <path> for the logfile
+path when directive LOG_DIR is omitted from the configuration file and
+the default logfile path "/dev/null" may be difficult to deal with.
+
+The options fileinfo and menuinfo were provided for a specific PHP
+script.  They exist for backward compatibility but are deprecated.
+They can be replaced by pathinfo and helpinfo as follows:
+For fileinfo, use:
+  heyu webhook pathinfo -d\$heyu_%V -b"=\"%V\";" -nb/tmp/
+For menuinfo, use:
+  heyu webhook helpinfo -d\$%V_menu -m[%V] -b"=\"/heyu/help %V\";"
+
+Notes:
+Obsolete configuration directives are omitted from config_dump.
+(Heyu displays a warning message when they are encountered in the
+configuration file.)
+
+The syntax for aliases in Heyu version 1 used no ALIAS directive,
+merely a line with the alias label, housecode, and unit.  While this
+syntax is still supported in Heyu version 2, config_dump will not
+include these aliases in the alias category.
+
+

@@ -1,0 +1,343 @@
+.TH X10RFXSENSORS 5 local
+.SH NAME
+.B x10rfxsensors\^
+- RFXSensor support for HEYU
+.SH DESCRIPTION
+.I Heyu
+is an X10 Automation program for Linux, Unix, and Mac OS X.
+See man page \fIheyu\fP(1) for usage information.
+.PP
+.I RFXSensors 
+are remote RF sensors which transmit encoded Temperature, Relative Humidity,
+and/or Barometric Pressure information, depending on configuration.  When
+equipped with a compatible RF receiver, Heyu can receive and decode this
+information. An overview of these sensors appears further down in this page.
+
+.SH SYSTEM REQUIREMENTS
+To use RFXSensors with Heyu requires a W800RF32A/AE or an RFXCOM X10
+RF receiver with a carrier frequency matching that of the RFXSensor
+transmitter and Heyu version 2.2 or greater.
+
+.SH COMPILER OPTION
+Support for RFXSensors is compiled into Heyu by default.  A compiler
+option can be used to omit this support.  See the file INSTALL
+included in the Heyu distribution source directory for details.
+
+.SH CONFIGURATION
+Start Heyu, including the Heyu Auxilliary daemon. Then open another
+xterm window and start the Heyu Monitor.
+.PP
+The following examples use RFXSensor data for a system comprised
+of an RFXSensor transmitter with a Relative Humidity sensor plus a
+connected external Temperature/Barometric Pressure sensor.
+.PP
+Press the recessed reset button on the RFXSensor transmitter and
+something like the following should appear in the Heyu Monitor
+window (ignoring the dates and times):
+.PP
+  rcva RFXSensorXmitter  : Type 3, version 10, sample_mode fast
+.br
+  rcva RFXSensorInit     : ID 0x00, chip DS2438, serial_no 8755651
+.br
+  rcva RFXSensorInit     : ID 0x04, chip DS2438, serial_no 8107391
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x00* Data 0x1429
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x02  Data 0x3AC3
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x01  Data 0x3047
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x04* Data 0x146D
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x06  Data 0x3ACB
+.br
+  rcva func       RFdata : Type RFXSensor ID 0x05  Data 0x1768
+.PP
+Note: The "RFXSensorInit" messages will not appear when using a
+W800RF32A/AE receiver or an RFXCOM receiver in 32-bit mode.
+They are garbled with these receivers and appear to Heyu as
+RF noise. (Heyu doesn't need this data.)
+.PP
+The asterisk (*) adjoining the IDs 0x00 and 0x04 in the RFdata
+entries identifies them as the base addresses of the transmitter
+and external sensor.  The RFXSensorInit provides the same information.
+If you have more than one RFXSensor transmitter, repeat the above
+with each to verify that the base addresses for all sensors are
+unique.
+.PP
+Now map each transmitter and each external sensor to an otherwise
+unused housecode|unit X10 address with ALIAS directives in the Heyu
+configuration file using module type RFXSENSOR, e.g.,
+.PP
+  ALIAS  House     L9  RFXSENSOR 0x00 TH
+.br
+  ALIAS  Basement  C7  RFXSENSOR 0x04 TB
+.PP
+where the format for this directive is:
+.br
+  ALIAS  <label> <hcode|unit> RFXSENSOR <base_addr> <sensor_type>
+.PP
+<sensor_type> is one of the following:
+.br
+  TH for a Temperature and Humidity sensor
+.br
+  TB for a Temperature and Barometric Pressure sensor
+.br
+  TV for a Temperature and A/D Voltage sensor
+.br
+  TP for a Temperature and Potentiometer sensor
+.br
+  TT for a Dual Temperature sensor
+.br
+  T  for a Temperature-only sensor (1-Wire DS18B20 chip)
+.PP
+Run \'heyu restart\' to incorporate the configuration file changes
+in Heyu's processes, then again press the reset button on each
+transmitter.  The display in the Heyu Monitor window should now
+look like this:
+.PP
+  rcva RFXSensorXmitter  : Type 3, version 10, sample_mode fast
+.br
+  rcva RFXSensorInit     : ID 0x00, chip DS2438, serial_no 8755651
+.br
+  rcva RFXSensorInit     : ID 0x04, chip DS2438, serial_no 8107391
+.br
+  rcva func      rfxTemp : hc L unit 9 Temp 20.125C (House)
+.br
+  rcva func        rfxVs : hc L unit 9 Vs 4.70V (House)
+.br
+  rcva func        rfxRH : hc L unit 9 RH 105.48% (House)
+.br
+  rcva func      rfxTemp : hc C unit 7 Temp 20.375C (Basement)
+.br
+  rcva func        rfxVs : hc C unit 7 Vs 4.70V (Basement)
+.br
+  rcva func        rfxBP : hc C unit 7 BP 547.6 hPa (Basement)
+.PP
+where the functions displayed are Temperature, Supply voltage (Vs),
+Relative Humidity (RH), and Barometric Pressure (BP).
+.PP
+An RFXSensor rfxTemp temperature message will be displayed whenever
+the sampled temperature changes by an amount determined by the 1-Wire
+chip (as described in the RFXSensor data sheet).  The rfxVs supply
+voltage message (and low battery signal, if any) appears only at
+reset and at the "heartbeat" intervals (40 or 80 minutes).
+
+.SH UNIT SCALING
+The native units for output of RFXSensors are Celsius for temperature,
+hPa (hectoPascals) for Barometric Pressure, and Volts for A/D Voltage.
+These may be scaled by Heyu to different units with the following
+configuration file directives:
+.PP
+Directive RFX_TSCALE  <temp_scale>
+.PP
+where <temp_scale> is F[ahrenheit], C[elsius], K[elvin], or R[ankine].
+.br
+Example:
+.br
+  RFX_TSCALE  F
+.PP
+Directive RFX_BPSCALE <BP_unit> <scale_factor> [<offset>]
+.PP
+where <BP_unit> is the name of the new unit, e.g. mmHg,
+and <scale_factor> is the number by which the BP in hPa is
+multiplied to get its value in the new unit.
+.br
+Some examples:
+.br
+  RFX_BPSCALE mmHg 0.75006158
+.br
+  RFX_BPSCALE inHg 0.029529983 1.06
+.br
+  RFX_BPSCALE millibars 1.0
+.PP
+The optional <offset> parameter is added to the BP after scaling.
+.PP
+In the USA at least, barometric pressures reported by the National
+Weather Service are adjusted to the BP at sea level.  The offset
+can be used to approximate this adjustment for altitude.
+Typical values for BP versus altitude can be found on the
+Internet.
+.PP
+Directive RFX_VADSCALE <Vad_unit> <scale_factor>
+
+.PP
+where <Vad_unit> is the name of the new unit, e.g., mV,
+and <scale_factor> is the number by which the A/D Voltage
+is multipled to get its value in the new unit.
+.br
+Example:
+.br
+  RFX_VADSCALE  mV  1000.0
+
+.SH STORED RFXSENSOR DATA
+If the Heyu Engine daemon is running, current RFXSensor data
+is stored in the Heyu state tables and displayed in the Heyu log
+file (if thus configured).
+.PP
+Stored data can be retrieved with the following Heyu
+state commands.  Scaled values are displayed for rfxtemp,
+rfxbp, rfxvad, and rfxtemp2.  The others are not scaled.
+Hu is the Housecode|Unit address to which the sensor has
+been mapped in the ALIAS directive.
+.br
+  heyu rfxtemp  Hu    - Temperature
+.br
+  heyu rfxtemp2 Hu    - Second Temperature
+.br
+  heyu rfxrh    Hu    - Relative Humidity
+.br
+  heyu rfxbp    Hu    - Barometric Pressure
+.br
+  heyu rfxvad   Hu    - A/D Voltage
+.br
+  heyu rfxpot   Hu    - Potentiometer setting
+.br
+  heyu rfxvs    Hu    - Supply Voltage
+.br
+  heyu rfxvadi  Hu    - Internal A/D Voltage (unscaled)
+.br
+  heyu rfxlobat Hu    - Low Battery indicator (Boolean).
+.PP
+Note that computation of barometric pressure requires the
+supply voltage.  Computation of relative humidity requires
+the supply voltage and temperature.  If for whatever reason
+all the required quantities have not yet been stored in the
+state tables, e.g., after 'heyu initstate', the value displayed
+will be "----" or "Not Ready".
+.PP
+Also note that rfxlobat (low battery) is a separate function
+and not a flag as it is with X10 security sensors.
+.PP
+The command \'heyu show rfxsensors\' will display stored data
+from all configured RFXSensors in tabular form.
+
+
+.SH HEYU SCRIPTS
+Heyu scripts can be launched by the functions rfxtemp, rfxrh,
+rfxbp, rfxpot, rfxvad, rfxlobat, and rfxtemp2 the same as any
+other Heyu function.  The source keyword "RCVA" must be included in the
+launch conditions.
+.br
+Example:
+.br
+  SCRIPT  L9 rfxtemp rcva :: my_rfxtemp.sh
+
+.SH SCRIPT ENVIRONMENT
+Any Heyu script has access to the stored RFXSensor values through
+environment variables linked to the housecode|unit (Hu) and its
+alias mapped to each RFXSensor.
+.br
+  X10_Hu_Temp   x10_<Hu_alias>_Temp
+.br
+  X10_Hu_Temp2  x10_<Hu_alias>_Temp2
+.br
+  X10_Hu_RH     x10_<Hu_alias>_RH
+.br
+  X10_Hu_BP     x10_<Hu_alias>_BP
+.br
+  X10_Hu_Pot    x10_<Hu_alias>_Pot
+.br
+  X10_Hu_Vad    x10_<Hu_alias>_Vad
+.br
+  X10_Hu_Vadi   x10_<Hu_alias>_Vadi
+.br
+  X10_Hu_Vs     x10_<Hu_alias>_Vs
+.br
+  X10_Hu_LoBat  x10_<Hu_alias>_LoBat  (Boolean)
+.PP
+No variable is created for data which is invalid or "not ready".
+
+.SH CONFIGURATION DIRECTIVES
+In addition to the ALIAS and scaling directives mentioned 
+above, the following will also affect RFXSensor data.  See
+man page x10config(5).
+
+Directive HIDE_UNCHANGED YES|NO
+
+.SH RFXSENSOR OVERVIEW
+RFXSensors are manufactured by RFXCOM (http://www.rfxcom.com)
+They consist of an RF transmitter to which may be optionally
+connected external sensors.  Models are available which transmit
+at a frequency of 310 MHz for use in North America and at a
+frequency of 433.92 MHz for use elsewhere in the world.  The RF
+signals can be received by a W800RF32A/AE or RFXCOM X10 RF receiver
+employing the same carrier frequency.
+.PP 
+RFXSensor RF transmitters have a built-in 1-Wire temperature sensor
+chip.  The current model ("Type 3") transmitter includes an A/D
+converter and may optionally include a Relative Humidity (RH) sensor
+chip.  The analog output of the RH sensor chip is encoded by the
+A/D converter.
+.PP
+The RFXSensor External Sensor modules have a built-in 1-Wire
+temperature sensor chip, optionally an A/D converter, and optionally
+either a Relative Humidity (RH) sensor chip or a Barometric Pressure
+(BP) sensor chip.  The analog output of the RH or BP chip is encoded
+by the A/D converter.
+.PP
+In the absence of a RH or BP chip, the A/D converter in a tranmitter
+or external sensor can encode the analog voltage (0 to 10VDC) from a
+user-supplied electrical device, or the relative setting of a 10K
+linear potentiometer.
+.PP
+A total of 64 RFXSensor modules are supported, which may include
+up to:
+.br
+  8 RFXSensor Type 3 RF Transmitters, each with up to 7 RFXSensor
+.br
+  External Sensor modules connected in a daisy chain configuration.
+.br
+     - or -
+.br
+  32 RFXSensor Type 1 or 2 RF Transmitters (both now discontinued),
+  each with a single connected RFXSensor External Sensor module.
+.PP
+RF signals from RFXSensors include an address which identifies the
+transmitter or external sensor, and type of signal.  Each transmitter
+has a "base address" which is user configurable (per the RFXSensor
+data sheet) and which must be different for each transmitter.  Type
+3 transmitters have a base address which is 0x00 or a multiple of 0x20.
+Type 1 or 2 transmitters have a base address which is 0x00 or a 
+multiple of 0x08.  External sensors have a base address assigned by
+the transmitter which is the base address of the transmitter plus
+a multiple of 0x04.
+.PP
+When delivered from the factory, transmitters will usually have a
+base address of 0x00 although this is not guaranteed.
+.PP
+Note that for a Type 3 transmitter with more than one connected
+external sensor, there is no definitive relationship between the
+base address assigned to a particular external sensor and its position
+in the daisy chain.  Furthermore, adding an additional external sensor
+may change the addresses previously assigned to other sensors in the chain.
+Some experimentation by the user may be necessary to determine which
+address is assigned to which external sensor if it's not obvious from
+the temperature readings.
+.PP
+Each 1-Wire chip encodes a unique serial number which is included in
+the power-up and reset message transmission, and which can be received
+by an RFXCOM X10 receiver operating in variable-length message mode.
+It may come in handy to record this serial number somewhere, perhaps
+even on a label affixed to the sensor.
+.PP
+Temperature signals are transmitted at the base address.  For
+sensors with an A/D converter, the A/D voltage signal is transmitted
+at the base address plus 1 and a Supply voltage signal at the
+base address plus 2.  Software, Heyu in this case, uses the address
+as an ID and decodes the A/D voltage signal according to the kind
+of sensor, i.e., whether humidity or barometric pressure or
+potentiometer setting or just as a voltage.
+
+.SH AUTHORS
+RFXSensor support was added to Heyu by Charles W. Sullivan
+
+.SH SEE ALSO
+http://www.rfxcom.com/sensors
+.br
+http://www.rfxcom.com/documents/RFXSensor.pdf
+.br
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5),
+x10cm17a(5), x10rfxmeters(5)

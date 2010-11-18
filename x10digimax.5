@@ -1,0 +1,181 @@
+.TH X10DIGIMAX 5 local
+.SH NAME
+.B x10digimax\^
+- DigiMax 210 support for HEYU
+.SH DESCRIPTION
+.I Heyu
+is an X10 Automation program for Linux, Unix, and Mac OS X.
+See man page \fIheyu\fP(1) for usage information.
+.PP
+.I DigiMax
+The DigiMax 210 is a wireless thermostat which transmits encoded
+Temperature, Setpoint, and Under/Over setpoint RF signals.  When
+equipped with a compatible RF receiver, Heyu can receive and
+decode this information.
+
+.SH SYSTEM REQUIREMENTS
+To use a DigiMax with Heyu requires a 433.92 MHz RFXCOM X10 RF receiver
+and Heyu version 2.3 or greater.
+
+.SH COMPILER OPTION
+Support for DigiMax is compiled into Heyu by default.  A compiler
+option can be used to omit this support.  See the file INSTALL
+included in the Heyu distribution source directory for details.
+
+.SH CONFIGURATION
+It is assumed that a working installation of Heyu version 2.3 or
+greater exists on the computer, and that the user has a basic
+familiarity with Heyu.
+.PP
+The Heyu configuration file should include the directive:
+.br
+  TTY_AUX  <serial_port> RFXCOM
+.br
+where <serial_port> is the port where the RFXCOM receiver is connected.
+The RFXCOM receiver connects to a USB port but includes a USB->Serial
+converter chip.
+
+.PP
+Start Heyu with \'heyu start\', then open another xterm window and
+run \'heyu monitor\' in it to start the Heyu Monitor.
+.PP
+Press and hold both the \'+\' and \'-\' buttons on the DigiMax 
+until the display starts flashing "]]]" (about 3 seconds).  It will
+start transmitting its initialization signal every 10 seconds
+(for 5 minutes or until a button is pressed).  Or you can just wait
+until the DigiMax sends its normal signal about every 5 minutes.
+In the Heyu monitor window you should then see something like
+this (ignoring the date and time):
+.PP
+  rcva func   RFdata : Type DigiMax ID 0xEB83 Data 0x29151350
+
+.PP
+Map the DigiMax ID to an otherwise unused housecode and unitcode
+address with an ALIAS directive in your Heyu configuration file
+using module type DIGIMAX.
+.br
+Example:
+.br
+  ALIAS Upstairs  B7  DIGIMAX EB83
+.PP
+Run \'heyu restart\' to incorporate this change into the running
+Heyu daemons.  Then the next time the DigiMax makes a transmission
+you should see (with the above example) something like this:
+.PP
+  rcva func     dmxTemp : hc B unit 7 Temp 21C Set Heat (Upstairs)
+.br
+  rcva func dmxSetpoint : hc B unit 7 Setpoint 19C Set Heat (Upstairs)
+.br
+  rcva func       dmxOn : hc B unit 7 Set Heat (Upstairs)
+.br
+   -- or --
+.br
+  rcva func      dmxOff : hc B unit 7 Set Heat (Upstairs)
+.PP
+Notes: The first dmxTemp signal after a start or restart will display
+the flag "NotSet" as the Heyu engine will not have recorded the
+Setpoint temperature until it receives the dmsSetpoint signal.
+.PP
+It\'s not clear whether the DigiMax thermostat will automatically
+swap On and Off signals if operated in "cool" mode (which requires
+cutting a jumper wire in the thermostat), or whether the swapping
+would be implemented in the base station which transmits On/Off
+powerline signals. User feedback is requested. The current
+implementation swaps the signals.
+
+.SH STORED DIGIMAX DATA
+If the Heyu Engine daemon is running, current DigiMax data
+is stored in the Heyu state tables and displayed in the Heyu log
+file (if thus configured).
+.PP
+Stored data can be retrieved with the following Heyu
+state commands, where Hu is the Housecode|Unit address to which
+the sensor has been mapped in the ALIAS directive, or the alias
+label itself.
+.br
+  heyu dmxtemp      Hu    - Current temperature
+.br
+  heyu dmxsetpoint  Hu    - Temperature setpoint
+.br
+  heyu dmxstatus    Hu    - On/Off status (1 = On, 0 = Off)
+.br
+  heyu dmxmode      Hu    - Heat/Cool mode (1 = Heat, 0 = Cool)
+.PP
+The command \'heyu show digimax\' will display stored data
+from all configured DigiMax units in tabular form.
+.PP
+When DigiMax functions dmxOn and dmxOff are received, the normal
+Heyu state for the particular housecode and unit is set to "On"
+or "Off" respectively and will be reflected when state commands like
+\'heyu onstate Hu\' and \'heyu show housemap H\' are run.
+
+.SH HEYU SCRIPTS
+Heyu scripts can be launched by the functions "dmxsetpoint", "dmxtemp",
+"dmxon", and "dmxoff" the same as any other Heyu function.  The launch
+conditions in the SCRIPT directive must include the source keyword
+"RCVA" and may optionally include the keyword "changed", any of the
+common flags, and the global security flags.  They may also
+optionally include the local flags.
+.br
+Examples:
+.br
+  SCRIPT  L9 rfxtemp rcva armed away :: my_rfxtemp.sh
+.br
+  SCRIPT  L9 dmxon dmxoff changed rcva :: my_onoff.sh
+
+.PP
+Local flags for the DigiMax functions are:
+.br
+  set, heat, cool, init, and their negations, e.g., notset.
+
+.SH SCRIPT ENVIRONMENT
+Any Heyu script has access to the stored DigiMax values through
+environment variables linked to the housecode|unit (Hu) and its
+alias mapped to each DigiMax unit.
+.br
+  X10_Hu_dmxSetpoint  x10_<Hu_alias>_dmxSetpoint
+.br
+  X10_Hu_dmxTemp      x10_<Hu_alias>_dmxTemp
+.br
+  X10_Hu_dmxStatus    x10_<Hu_alias>_dmxStatus (1 = On, 0 = Off)
+.br
+  X10_Hu_dmxMode      x10_<Hu_alias>_dmxMode (1 = Heat, 0 = Cool)
+.br
+  X10_Hu_dmxSet       x10_<Hu_alias>_dmxSet (1 = Set, 0 = notSet)
+.br
+  X10_Hu_dmxInit      x10_<Hu_alias>_dmxInit (1 = Init, 0 = notInit)
+.PP
+If a Heyu script is launched by one of the functions "dmxsetpoint",
+"dmxtemp", "dmxon" or "dmxoff", the environment will additionally
+include variables for flags and values without the "Hu" identification
+as follows:
+.br
+  flags : X10_dmxSet, X10_dmxHeat, X10_dmxInit
+.br
+  dmxsetpoint : X10_dmxSetpoint
+.br
+  dmxtemp : X10_dmxTemp
+.br
+  dmxon or dmxoff : X10_dmxStatus, X10_dmxHeat
+.PP
+No variable is created for data which is invalid or "not ready".
+
+.SH CONFIGURATION DIRECTIVES
+In addition to the ALIAS and scaling directives mentioned 
+above, the following will also affect DigiMax data.  See
+man page x10config(5).
+
+Directive HIDE_UNCHANGED YES|NO
+
+
+.SH AUTHORS
+DigiMax support was added to Heyu by Charles W. Sullivan using the
+protocol gratefully provided by RFXCOM.
+
+.SH SEE ALSO
+http://www.marmitek.com/en/manual/9431.pdf
+.br
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5),
+x10cm17a(5), x10rfxsensors(5), x10rfxmeters(5)

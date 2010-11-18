@@ -1,0 +1,262 @@
+.TH X10RFXMETERS 5 local
+.SH NAME
+.B x10rfxmeters\^
+- RFXMeter support for HEYU
+.SH DESCRIPTION
+.I Heyu
+is an X10 Automation program for Linux, Unix, and Mac OS X.
+See man page \fIheyu\fP(1) for usage information.
+.PP
+.I RFXMeters 
+are remote RF sensors which transmit encoded data from electric power,
+water, gas, or other metering modules, depending on configuration.
+When equipped with a compatible RF receiver, Heyu can receive and
+decode this information. An overview of these sensors appears further
+down in this page.
+
+.SH SYSTEM REQUIREMENTS
+To use RFXMeters with Heyu requires a 433.92 MHz RFXCOM X10 RF
+receiver and Heyu version 2.2 or greater.
+
+.SH COMPILER OPTION
+Support for RFXMeters is compiled into Heyu by default.  A compiler
+option can be used to omit this support.  See the file INSTALL
+included in the Heyu distribution source directory for details.
+
+.SH HEYU CONFIGURATION
+It is assumed that a working installation of Heyu version 2.2 or
+greater exists on the computer, and that the user has a basic
+familiarity with Heyu.
+.PP
+The Heyu configuration file should include the directive:
+.br
+  TTY_AUX  <serial_port> RFXCOM
+.br
+where <serial_port> is the port where the RFXCOM receiver is connected.
+.PP
+Start Heyu with 'heyu start', then open another xterm window and
+start the Heyu Monitor.
+.PP
+Wait for the RFXMeter to make a transmission, at which time
+you should see in the Monitor widow something like this
+(ignoring the date and time):
+.PP
+  rcva func       RFdata : Type RFXMeter ID 0x08 Data 0xADB92C07
+.PP
+Map the RFXMeter ID to an otherwise unused housecode and unitcode
+address with an ALIAS directive, using one of the following
+module types depending on whether the RFXMeter is monitoring
+Electric Power, Water, or Gas (or is just used to count pulses):
+.br
+  RFXPOWER <ID>
+.br
+  RFXWATER <ID>
+.br
+  RFXGAS <ID>
+.br
+  RFXPULSE <ID>
+.PP
+Example using housecode|unit C5 and the above ID:
+.br
+  ALIAS MyElectric  C5  RFXPOWER  08
+.PP
+Run 'heyu restart'.  The next time the RFXMeter transmits, you
+should then see in the Monitor window:
+.PP
+  rcva func       rfxPower : hc C unit 5 Meter 99.876 kWh (MyElectric)
+.PP
+If instead of electric power the RFXMeter is monitoring Water or
+Gas consumption and the following mapping is used:
+.br
+  ALIAS MyGas  C5  RFXGAS 08
+.PP
+You would instead see in the Monitor window:
+.br
+  rcva func       rfxGas : hc C unit 5 Counter 99876 pulses (MyGas)
+
+.SH UNIT SCALING
+While the RFXPower module is already calibrated in kWh, the scale
+factor for Water, Gas, or Pulse metering must be supplied.  For this,
+one of the following configuration directives is used:
+.br
+  RFX_WATERSCALE  <Water_unit>  <scale_factor>
+.br
+  RFX_GASSCALE  <Gas_unit>  <scale_factor>
+.br
+  RFX_PULSESCALE  <Pulse_unit>  <scale_factor>
+.PP
+For example a gas meter often has a series of dials and an optical
+sensor can presumably be mounted to provide one pulse for each
+rotation of the smallest dial.  On one type of gas meter in the USA,
+each rotation of the smallest dial corresponds to 0.5 cubic feet
+of gas, so the directive to use would be:
+.br
+  RFX_GASSCALE  cu_ft  0.5
+.PP
+And (after 'heyu restart') you will then see:
+.br
+  rcva func       rfxGas : hc C unit 5 Meter 49938.0 cu_ft (MyGas)
+
+.SH ROLLOVER
+The counter in a RFXMeter module counts from zero to a maximum
+value of 16777215 (0xFFFFFF), corresponding in the case of RFXPower
+modules to 16777.215 kWh, then rolls over to zero.  When Heyu detects
+that a reported count is less than the previous count it sets a local
+"rollover" flag.  Note that this includes the case where the user
+has reset the counter to zero during RFXMeter configuration.
+
+.SH POWER PANEL TOTALS
+If two or three RFXPower modules are installed in adjacent slots in an
+RFXMeter transmitter, Heyu assumes they are being used to monitor the phases
+in a two or three phase power panel or breaker box.  It will then sum the
+readings from each of the phases and display the total in the Heyu Monitor
+and log file as a "Panel".  Panels are numbered starting with 0 in the event
+there are multiple RFXMeter transmitters, each with two or three RFXPower
+modules.
+
+.SH STORED RFXMETER DATA
+If the Heyu Engine daemon is running, the most recent transmissions
+from RFXMeters are stored in the Heyu state tables and can be recovered
+with the following state commands:
+.br
+  heyu rfxpower Hu  (for Power)
+.br
+  heyu rfxwater Hu  (for Water)
+.br
+  heyu rfxgas   Hu  (for Gas)
+.br
+  heyu rfxpulse Hu  (for pulse count)
+.br
+  heyu rfxcount Hu  (raw counter of any RFXMeter)
+.br
+  heyu rfxpanel [N] (Power panel [N] total - default N is Panel 0)
+.PP
+The command 'heyu show rfxmeters' will display the meter readings
+for all configured RFXMeters in a tabular format.
+
+.SH HEYU SCRIPTS
+The functions rfxpower, rfxwater, rfxgas, and rfxpulse can be
+used in launch conditions to launch Heyu scripts the same as
+any other Heyu function.  The source keyword "RCVA" must be 
+included in the launch conditions.
+.br
+Example:
+.br
+  SCRIPT  C5  rfxpower rcva :: my_power_script.sh
+.PP
+Any of the usual flags may be included in the launch condition,
+including the rollover flag set after an RFXMeter counter rolls
+over to zero.
+.br
+Example:
+.br
+  SCRIPT  C5  rfxpower rollover rcva :: my_rollover_script.sh
+
+.SH SCRIPT ENVIRONMENT
+Any Heyu script has access to the stored RFXMeter values through
+environment variables linked to the housecode|unit (Hu) and its
+alias mapped to each RFXMeter.
+.PP
+  X10_Hu_Power   x10_<Hu_alias>_Power
+.br
+  X10_Hu_Water   x10_<Hu_alias>_Water
+.br
+  X10_Hu_Gas     x10_<Hu_alias>_Gas
+.br
+  X10_Hu_Pulse   x10_<Hu_alias>_Pulse
+.br
+  X10_Hu_Count   x10_<Hu_alias>_Count
+.PP
+Example:
+.br
+  SCRIPT A1 on sndc :: echo "Gas used: "$x10_MyGas_Gas | mail
+
+.SH RFXMETER CONFIGURATION
+Configuring the RFXMeter is a matter of pushing or not
+pushing the MODE button on the RFXMeter transmitter in
+response to transmitted prompts.
+.PP
+When the button is to be pushed, it generally has to be
+done within 5 seconds.  Or if the button is not to be
+pushed, it\'s necessary to wait 5 seconds for the next
+prompt.
+.PP
+To help avoid confusion and frustration with this process,
+a special Heyu Monitor feature has been implemented.  If the
+monitor is started with the parameter "rfxmeter", i.e.,
+.br
+  heyu monitor rfxmeter
+.PP
+then only RFXMeter messages are displayed and their format
+is simplified as follows:
+.PP
+  The usual date, time, and signal source are omitted.
+.br
+
+  Normal data transmissions are displayed as:
+.br
+    RFXMeter ID nn, Counter nnnn pulses
+.br
+
+  Instructional messages and prompts from the RFXMeter are
+.br
+    translated and displayed.
+.PP
+With this special monitor window open, start the configuration
+process by powering down the RFXMeter for at least 10 seconds,
+then hold down the MODE button on the device while restoring the
+power. When the green LED lights, release the button. Following
+display of the firmware identification, the prompts will
+begin.
+.PP
+The order the configuration items will appear is:
+.br
+  Set Interval
+.br
+  Set Address
+.br
+  Power Calibration 
+.br
+  Reset Counter to zero
+.PP
+Note: Power calibration requires a precision wattmeter and is
+normally unnecessary since the unit is precalibrated at the
+factory.
+
+.SH RFXMETER OVERVIEW
+RFXMeters are manufactured by RFXCOM (http://www.rfxcom.com)
+They consist of an RF transmitter with up to three plug-in modules.
+The transmitter operates at a carrier frequency of 433.92 MHz.
+Plug-in modules are available for metering power consumption and
+for counting pulses from optical sensors or switch contacts
+attached to other types of meters such as water or gas meters.
+Counter values are saved in non-volatile memory in the event
+of power interruption.
+.PP
+Multiple RFXMeter transmitters may be used with a total of
+up to 256 plug-in modules. (This many would use all 256
+X10 Housecode/Unit addresses.)
+.PP
+The RFXMeter transmits its data packet at user configurable
+intervals of 30 seconds, 1, 6, 12, 15, 30, 45, or 60 minutes.
+.PP
+
+.SH AUTHORS
+RFXMeter support was added to Heyu by Charles W. Sullivan
+
+.SH SEE ALSO
+http://www.rfxcom.com/sensors
+.br
+http://www.rfxcom.com/documents/RFXMeter.pdf
+.br
+http://www.rfxcom.com/documents/RFXPwr%20module.pdf
+.br
+http://www.rfxcom.com/documents/RFXPulse%20module.pdf
+.br
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5),
+x10cm17a(5), x10rfxsensors(5)
+
+
+  

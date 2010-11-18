@@ -1,0 +1,85 @@
+# This is an example of a Heyu schedule file.  It uses features which
+# are new to Heyu version 2 and which will not be recognized by heyu
+# version 1.xx
+
+# In this timer, the macro c5on will be executed once a day at 2:58 PM.  The
+# macro c5off will execute at 2:59 PM.  The timer is active every day of the 
+# week from 2/1 through 12/12.
+
+timer  smtwtfs    02/01-12/12 14:58 14:59   c5on  c5off
+macro  c5on  0  on  a1,3
+macro  c5off 0  off a1,3
+
+# The next one only runs on Dec 11, and then only if it falls on a Friday.
+
+timer .....f. 12/11-12/11 23:34 23:35  d6on  d6off
+macro  d6on  0  on  d6
+macro  d6off 0  off d6
+
+# This timer sounds a chime (perhaps a Universal Module UM-506) every workday
+# at Noon, legal (wall clock) time, Monday through Friday.  There's nothing
+# logically appropriate for the "off" event so we use the null macro, which
+# does nothing.
+
+timer .mtwtf. 01/01-12/31 12:00 00:00  lunch_chime  null
+macro  lunch_chime 0  on b6
+
+
+# This one uses the special date range "expire-dd" to sound a chime at 
+# 7 AM and 7 PM  3 days in a row before the expiration date of the schedule
+# and on the final date itself (a total of 4 days) to remind the user 
+# that the uploaded schedule will shortly become invalid and need to be 
+# reloaded. 
+
+timer smtwtfs  expire-3  07:00 19:00  chime  chime
+macro chime  0  on b6
+
+
+# The following two timers turn on an inside hall light 30 minutes before 
+# Dusk, dim it after 11 PM, and turn it off 15 minutes after Dawn.
+
+timer smtwtfs  01/01-12/31  dusk-30  23:00  hall_on   hall_dim
+timer smtwtfs  01/01-12/31  dawn+15  00:00  hall_off  null
+macro hall_on  0  on  a7
+macro hall_dim 0  dim a7 15
+macro hall_off 0  off a7
+
+
+# The following timer operates decorative lighting between Dusk and 10 PM 
+# during the holiday season.  We also add triggers to operate the lights
+# manually from a plug-in or remote controller.  (The user's longitude and
+# latitude need be defined in the x10config file in order for heyu to
+# compute the time of Dusk at the user's location.)
+
+timer smtwtfs  12/15-01/02  dusk  22:00   xmas_on  xmas_off
+macro xmas_on  0  on  b5,6,9-12
+macro xmas_off 0  off b5,6,9-12
+trigger  d5  on  xmas_on
+trigger  d5  off xmas_off
+
+# This trigger runs the previously defined macro c5off when 'c1 off' is received.
+# The net effect would be that the device with the code c1 will be turned off AND
+# whatever the macro c5off directs will be done too.
+
+trigger c1          off              c5off
+
+# E4 is a dusk sensor (ms13a) outside.  It turns on the living room lamps 
+# (via the livingroom_on macro), but it does not turn them off. I use a timer 
+# to do that at 10 PM.  (If I waited for the ms13a, they'd turn off at dawn 
+# even if I'm reading my newspaper then.)
+
+trigger e4 on livingroom_on
+timer   smtwtfs  01/01-12/31  22:00 00:00  livingroom_off  null
+macro   livingroom_on  0  on  b1-3
+macro   livingroom_off 0  off b1-3
+
+# These timers employ timer options to prevent the On/Off events from
+# occurring in the wrong order during summer months when Dusk can fall
+# much later in the day.  In this case the option 'DUSKLT 21:00'
+# directs heyu to create timers only for days when Dusk occurs before,
+# i.e., "less than" (LT), 21:00 hours.
+
+timer smtwtfs 01/01-12/31 dusk  21:00 light_on  light_dim  dusklt 21:00
+timer smtwtfs 01/01-12/31 23:00 00:00 light_off null       dusklt 21:00
+
+

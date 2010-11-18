@@ -1,0 +1,18 @@
+
+Note for CM10A (IBM HD16) owners:
+
+For Heyu to support the CM10A, you must append
+the keyword CM10A to the TTY directive in your
+Heyu configuration file, e.g.,
+  TTY  /dev/ttyS0  CM10A
+
+For this change to become fully effective it must
+be incorporated in the heyu_relay process running in
+the background.  If the heyu_relay is currently running
+(almost any Heyu command will have started it running),
+this requires stopping and restarting Heyu, e.g.,
+  heyu stop
+  heyu cm10a_init
+
+
+

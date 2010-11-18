@@ -1,0 +1,2176 @@
+.TH HEYU 1 local
+.SH NAME
+.B Heyu\^
+- a control program for the  X-10 CM11A serial interface
+.SH USAGE
+.B heyu [options] command [parameter(s)]
+.br
+
+Run \'heyu help\' for a description of the Heyu options and commands available
+in the current version.
+
+.SH DESCRIPTION
+.I Heyu
+is a program for controlling an X-10 CM11A 2-Way Computer Interface.
+This is the control device manufactured by X-10 (USA) Inc.
+and found in their ActiveHome(TM) CK11A kit.  Equivalent (rebranded)
+devices have been sold as the IBM HD11A Home Director and the RCA HC60CRX
+Home Control Interface.  220 Volt versions of the CM11A are sold in Europe as
+variously named CM11x models (depending on AC plug style) and in the UK
+as the CM12U.
+.PP
+The CM11A can remotely control lights and appliances in your house by
+signaling over the AC house wiring.  It can store lists of X10 signals and
+send them at scheduled times.  It can respond to some X10 signals
+by sending out other X10 signals.  With Heyu, it can respond to X10 signals 
+by executing an arbitrary command or script selected by the user.
+.PP
+Limited support is provided for the IBM HD16A, an earlier version of the Home
+Director without clock or battery backup and known as the CM10A - see
+special CM10A configuration instructions in the TTY directive section of
+man page x10config(5).
+.PP
+Heyu supports an auxiliary input device on a second serial port for X10
+RF signals.  Supported devices are the WGL W800RF32A, the X-10 MR26A,
+and the RFXCOM X10 RF Receivers.
+.PP
+The W800RF32A is manufactured by WGL & Associates (http://www.wgldesigns.com).
+It is available in both a 310 MHz version for operation in the USA and Canada
+and a 433.92 MHz version (W800RF32AE) for European and other countries.
+It can receive signals from standard, entertainment, and security X10
+transmitters.
+.PP
+The X-10 MR26A is usually bundled with a univeral remote in a package
+by X-10 but is also available individually.  It can receive standard and
+entertainment X10 signals but not security X10 signals.
+.PP
+The RFXCOM X10 receiver is supported in W800RF32 emulation mode and
+has the same capabilities.  It is a USB device but has a built-in 
+FTDI USB-to-Serial converter and communication with it is the same
+as with a serial port (assuming your OS supports the FTDI chipset, as
+does Linux).
+.PP
+Heyu also supports the X-10 CM17A "Firecracker", a small serial dongle which
+can transmit X10 commands via RF signals to a transceiver plugged into the
+power line.  The CM17A and CM11A coexist on the same serial port - no
+additional serial port is required.
+.br
+As far as can be determined there is no version of the CM17A which
+transmits at an RF frequency other than the 310 MHz used for X10
+transceivers in North America.  A compile option is provided to
+compile Heyu without CM17A support for users outside North America or those
+who simply have no interest in this device. (See the file "INSTALL" included
+in the Heyu distribution directory.)
+.PP
+Heyu depends on a configuration file to tell it on what serial port
+the CM11A is connected and to provide it with various other user options.
+Heyu will not run without the configuration file. 
+See x10config(5) for more information.  The standard pathnames
+Heyu assumes for this file are either $HOME/.heyu/x10config or /etc/heyu/x10.conf,
+in that order, but the user can specify a non-standard pathname at the
+command line or with an environment variable.  (Operating systems other
+than Linux may store the configuration file in a different directory
+by default.)  The directory where Heyu finds the configuration file
+is Heyu\'s "base" directory.  Heyu requires that this directory be writable.  
+.PP
+The CM11A connects to a computer via an RS232 serial port (or a
+USB-to-Serial adapter for newer systems without an RS232 serial port).
+It can store about 128 events;  each event can turn on, turn off, or dim
+one or more X10 modules.  The CM11A box has a battery backed clock
+which the computer can read.  The data is stored in an EEPROM.
+.PP
+You could just put a bunch of Heyu commands in your crontab, but
+this doesn\'t work if your system is down for backups, or has crashed,
+or if someone\'s tripped over the RS232 cable and unplugged it, and it
+clutters up the crontab.  For most users, it\'s much
+easier to upload a schedule of events into the CM11A\'s EEPROM.
+.PP
+Special note: If you have chosen to locate the Heyu configuration
+file under your home directory and then run Heyu commands in crontab,
+Heyu won\'t be able to automatically find the configuration file since
+it will be running as user 'root'.  In this situation, specify the
+full path to the configuration file with either the '-c' Heyu command
+line switch or with the environment variable X10CONFIG.
+.br
+Also, specify the full Heyu executable pathspec, e.g., /usr/local/bin/heyu,
+if your crontab path does not include the directory where the Heyu executable
+is located.
+.PP
+The timers and macros to be uploaded the the CM11A\'s EEPROM are stored
+in a file.  The default is $HOME/.heyu/x10.sched
+or /etc/heyu/x10.sched.  See x10sched(5) for the layout of the file.
+.PP
+X10 modules are identified by a one-letter housecode ranging from A to P
+(for 16 different codes) and a number from 1 to 16, for a total of 256
+possible unit codes. The character \'*\' is interpreted to mean
+all units 1-16 (but must be escaped if entered on the command line).
+.PP
+Heyu spawns a relay daemon that gathers the CM11A output
+for any process that wants it.  This allows running the monitor while sending
+on/off commands.  Just as important is that it also catches power fail
+messages and responds to them immediately.
+.PP
+As of version 2, a state engine daemon may optionally
+be started which will maintain a record of the state of each module on
+the system, and which has the capability of executing scripts.
+.PP 
+Heyu supports multiple CM11A units connected to different serial
+ports on the same computer.  The configuration files for each CM11A 
+must be stored in different directories - it\'s usually most convenient to
+store them in subdirectories /0 through /9 of the normal locations.
+Each CM11A operates independently of the others (except for
+communication via the house wiring) and has its own set of associated files.
+
+.SH OPTIONS
+.PP 
+-v   Enable verbose mode
+.PP
+-c  \<pathname\>  Specify full configuration file pathname
+.PP
+-s  \<pathname\>  Specify full schedule file pathname
+.PP
+-0 ... -9  Look for config file in subdirectory /0 ... /9
+of standard location, e.g., $HOME/.heyu/3/x10config
+
+.PP
+.SH COMMANDS
+.PP
+Heyu\'s commands are divided into Administrative, State, Direct, and
+CM17A "Firecracker" commands.
+.PP
+Administrative commands generally control some feature of the CM11A or display
+information from the CM11A, or display information about Heyu or about the
+user\'s configuration.
+.PP
+State commands return in various formats information about the state of
+modules on the user\'s system which has already been stored in the tables
+maintained by Heyu Engine.  They don\'t attempt to update these tables.
+They are primarily intended to be called by scripts.
+Note however that scripts launched by the Heyu state engine (excluding heyuhelper) 
+are passed an environment which already contains most all the state information.  Any of the
+state commands require that the Heyu state engine daemon (heyu_engine) be running.
+.PP
+Direct commands are used to transmit specific module control instructions
+out over the AC power line through the CM11A interface.
+.PP
+CM17A "Firecracker" commands transmit X10 RF signals if there is a CM17A
+device connected to the serial port.
+
+.SH ADMINISTRATIVE COMMANDS
+.PP
+.IP \fBdate\fP
+Gets current date and time from the CM11A clock/calendar and displays
+it in a form suitable for feeding to \fIdate(1)\fP as input.  
+.PP
+.IP \fBerase\fP
+Erases the CM11A\'s EEPROM.  All events, macros, etc  are permanently gone.
+.PP
+.IP \fBinfo\fP
+Displays the current setting of CM11A\'s clock, base housecode, battery timer,
+and monitored housecode registers.  It also displays the status of 
+the uploaded timer schedule, if any.
+.PP
+.IP \fBhelp\fP
+Displays a list of the commands that are available.  If executed with the
+name of a command as a parameter, it will display the the syntax for that
+command only.  If executed with the parameter \'admin\', \'state\',
+\'direct\', \'cm17a\', \'shutter\', \'rfxsensor\', or \'rfxmeter\' 
+it will display only the commands of that type.
+
+.PP
+.IP \fBsyn\fB
+Displays built-in synonyms for many of the common direct commands.
+.PP
+.IP \fB<scene_label>\fP
+Executes a scene or user-defined synonym (usersyn) from the user\'s
+configuration file.
+.PP
+.IP \fBshow\fP
+Display various information from the user\'s configuration file
+or about the state of the system. Run \'heyu show\' with no other
+parameters to see the options available in the current release.
+.br
+
+al[iases]      Aliases defined in config file
+.br
+ar[med]        Armed status of Heyu
+.br
+sc[enes]       Scenes defined in config file
+.br
+se[nsors]      Sensor health report.
+.br
+u[sersyns]     Usersyns defined in config file
+.br
+m[odules] H    Module attributes, housecode H
+.br
+l[aunchers] [H] Launcher attributes, all, or housecode H (or -p -s -r -t)
+.br
+h[ousemap] [H] Overall system state, or details housecode H (*)
+.br
+da[wndusk]     Dawn and Dusk used for \'night\' and \'dark\' flags (*)
+.br
+dim[levels]    Dim levels of modules as percent brightness (*)
+.br
+r[awlevels]    Native levels of modules (0-210, 1-31, 0-63) (*)
+.br
+f[lags]        Software flags (*)
+.br
+ti[mers]       Countdown times for active timers (*)
+.br
+ts[tamp] Hu    Data and time of last signal to address Hu (*)
+.br
+g[roups] H     Extended code group assignments and levels (*)
+.br
+x[10sensors]   Tabular display of X10 Security sensors (*)
+.br
+dig[imax]      Tabular display of DigiMax sensors (*)
+.br
+rfxs[ensors]   Tabular display of RFXSensor sensors (*)
+.br
+rfxm[eters]    Tabular display of RFXMeter sensors (*)
+.br
+or[egon]       Tabular display of Oregon sensors (*)
+.br
+ot[hers]       Cumulative received address map (*) - clear with 
+                 \'heyu initothers\' or \'heyu initstate\'
+.br
+(*) Require the heyu state engine to be running
+
+.PP
+.IP \fBupload [check | croncheck | status | cronstatus]\fP
+By itself (heyu upload), the upload command reads timers, triggers, and
+macros from the user\'s schedule file, processes it and creates a binary
+memory image, and uploads this image into the CM11A\'s EEPROM.
+.br
+
+Upon successful completion, the following files are written to the
+hard drive in Heyu\'s base directory.
+.br
+
+x10record   -  Heyu\'s memory of the mode and time of the most recent
+uploaded schedule.  (This _must_ remain intact for Heyu to know how to
+reset the CM11A clock when required.)
+.br
+
+x10macroxref - A listing of the EEPROM addresses of uploaded macros for
+use by Heyu\'s state engine and monitor.
+.br
+
+x10image    -  The 1024 byte binary image of the EEPROM.  It\'s also
+used by Heyu\'s state engine and monitor
+.br
+
+report.txt  -  The full details of Heyu\'s processing of data 
+uploaded to the EEPROM.
+.br
+
+If there are errors in the schedule file, the load will abort without
+changing anything.
+.br
+
+The upload command with the check option (heyu upload check)  will check
+the config file and report any errors.  The only file written to the
+hard drive is the same \'report.txt\' mentioned above. (A configuration
+file directive can be used to force writing the other files with
+a ".check" extension.)
+.br
+
+The upload command with the croncheck option (heyu upload croncheck) 
+is only applicable when Heyu is configured to operate in HEYU mode 
+(see \fix10config(5)\fR for a description of the MODE directive).  It 
+repeats the data processing Heyu would do if \'heyu upload check\' were
+executed daily for the next 366 days and writes a file \'cronreport.txt\' to the
+hard drive with a daily summary.  (Its purpose is to prevent unpleasant
+surprises if 'heyu upload' is to be executed automatically as a cron job.)
+.br
+
+The upload command with the status option (heyu upload status) or the
+cronstatus option (heyu upload cronstatus) reports the number of days 
+before the currently uploaded schedule will expire. These options are
+useful primarily when Heyu is configured to operate in HEYU mode,
+where the period of validity of the schedule is variable at the user\'s
+option.  The difference between the two, i.e., status and cronstatus,
+is that \'status\' displays a human-readable message whereas \'cronstatus\'
+displays only the number of days (or an error code) for convenient
+parsing in a cron script.  The codes are:
+.br
+
+  >= 0  Number of days until expiration (0 = Today is last day)
+.br
+    -1  SCHEDULE_EXPIRED  (Schedule must be reloaded)
+.br
+    -2  NO_EXPIRATION     (Schedule contains no timers)
+.br
+    -3  NO_RECORD_FILE    (No schedule has been uploaded)
+.br
+    -4  BAD_RECORD_FILE   (File x10record is corrupted.)
+.br
+.PP
+.IP \fBcatchup\fP
+Reads the EEPROM image binary file x10image saved when a schedule is
+uploaded and immediately executes in chronological order the commands
+in the macros for each timed event scheduled for today\'s date, beginning
+at 00:00 hours and continuing up until the current system time.  
+.PP
+.IP \fBtrigger\fP
+An uploaded macro can only be executed by an uploaded timer or if
+triggered by a powerline command.  The 'heyu trigger Hu on|off' command
+emulates a powerline trigger by looking up the trigger condition and
+macro commands in the x10image and x10macroxref files saved by Heyu when a
+schedule is uploaded.  It then executes them as direct commands.
+Macro delays are ignored.
+.PP
+.IP \fBmacro\fP
+Using the x10macroxref and x10image files saved when a schedule
+is uploaded, \'heyu macro <label>\' looks up the commands comprising
+the macro with the argument label and immediately executes them as
+direct commands.  Macro delays are ignored.
+.PP
+.IP \fBmonitor\fP
+When executed in a separate terminal window, all X10 events sent and received
+by the CM11A interface will be displayed in this window.  The output goes to
+stdout and may be redirected to a file (however the log file generated 
+by the Heyu state engine process contains the same information, and more).
+The events are time-stamped and identified as to their source with the
+following codes:
+.br
+\fIsndc\fP  - Sent from the Heyu command line.
+.br
+\fIsnda\fP  - Transceived from RF by the heyu_aux daemon.
+.br
+\fIsnds\fP  - Sent by Heyu from within a script. (*)
+.br
+\fIsndp\fP  - Sent by Heyu from within a power-fail script. (*)
+.br
+\fIsndm\fP  - Sent by an uploaded macro when initiated by a Timer.
+.br
+\fIsndt\fP  - Sent by an uploaded macro when initiated by a Trigger.
+.br
+\fIrcvi\fP  - Received over the AC power line.
+.br
+\fIrcvt\fP  - A Trigger signal which initiated an uploaded macro.
+.br
+\fIrcva\fP  - RF signals received from the heyu_aux daemon.
+.br
+
+(*) When that script is launched by the Heyu state engine daemon.
+.PP
+.IP \fBstart\fP
+Starts the Heyu relay daemon and other configured daemons, i.e., it
+will also start the Heyu Engine daemon if the directive \'START_ENGINE AUTO\'
+appears in the configuration file and will start the Heyu Auxilliary daemon
+if the \'TTY_AUX ...\' directive appears in the configuration file.
+.PP
+.IP \fBrestart\fP
+Directs all running Heyu background processes - heyu_relay, heyu_engine,
+heyu_aux - plus Heyu monitors, to re-read the configuration file and
+incorporate any changes since these processes were started.
+.PP
+.IP \fBstop\fP
+Kills the heyu_relay daemon that gathers input from the tty port.  This will also
+cause heyu_engine, heyu_aux, and any monitors to stop.  It can only kill the
+processes that you have permissions to stop.
+.PP
+.IP \fBengine\fP
+Starts the Heyu state engine daemon, heyu_engine, a background process which
+maintains a record of the state of each module based on X10 signals sent
+or received, and which can launch scripts based on these signals.  If so
+enabled in the configuration file, its output, similar to that of the monitor,
+is written to a log file.
+.br
+This command will not be needed if the directive "START_ENGINE AUTO" is
+included in the configuration file and Heyu's background processes are
+initiated by running \'heyu start\'.
+.br
+
+Whenever changes are made to the configuration file, the engine must
+be restarted for the changes to be incorporated.  (Run \'heyu restart\'
+to restart it.)
+.br
+
+Warning: The record of module states maintained by the state engine can be
+in disagreement with reality for any number of reasons and should never
+be relied on for critical applications.
+.PP
+.IP \fBaux\fP
+Starts the auxiliary daemon heyu_aux, a background process which
+allows X10 commands to be input to Heyu via RF signals from a W800RF32A,
+MR26A, or RFXCOM serial receiver.  The serial port to which the receiver is
+connected and the receiver device type must be specified in the
+configuration file with the TTY_AUX directive.
+.br
+
+This command will not be needed if Heyu's background processes are
+initiated with the \'heyu start\' command.
+.PP
+.IP \fBscript_ctrl\fP
+Globally disables (\'heyu script_ctrl disable\') or enables
+(\'heyu script_ctrl enable\') launching of scripts by Heyu.  This
+command overrides the configuration directive SCRIPT_CTRL (or its
+default value of ENABLE).
+.PP
+.IP \fBinitstate\fP
+If no housecode is specified, initializes the entire X10 state table to zero.
+With a housecode (heyu initstate H), initializes the state table to zero for
+just that housecode.
+.PP
+.IP \fBinitothers\fP
+Initialize the cumulative received address state table to zero.
+.PP
+.IP \fBreset\fP
+The default action for \fIreset\fR is to clear the registers in the the CM11A
+and to set it to the default housecode defined in the configuration file.
+The CM11A will then track state changes for that housecode in its internal
+registers.  If a housecode is specified as an argument, the CM11A will be set
+to track state changes on that housecode instead.  Note that the state recorded
+in the CM11A internal registers is completely independent of the all-housecode
+states tracked by the Heyu state engine.
+.PP
+.IP \fBsetclock\fP
+Reads the system clock and loads it into the CM11A.  This is adjusted for local
+daylight savings time and for the mode of an uploaded schedule, if any.  As of
+Heyu version 2, the CM11A clock is maintained on local Standard Time throughout
+the year.
+.PP
+.IP \fBreadclock\fP
+Displays the date and time for the CM11A and system clocks.  The raw data from
+the CM11A clock is adjusted for local daylight savings time and for the mode
+of an uploaded schedule, if any.
+.PP
+.IP \fBnewbattery\fP
+Resets the CM11A battery timer to zero.
+.PP
+.IP \fBpurge\fP
+Cancel any pending delayed macros, i.e., delayed macros which have been called
+by a timer or trigger but have not yet been executed.
+.PP
+.IP \fBclear\fP
+Clear the CM11A unit status registers for the monitored housecode.
+.PP
+.IP \fButility\fP
+Several infrequently-used options are available:
+.br
+
+\'heyu utility syscheck\' displays clock/calendar/timezone information obtained
+from the system by Heyu.  Use this to make sure that your system\'s time
+configuration is what you think it ought to be.
+.br
+
+\'heyu utility dawndusk\' displays the times of Dawn and Dusk for today.
+.br
+
+\'heyu utility suntable [-r|-c|-n|-a -s -w] [yyyy]\' writes a file to the 
+hard drive containing a daily table of Dawn and Dusk as computed by Heyu for
+your Longitude, Latitude, and Timezone, for the current year or for year yyyy.
+By default, Dawn and Dusk are as defined by the DAWNDUSK_DEF directive in your
+configuration file, times displayed are Civil (i.e., wall-clock) times, and
+the table is 80 columns wide.
+.br
+Switches -r, -c, -n, -a direct Heyu to use the definition of Dawn and Dusk as
+Rise/set, or as Civil, Nautical, or Astronomical Twilight, respectively, and
+overriding the definition of Dawn and Dusk in your configuration file.
+.br
+Switch -s displays times as Standard Time throughout the year instead of
+Civil Time.
+.br
+Switch -w writes the table in wide (135 column) format instead of the default
+80 columns.  (Printing this table on US Letter or A4 size
+paper requires landscape orientation and an 8-point fixed font.)
+.br
+
+\'heyu utility calibrate\' provides the timing loop calibration needed for
+CM17A Firecracker "fast" commands and some experimental commands.
+.br
+
+\'heyu utility masks\' displays the numerical value of the mask environment
+variables for Heyu and Xtend environments.  (For use with \'heyu heyu_state\',
+\'heyu heyu_rawstate\', and \'heyu xtend_state\'.)
+.PP
+.IP \fBlogmsg\fP
+Writes its quoted-text argument (max length 80 characters) as a time-stamped
+entry in the Heyu logfile and on the monitor screen.  (There\'s no checking
+to see whether either the engine or monitor is actually running.)
+This is primarily intended for making occasional notes while testing and
+may or may not play well if executed in the midst of X10 power line activity.
+It will also increase the size of the spool file by a few bytes more than
+the length of the text, so should be used sparingly. 
+.br
+Example:
+.br
+  heyu logmsg "Awaiting signals from my new wall switch and transceiver."
+.PP
+.IP \fBcm10a_init\fP
+Manually re-initialize a CM10A interface provided Heyu has been configured
+for a CM10A instead of a CM11A.  Note that when thus configured, the Heyu relay
+should handle this automatically after a power interruption.
+.PP
+.IP \fBwait\fP
+Wait until execution of an uploaded macro has completed before returning.
+This is primarily intended for use when a script or shell command is launched
+by an X10 command executed within an uploaded macro, i.e., with launch source
+SNDM or SNDT, when it\'s important to be certain that the execution of the
+macro has been completed.  If the timeout parameter is omitted, the default
+timeout is 30 seconds.  This command operates by repeatedly pinging the CM11A
+once a second until it echoes back the ping character.
+.PP
+.PP
+.IP \fBrestore_groups\fP
+Primarily intended for use following an interruption of AC power, this
+command sends the X10 signals to all modules defined as supporting
+extended code groups to restore the group assignments and xconfig mode
+to the settings preserved in the X10 state file.  (Run \'heyu show
+groups H\' to display the group settings.)
+.PP
+.IP \fBlogtail\fP
+Calls the system \'tail\' command to display the last N lines of the
+Heyu log file.  If parameter N is omitted, the default for the system
+tail command, typically 10 lines, is displayed.  The directory where
+the log file is maintained must have been specified with the LOG_DIR
+directive in the Heyu configuration file.
+.PP
+.IP \fBlaunch\fP
+Launches a script defined by a SCRIPT directive provided a restricted
+subset of the launch conditions are satisfied.  For all scripts, the
+sources, keywords, and flags other than global flags are disregarded
+in the launch conditions.
+.IP
+For a Normal script, function tokens on, off, dim, and changed are
+interpreted as representing the on/off/dim/changed state of the
+specified module addresses rather than signals.  All other function
+tokens are disregarded.  The launch condition is satisfied if any
+one of the state comparisons is TRUE and all the global flags are
+TRUE.
+.br
+For an Address script the launch conditions are satisfied
+when a module is in the addressed state and the global flags are true.
+.br
+
+The syntax is:
+.br
+   heyu launch [-e] [-L<n>] <script_label>
+.br
+For a Normal or Address script, the -e switch instructs Heyu to ignore
+the functions and addresses and test only the global flags in the
+launch conditions, as if it were an -exec script.
+.br
+
+Each set of launch conditions for a script is tested in the same order
+as for a script launched by an X10 signal.  For a script with multiple
+launchers, the testing can be confined to a single launcher by providing
+the launcher number <n> with the -L<n> switch.  Launcher numbers start
+at 0 for each script and are displayed in square "[]" brackets following
+the script label in \'heyu show launchers\' command when there is more
+than one. (If there is only one set of launch conditions, the launcher
+number will always be 0 and is not displayed.)
+.br
+
+Examples:
+
+.br
+For the directive:
+  SCRIPT -l CheckLights A1-16 on notnight nosrc; B1-16 on notnight nosrc :: ...
+.br
+  heyu launch CheckLights
+.br
+  heyu launch -L1 CheckLights
+
+.PP
+.IP \fBversion\fP 
+Prints the version number and then exits.
+
+
+.SH STATE COMMANDS
+These commands are primarily intended for external scripts or programs
+to obtain state information from Heyu which has previously been stored in
+the state tables maintained by the Heyu engine.  Scripts and programs launched
+by the Heyu engine already have access to complete state information
+via the environment variables passed to them.  For a more human-readable
+display, use the \'heyu show housemap [H]\' command.
+
+.PP
+These commands will display the various states of a module.  The parameter
+is a single-unit housecode|unit string \'Hu\' or just a housecode \'H\'.
+(An alias is also accepted.)  For the flagstate command, the parameter
+is just the number of the flag (1-N).
+.PP
+The format for some of the state commands has been changed to the
+following.  See below for the older formats, which are still available.
+.PP
+   enginestate     State engine daemon is running (1) or not running (0)
+.br
+   armedstate      Bitmap: 1 = Armed, 2 = Home, 4 = ArmPending, 8 = tamper
+.br
+   sensorfault     Bitmap: 1 = Low battery, 2 = Inactive, 8 = tamper
+.br
+   flagstate  n    State of flag n as either 1 (set) or 0 (clear)
+.br
+   nightstate      State of night flag as 1 (night) or 0 (notnight)
+.br
+   darkstate       State of dark flag as 1 (dark) or 0 (notdark)
+.br
+                   (Dark is defined by config directive ISDARK_OFFSET)
+.br
+   sunstate        Bitmap: 1 = Night, 2 = Dark
+
+.PP
+In the following, specifying a housecode|unit (Hu) will display the
+boolean value 1 or 0 representing that Hu is in or not in that state,
+respectively.  Specifying only the Housecode will display a unit bitmap
+(as an integer) of the units which are in that state, with bit 0 
+corresponding to unit 1, bit 1 to unit 2, bit 2 to unit 3, etc.
+.br
+   onstate   H[u]    On state
+.br
+   offstate   H[u]   Off state (not On)
+.br
+   dimstate  H[u]    Dim state
+.br
+   addrstate H[u]    Addressed state
+.br
+   chgstate  H[u]    Changed state
+.br
+   fullonstate  H[u]  Fully On state (On and not Dim)
+.br
+   alertstate H[u]   Alert state
+.br
+   clearstate H[u]   Clear state
+.br
+   auxalertstate H[u]   AuxAlert state
+.br
+   auxclearstate H[u]   AuxClear state
+.br
+   lobatstate H[u]   Low Battery state for sensors
+.br
+   validstate H[u]  Function processed state (*)
+.br
+   activestate H[u]  Active state for sensors
+.br
+   inactivestate H[u]  Inactive state for sensors
+.br
+   spendstate H[u]   Status-pending flags (**)
+.br
+   statusstate H[u]  Deprecated - same as spendstate H[u]
+
+.PP
+(*) validstate H[u] indicates that a signal supported by the module
+type at H[u] has been sent or received in the Heyu State Engine since
+Heyu was started.
+
+.PP
+(**) When Heyu sends or receives a status or xstatus signal, the Heyu
+State Engine sets a status-pending flag for the addressed unit in its
+state table.  When it receives a StatusOn, StatusOff, or xStatusAck return
+signal from a 2-way module, it resets this flag for the addressed unit.
+.br
+If the status-pending flag remains set after an expected response
+time (which may be a few seconds), it\'s an indication that something
+is wrong - possibly a missed signal, a tripped circuit breaker or GFI,
+or a 2-way module unplugged or simply gone bad.
+.br
+Note that most common modules are only 1-way and don\'t respond to a
+status request. The state of the status-pending flag is therefore
+meaningless for those modules.  Note also that the status-pending flag
+will NOT be reset for 2-way modules (like many SwitchLinc and LampLinc
+modules) which return a brightness level rather than a StatusOn/StatusOff
+signal.
+.PP
+The \'sensorfault\' command provides a quick check of sensors defined
+by their module types in an ALIAS directive as being security sensors.
+.br
+A displayed value of 0 indicates all security sensors are operating
+normally, otherwise the consolidated bitmap with 1 indicates a low
+battery in one or more sensors, and the bitmap with 2 indicates one or
+more sensors haven\'t reported in the elapsed time defined by the
+INACTIVE_TIMEOUT configuration directive.  Run \'heyu show sensors\'
+for a detailed report identifying the individual sensors with
+problems.
+
+.PP
+The old format is available for compatibility by setting the configuration
+directive OLD_STATE_FORMAT to YES.  The commands require a housecode|unit
+parameter Hu and display the output in the heyuhelper style.  Example
+outputs are shown in parentheses for Hu = B8.
+.PP
+   onstate   Hu    State of Hu as either On or Off  (b8On, b8Off)
+.br
+   dimstate  Hu    State of Hu as Dim, On, or Off  (b8Dim, b8On, b8Off)
+.br
+   addrstate Hu    Addressed state of Hu  (b8Addr, b8Unaddr)
+.br
+   chgstate  Hu    Changed state of Hu  (b8Chg, b8Unchg)
+.br
+.PP
+The following command displays the state of all units on housecode H
+as a 16 character ASCII string.  Characters 1-16 represent respectively
+the states of Units 1-16, each as a (lower-case) hexadecimal digit
+0-0xf formed by adding together the state values On = 8, Dimmed = 4,
+Changed = 2, Addressed = 1.
+.br
+   statestr  H    (8c30000000000000)
+.br
+
+The above example indicates H1 is On, H2 is On and Dimmed,
+H3 was changed to Off by the most recent command on housecode H
+and remains addressed, and H4-16 are all Off and unaddressed.
+.br
+
+The following return the current brightness or native level
+of module Hu as recorded by the Heyu state engine.  (For Hu addresses
+of X10 security sensors, the security data byte is returned.) 
+.br
+
+   dimlevel  Hu    Brighness level of Hu as 0-100%  (50)
+.br
+   rawlevel  Hu    Native level (0-210, 1-32, or 0-63) of Hu (32)
+.PP
+
+The following return respectively the stored brightness level 0-100%
+and stored native level for modules which retain the memory of a
+previous setting, e.g., lamp modules which support the Resume or
+On-Level feature, or shutter controllers which store a limit value.
+The level returned for modules without a memory feature will be just
+the maximum level for that module type. (For Hu addresses of two-channel
+X10 security sensors configured in dual mode, the security data byte
+for the Aux channel is returned.)
+.br
+
+   memlevel  Hu    Stored brightness level of Hu as 0-100%
+.br
+   rawmemlevel Hu  Stored native level of Hu
+.PP
+   counter N       Value of counter N
+.PP
+
+The following return the state bitmap of a module as a decimal integer.
+See x10scripts(5) for the meaning of each bit, which differs for Heyu
+and Xtend bitmaps.  These are the values of the variables provided
+in the script environment as \'X10_Hu\'.
+.br
+
+   heyu_state  Hu  Heyu script environment state bitmap with dimlevel
+as a percentage of full brightness.
+.br
+   heyu_rawstate Hu Heyu script environment state bitmap with 
+native level (0-210, 1-32, 0-63, 0-15, 0-255).
+.br
+   heyu_vflagstate Hu  Heyu script environment vFlag state bitmap
+.br
+   xtend_state Hu  Xtend script environment state bitmap
+.PP
+   rcstemp H  Retrieves the stored value of temperature from an
+RCS compatible thermometer which has previously been stored in
+the Heyu Engine state tables by either an automatic report or
+resulting from a query of the thermometer.
+.PP
+The following command directs the state engine to write an updated
+state file to the hard drive.
+.br
+
+   fetchstate
+.br
+
+This command should be required only if the configuration directive
+AUTOFETCH has been changed to NO, _and_ it\'s important to know the
+addressed/unaddressed state of a module.  Here\'s why:
+.br
+The state engine automatically updates the state file whenever an
+X10 function is sent or received, but not when an X10 address is
+sent or received until the X10 function which normally follows.
+The state file is used only when a state command, e.g., \'onstate\' or
+\'dimstate\' command is issued from the command line.  (The environment
+variables supplied by Heyu when a script is launched by the state
+engine are created directly from the engine\'s memory record and not
+the state file.)
+
+Of the state commands, only \'addrstate\', \'heyu_state\',
+\'xtend_state\' report the addressed state of a module or modules.
+If the configuration directive AUTOFETCH retains its default value
+of YES, these commands will automatically call for an update of the
+state file.  If AUTOFETCH is changed to NO _and_ an X10 address is
+sent or received without a following X10 function, then it will be
+necessary to execute \'heyu fetchstate\' before the any of the above
+mentioned state commands in order for the reported addressed state
+to be correct.
+.br
+
+Example: If AUTOFETCH is set to NO and the following sequence of
+X10 signals is received:
+.br
+   address unit 1 : housecode A
+.br
+   function    On : housecode A
+.br
+   address unit 2 : housecode A
+.br
+
+Then the command \'heyu addrstate An\' will incorrectly show
+A1 as addressed and A2 as unaddressed unless \'heyu fetchstate\'
+is run first.
+.br
+
+(The above may be a little confusing but the vast majority of users can
+safely ignore both the \'fetchstate\' command and the AUTOFETCH
+configuration directive.)
+.PP
+The following state commands retrieve data received from RFXSensors
+and stored in Heyu\'s state tables.  See man page x10rfxsensors(5)
+for details.
+.PP
+   rfxtemp Hu  Stored Temperature
+.br
+   rfxrh Hu    Stored Relative Humidity
+.br
+   rfxbp Hu    Stored Barometric Pressure
+.br
+   rfxvs Hu    Stored Supply Voltage
+.br
+   rfxvad Hu   Stored A/D Voltage
+.br
+   rfxvadi Hu  Stored internal A/D Voltage
+.br
+   rfxpot Hu   Stored Potentiometer setting
+.br
+   rfxtemp2 Hu Stored Second Temperature
+.br
+   rfxlobat Hu Stored Low Battery status (1 = Low, 0 = Normal)
+
+.PP
+The following state commands retrieve data received from RFXMeters
+and stored in Heyu's state tables.  See man page x10rfxmeters(5)
+for details.
+.PP
+   rfxpower Hu  Stored Watt-Hour meter reading.
+.br
+   rfxpanel [N] Stored total Watt-Hour reading for power panel N
+.br
+   rfxwater Hu  Stored Water meter reading
+.br
+   rfxgas   Hu  Stored Gas meter reading
+.br
+   rfxpulse Hu  Stored Pulse meter reading
+.br
+   rfxcount Hu  Stored raw counter reading
+
+.PP
+The following state commands retrieve data received from the
+DigiMax 210 Thermostat.  See man page x10digimax(5) for details.
+.PP
+   dmxtemp     Hu  Stored current temperature (C)
+.br
+   dmxsetpoint Hu  Stored setpoint temperature (C)
+.br
+   dmxstatus   Hu  Stored On/Off status (1 = On)
+.br
+   dmxmode     Hu  Stored Heat/Cool mode (1 = Heat)
+
+.PP
+The following state commands retrieve data received from Oregon
+Temperature/Relative Humidity/Barometric Pressure sensors or from
+Wind or Rain sensors.  See man page x10oregon(5) for details.
+.PP
+   oretemp      Hu  Stored temperature reading.
+.br
+   orerh        Hu  Stored Relative Humidity.
+.br
+   orebp        Hu  Stored Barometric Pressure.
+.br
+   orewindavsp  Hu  Stored Wind Average Speed.
+.br
+   orewindsp    Hu  Stored Wind Instantaneous Speed.
+.br
+   orewinddir   Hu  Stored Wind Direction angle.
+.br
+   orerainrate  Hu  Stored Rainfall Rate.
+.br
+   oreraintot   Hu  Stored Rainfall Total Accumulation.
+.br
+   elscurr      Hu  Stored Electrisave Current reading.
+.PP
+
+The following command allows an external program to store Temp/RH/BP data
+in the state table for a emulation (dummy) Oregon module for processing
+by Heyu, just as if the data were received from an actual Oregon sensor.
+.PP
+   heyu ore_emu  Hu  <func>  <value>
+.PP
+See section "OREGON SENSOR EMULATION" in man page x10oregon(5) for
+details.
+.PP
+
+The following command allows an external program to emulate a signal
+from an X10 Security sensor or remote, as if the signal were received
+from an actual device.
+.PP
+   heyu sec_emu  Hu  <func>  <flags>
+.PP
+where <funct> must be one which is transmitted by the physical
+security sensor or remote mapped to Hu. Like other Heyu function names
+it must be entered in all lower case.
+.br
+<func> may be:  alert, clear, sectamper, panic, arm, disarm,
+test, slightson, slightsoff, sdusk, sdawn, akeyon, akeyoff, bkeyon, or
+bkeyoff.
+.PP
+The <flags> must be specified as they would appear in the monitor/logfile
+when an actual RF transmission is received, although they are not case
+sensitive and can appear in any order after the <func>.  There are
+no defaults, e.g., for a door/window sensor with a Min/Max switch, either
+swmin or swmax must be specified.
+.br
+<flags> may be: swmin, swmax, swhome, swaway, main, aux, and lobat as
+supported by the particular sensor.  Do not specify the tamper flag as it
+is handled differently from the other flags.
+
+.SH DIRECT COMMANDS
+Heyu version 2 greatly expands the number of commands which can be executed
+directly from the command line.  All commands which the CM11A is capable
+of sending are now available, although many of them will be of little use
+to the average user.  
+.br
+
+Enter \'heyu help\' for a complete up-to-date listing of the 
+commands and their syntax.  A number of commands have synonyms which some
+users may find easier to remember.  Enter \'heyu syn\' to see the
+synonyms for each command. 
+.br
+Although a few commands are different, the command syntax in general
+is as follows:
+.br
+ 
+   heyu  \<command\>  Housecode|Units  [\<data\>]
+.PP
+The usual Housecode|Units address is comprised of a case-insensitive
+housecode letter A through P, followed with no intervening spaces by a
+list of the particular unit codes to be addressed, ranging from 1 through 16.
+Unit code 0 is acceptable (but not necessary) for commands which don\'t
+require any unit codes.
+.br
+
+An \'alias\' defined in the configuration file can be used in place of
+a Housecode|Units string.
+.br
+
+For any command, using an underscore (\'_\') in place of the housecode letter
+will direct Heyu to substitute the default housecode defined in the
+configuration file.
+.br
+
+The units list may consist of a single unit, multiple units delimited
+by commas, a range of units separated with a \'-\' sign, or a combination
+of the foregoing.
+.br
+
+The following are examples of valid Housecode|Unit addresses:
+.br
+   A7
+.br
+   B3,5
+.br
+   g2,4,6-9,11,14-16
+.br
+
+For commands which apply to all units in a given housecode, the
+units list is omitted, e.g.,
+.br
+
+   heyu lightson  B
+.br
+
+
+Direct Command listing (H = Housecode, HU = Housecode|Units):
+.br
+
+on  HU                   Turn units ON
+.br
+off  HU                  Turn units OFF
+.br
+dim  HU <level>          Dim by <level> (1-22)
+.br
+dimb  HU <level>         Dim to <level> (1-22) after full bright
+.br
+obdim HU <level>         Dim to <level> after on and full bright.
+.br
+bright  HU <level>       Brighten by <level> (1-22)
+.br
+brightb  HU <level>      Brighten by <level> (1-22) after full bright
+.br
+lightson  H              Turn All Lights ON
+.br
+lightsoff  H             Turn All Lights OFF (**)
+.br
+allon  H                 Turn All Units ON
+.br
+alloff  H                Turn All Units OFF
+.br
+turn  HU <command>       Change state on|off|up|down [vv]
+.br
+preset  HU <level>       Preset units to <level> (1-32) (*)
+.br
+mpreset  HU <linked>     Limited Preset for uploaded macros
+.br
+preset_level  <level>    Preset to <level> (1-32) (function only)
+.br
+status  HU               Request ON/OFF status (two-way modules)
+.br
+status_on  HU            Status Acknowledge ON
+.br
+status_off  HU           Status Acknowledge OFF
+.br
+hail  [H]                Hail other devices
+.br
+hailw  [H]               Hail other devices, await ack (*)
+.br
+hail_ack  [H]            Hail Acknowledge
+.br
+data_xfer  H             Data Transfer (function code 0xC)
+.br
+xon  HU                  Extended Turn Units Full ON (LM14A)
+.br
+xoff  HU                 Extended Turn Units Full OFF (LM14A)
+.br
+xpreset  HU <level>      Extended Preset <level> (0-63) (LM14A)
+.br
+xallon  H                Extended All Units ON (LM14A)
+.br
+xalloff  H               Extended All Units OFF (LM14A)
+.br
+xstatus  HU              Extended Status Request (LM14A)
+.br
+xconfig  H <mode 0-3>    Extended Config Auto Status Report (LM14A)
+.br
+                         (0 = Off, 1 = Extended, 2 = Standard, 3 = Either)
+.br
+xpowerup HU              Extended Module PowerUp signal (LM14A)
+.br
+xgrpadd HU G             Include HU in group G (0-3) at current level
+.br
+xgrpaddlvl HU g <level>  Include HU in group g (0-3) at level (0-63)
+.br
+xgrprem HU g[,g,...]     Remove HU from group(s) in list.
+.br
+xgrpremall H g[,g,...]   Remove all housecode H from group(s) in list
+.br
+xgrpexec H G             Execute functions for housecode H, group G
+.br
+xgrpstatus HU G          Return level (or Nack) for unit(s) in group G.
+.br
+                         (for 2-way modules only)
+.br
+xfunc  <T/F> HU <Data>   Extended command - general
+.br
+xfuncw  <T/F> HU <Data>  Extended command - general, await ack (*)
+.br
+address  HU [HU [...]]   Send HC|Units addresses only (*)
+.br
+function  <command ...>  Send command function only
+.br
+kill_all_hc              Send All_Units_Off to All Housecodes
+.br
+pause  N.NNN             Pause for N.NNN seconds (*)
+.br
+sleep  N.NNN             Sleep for N.NNN seconds (*)
+.br
+delay NNN                Delay for NNN minutes (*)
+.br
+rdelay [MIN] MAX         Delay random time between MIN and MAX minutes (*)
+.br
+temp_req  <query_cmd>    Request temperature (RCS compatible) (*)
+.br
+rcs_req  <query_cmd>     Request RCS compatible status (*)
+.br
+vdata  HU <Data>         Write data to primary byte at address HU (*)
+.br
+vdatam  HU <Data>        Write data to memory byte at address HU (*)
+.br
+arm  [parameters]        Arm system [home|away] [min|max] (@) (*)
+.br
+disarm                   Disarm system (@) (*)
+.br
+setflag  n[,n...]        Set one or more flags (@) (*)
+.br
+clrflag  n[,n...]        Clear one or more flags (@) (*)
+.br
+clrspend H[U]            Clear status-pending flags for H[U] (*)
+.br
+clrstatus H[U]           Deprecated - same as clrspend
+.br
+settimer N <hh:mm:ss>    Set countdown timer N to hh:mm:ss (@) (*)
+.br
+clrtimers                Reset all countdowns timers to zero (@) (*)
+.br
+clrtamper                Reset the global tamper flag (@) (*)
+.br
+setcount N <count>       Set counter N to count (0-64K) (@) (*)
+.br
+inccount N               Increment counter N by 1 (@) (*)
+.br
+deccount N               Decrement counter N by 1 (@) (*)
+.br
+
+(*)  Not available for use in uploaded macros.
+.br
+(**) Many dimmer modules do NOT support this command.
+.br
+(@)  Ignored if the Heyu state engine daemon is not running.
+.br
+
+Additionally, if Heyu has been configured to recognize Extended Code
+Type 0 (Shutter and Shade) commands:
+.br
+
+shopen  HU <level>      Open shutter to level (0-25) and cancel limit
+.br
+shopenlim  HU <level>   Open shutter to level (0-25), enforce limit
+.br
+shsetlim  HU <level>    Set limit (0-25) and open shutter to limit
+.br
+shopenall  H            Open all shutters fully and cancel limit
+.br
+shcloseall  H           Close all shutters fully
+.br
+
+(The only module known to support these shutter commands is the 230 Volt,
+50 Hz, Marmitek SW10 Shutter Motor Controller sold in Europe, and Marmitek
+keeps this support a secret.)
+
+.PP
+Internal engine precommands.  These work the same as the corresponding
+direct commands without the \'@\' prefix but are used ONLY in the command
+line of a SCRIPT directive.  See the SCRIPT COMMAND LINE section of
+man page x10scripts(5) for details.
+.PP
+@arm  [parameters]        Arm system [home|away] [min|max] (*)
+.br
+@disarm                   Disarm system
+.br
+@setflag  n[,n...]        Set one or more flags (*)
+.br
+@clrflag  n[,n...]        Clear one or more flags (*)
+.br
+@clrspend H[U]            Clear status-pending flags for H[U] (*)
+.br
+@settimer N <hh:mm:ss>    Set countdown timer N to hh:mm:ss (*)
+.br
+@clrtimers                Reset all countdown timers to zero (*)
+.br
+@vdata HU <byte>          Write data (0-255) to HU primary address (*)
+.br
+@vdatam HU <byte>         Write data (0-255) to HU memory address (*)
+.br
+@setcount N <count>       Set counter N to count (0-64K) (*)
+.br
+@inccount N               Increment counter N by 1 (*)
+.br
+@deccount N               Decrement counter N by 1 (*)
+.br
+@decskpz N                Decrement counter N by 1 and skip if zero (*)
+.br
+@decskpnz N               Decrement counter N by 1 and skip if not zero (*)
+.br
+@null                     Just a place holder - does nothing (*)
+
+.PP
+More details on a few of these commands:
+.br
+
+The \'heyu obdim HU <level>\' command is a compound command equivalent to
+running the scene \'on HU; bright -H 22; dim -H <level>\'.  It is intended
+to replace the \'dimb HU <level>\' command when compatibility of the new
+X-10 WS467 Wall Switch (redesigned in 2007) with the original WS467 (and other
+dimmers) is required. (The redesigned WS467 cannot be turned on from the Off
+state by a dim or bright alone.)
+.br
+
+The _turn, _preset, and _status "legacy" commands in earlier versions
+of Heyu have been removed.
+.br
+
+The \'setflag\', \'clrflag\', and \'clrstatus\' commands are not strictly
+speaking direct commands because they send nothing to the CM11A and only
+control software flags in the state engine.  They are included with the direct
+command group so they can be used in scenes and usersyns.
+.PP
+
+The \'setflag\' and \'clrflag\' parameter may be a
+single flag number between 1 and N, e.g., \'heyu setflag 4\', or a comma
+delimited list of numbers or ranges of numbers, e.g., \'heyu setflag 2,3,5-7\'.
+If the state engine daemon is not running, these commands will be silently
+ignored.
+.PP
+The \'arm\' command controls the setting of Heyu global security flags which can
+be tested as part of the launch conditions for Heyu scripts.  These flags are
+"disarmed", "armed", "notarmed", "armpending", "home" and "away".  (The
+"notarmed" flag is set when either the "disarmed" or "armpending" flag is set.) 
+.PP
+The MIN or MAX parameter determines the delay before the system enters
+the Armed state.  With MIN, the "armed" flag is set immediately.  With
+MAX, the "armpending" flag is set until the end of the delay time given
+by the ARM_MAX_DELAY configuration directive, at which time the flag will
+change from "armpending" to "armed".  If neither MIN nor MAX is entered
+the default is MIN.
+.br
+
+When the \'arm\' command is issued at the command line, Heyu will issue
+a warning if any of the configured security door/window or motion sensors
+are in the Alert state, since many of these sensors will retransmit the
+Alert signal at their heartbeat intervals.
+
+The HOME or AWAY parameter sets the "home" or "away" flag respectively.
+If neither HOME nor AWAY is entered, the default is AWAY.
+.PP
+When the \'arm\' command is received from an RF Security remote (signal
+source RCVA), the automatic setting of the global security flags as described
+above may be disabled with the config directive "ARM_REMOTE MANUAL".  This
+allows using the command to launch a script to customize the arming process,
+e.g., if doors or windows are open, warn the user and don\'t arm the system.
+.PP   
+The \'disarm\' command takes no parameters. It sets the "disarmed" flag and
+clears all the other global security flags.
+.PP
+  
+If the \'hail\' or \'hail_ack\' commands are entered without a
+housecode, Heyu will supply the default housecode from the
+Heyu configuration file, as if an underscore were entered for
+the housecode letter.
+.br
+
+The Heyu \'turn\' command requires using the underscore to
+initiate replacement with the default housecode.  It supports
+the functions on, off, lightson, lightsoff, allon, alloff, dim, dimb,
+bright, brightb, or any of the synonyms for these functions.
+.br
+The \'turn\' command also supports the CM17A commands fon, foff, fdim,
+fbright, flightson, flightsoff, falloff, and the applicable "fast"
+implementations of these commands.
+  
+The Extended Code command \'xconfig\' configures the automatic
+status reporting mode of an X-10 2-way module like the LM14A or
+AM14A.
+.br
+The module can be directed to automatically report its status
+whenever it receives a command which changes its state.  The four
+modes are: 0 = Off; 1 = Report status when an Extended command is
+received; 2 = Report status when a Standard command is received;
+3 = Report status when either a Standard or Extended command is
+received.  (Note that the mode is stored in volatile memory in the
+module and will be reset to the default mode 0 in the event of a
+power interruption.)
+.br
+
+The Extended Code module power-up signal \'xpowerup\' is sent by
+X-10 2-way modules like the LM14A and AM14A when they are
+powered up following an AC power interruption of at least a few
+seconds duration.  This signal is included as a direct and macro
+command primarily for testing purposes - its primary use is
+in launch conditions for a script or shell command to reconfigure
+the status reporting mode of the module.
+.br
+
+The general Extended Code commands \'xfunc\' and \'xfuncw\' require
+entering the extended Type/Function for the desired function between
+the command and the Housecode|Units list.  Both the T/F and Data 
+bytes are entered as hexadecimal digits.  Example:
+.br
+
+   heyu xfunc 31  M12  20
+.br
+
+(which is equivalent to \'heyu xpreset  M12  32\')
+.br
+
+The Extended Code Group command \'xgrpadd\' allows a module which
+supports extended code (Type 3) functions, like the LM14A, to be
+assigned to up to four groups (0-3), each with an individual preset
+level (0-63).  Then a single \'xgrpexec\' command executed for a group
+will set each member of that group on that housecode to the predefined
+preset level.  The \'xgrprem\' and \'xgrpremall\' command removes
+either individual units or the entire housecode from one or more groups.
+The \'xgrpstatus\' command polls a (2-way) module for the extended 
+preset level for a group stored in the module\'s (volatile) memory.
+.br
+Examples:
+   
+   heyu xgrpadd A1,9 2 
+.br
+adds modules A1 and A9 to group 2 at their current levels.
+.br
+
+   heyu xgrpaddlvl A1,2,4  3  40
+.br
+adds modules A1, A2 and A4 to group 3 at extended preset level 40
+.br
+
+   heyu xgrpexec A  2
+.br
+results in modules A1 and A9 simultaneously going to
+the levels defined for group 2.
+.br
+
+   heyu xgrprem  A9  2
+.br
+removes A9 from group 2.
+.br
+
+   heyu xgrprem  A1  2,3
+.br
+removes A1 from groups 2 and 3
+.br
+
+   heyu xgrpremall  A  2,3
+.br
+removes all modules on housecode A from groups 2 and 3
+.br
+
+   heyu xgrpstatus  A1  3
+.br
+for 2-way modules will be either acknowledged ("xGrpAck") by A1 with
+the preset level stored for group 3, or negative-acknowledged
+("xGrpNack") if A1 is not a member of group 3.
+
+.PP
+Details of Extended Codes defined by X-10 are found in their document
+xtdcodes.pdf which may be downloaded from their website.  (This
+document replaced their older XTC798.DOC.)
+.br
+
+The (old-style) \'preset\' command has a peculiar coding - the
+housecode is not part of the function byte as it is for all other
+native X10 commands.  Since  Heyu\'s \'preset_level\', i.e.
+preset function-only, command does not take a housecode, it is
+programmed simply as:
+.br
+
+   heyu preset_level  <level>
+.br
+
+The \'mpreset\' command implements the very limited CM11A
+support for (old style) \'preset\' commands in uploaded macros.
+The allowed preset levels are linked with the housecode
+according to the following table.
+.br
+   HC     Levels supported
+.br
+   ---    ----------------
+.br
+    A      7, 23
+.br
+    B      8, 24
+.br
+    C      5, 21
+.br
+    D      6, 22
+.br
+    E      9, 25
+.br
+    F     10, 26
+.br
+    G     11, 27
+.br
+    H     12, 28
+.br
+    I     15, 31
+.br
+    J     16, 32
+.br
+    K     13, 29
+.br
+    L     14, 30
+.br
+    M      1, 17
+.br
+    N      2, 18
+.br
+    O      3, 19
+.br
+    P      4, 20
+.br
+
+If the \'mpreset\' command is executed from the Heyu command
+line, the levels are restricted to those shown, for consistancy
+with its support in an uploaded macro.
+.br
+
+The \'brightb\' command (brighten after brightening to 100%)
+is essentially useless.  It is implemented as a direct command
+only because it is a valid (although equally useless) command
+in an uploaded macro.  A design goal for Heyu is to have the
+ability to program any command supported by the CM11A, and to
+have a direct command corresponding to each macro command.
+(The existance of the brightb macro command is probably just
+a side effect of firmware code shared with the dimb command.)
+.br
+
+The \'address\' command sends one or more module addresses to the
+power line with no function code.  It is useful for devices like
+the various SwitchLinc(TM) modules which require a sequence of
+addresses only, with no intervening functions, for programming
+them.  (There does not appear to be any way to have the CM11A
+send only addresses from an uploaded macro in its EEPROM.)
+Send individual Housecode|Unit addresses to guarantee the
+order in which they are sent.
+Example:
+.br
+  
+  heyu address F1 B3 B4
+.br
+
+The \'function\' command sends only the function code for its
+argument command, without any module unit addresses.  The
+housecode is part of the function code, so must be specified.
+.br
+Example:
+.br
+
+  heyu function on A
+.br
+
+The \'kill_all_hc\' command sends an \'alloff\' command to each
+housecode A-P.  Its purpose is to put the user\'s home system in a
+known state, with all modules turned off and unaddressed. 
+.br
+
+The \'pause\' command is useful in scenes or usersyns when it\'s
+desireable to insert a short delay between transmissions of commands
+defined in the scene/usersyn.  Its parameter is decimal seconds
+and fractions, with millisecond precision (although not necessarily
+millisecond accuracy).  It should not be used to insert long delays
+as the serial port write lock prevents other Heyu commands from being
+executed during the pause interval.
+.br
+
+The \'sleep\' command is similar to the \'pause\' command except that
+the serial port write lock is removed during the sleep interval, allowing
+other Heyu commands to be executed during the interval.  This Heyu
+command may be useful for operating systems under which the shell
+sleep command accepts only an integer parameter.
+.br
+
+The \'delay\' and \'rdelay\' commands are similar to \'sleep\' in that
+the port write lock is removed during the interval, but the time is
+expressed in integer minutes 0-240.  The \'delay\' command delays
+for a fixed time.  The \'rdelay\' commands accepts either one or
+two parameters, [MIN] and MAX.  The delay will be a random time no
+shorter than MIN (default 0) and no longer than MAX.
+.br
+ 
+The \'temp_req\' command requires as an argument the command used by
+the particular model of remote thermostat/thermometer to initiate
+an RCS-compatible temperature report.  It will then convert the encoded
+reply from the thermometer to a temperature and display it on the
+command line. For the TempLinc(TM) Model 1625 remote thermometer,
+the command to initiate the report is the \'status\' command.  For
+the RCS TX15-B (or newer RCS TXB16) Thermostat, the command to initiate
+the temperature report is the \'preset\' command to level 1 at unit 5.
+Examples:
+.br
+
+For the TempLinc 1625:
+.br
+   heyu temp_req status A1
+.br
+
+For the RCS TX15-B:
+.br
+   heyu temp_req preset A5 1
+.br
+
+An RCS-compatible remote thermometer encodes the temperature in
+the unit code and preset Level of an old-style Preset command
+according to the following formula:
+.br
+   temperature = -60 + (level - 1) + 32 * (unit - 11)
+.br
+(valid for units 11 through 16)
+.br
+
+Whether the temperature scale is Celsius or Fahrenheit is
+determined by how the thermometer is initially programmed.
+The same formula is used in either case.
+.br
+
+Since the unit code of the thermometer module itself is
+lost, the only way to distinguish between the reports from multiple
+thermometers is to assign each to a different housecode.
+.br
+
+A (fictitious) unit 0 alias, e.g., \'ALIAS Basement B0\', can be
+defined to give a name to the location where the temperature is
+reported.  If the Heyu State Engine is running, the decoded temperature
+will be stored at this address, where it can later be recovered
+with either the \'heyu dimlevel B0\' or \'heyu rawlevel B0\' commands.
+Or from within a script launched by Heyu, from the value of environment
+variable X10_B0 or the environment variable for the alias for this
+address, e.g., x10_Basement.
+.br
+
+The \'rcs_req\' command functions similarly to the \'temp_req\'
+command.  (It is in fact the same command with a different name
+and either can be used interchangeably.)
+.br
+Heyu now has built-in support for interpreting the various 
+status reports received from a RCS TX15-B or TXB16 thermostat.  The
+thermostat can be directed to transmit these reports with
+the following commands (for a thermostat configured for housecode A):
+.br
+   heyu rcs_req preset A5 1  (temperature)
+.br
+   heyu rcs_req preset A5 2  (setpoint temperature)
+.br
+   heyu rcs_req preset A5 3  (system mode)
+.br
+   heyu rcs_req preset A5 4  (fan mode)
+.br
+   heyu rcs_req preset A5 5  (setback mode)
+.br
+   heyu rcs_req preset A5 6  (setback delta temperature)
+
+.PP
+Note: the temperature value stored at the unit 0
+address location will be the one most recently decoded, whether
+(room) temperature, setpoint temperature, or setback delta.
+
+.PP
+See the TX15-B or TXB16 protocol manual for complete details.
+
+.PP
+The \'settimer\' command will accept the countdown time parameter
+as either seconds, minutes:seconds, or hours:minutes:seconds.  Minutes
+and seconds aren\'t limited to the range 0-59.
+.br
+The specified countdown time is decremented at each one-second tick
+of the computer\'s clock, so the accuracy of the countdown time is
+only +0/-1 second, depending on when between ticks the timer is set.
+.br
+When the timer counts down to zero, Heyu will launch a \'-timeout\'
+script if one has been specified for that timer in the configuration
+file.  If the timer is reset to zero before timeout, then no script
+is launched.  In the current implementation, the countdown times are
+not reset to zero when a \'heyu restart\' is executed.
+
+.PP
+The \'setrtimer\' command sets a countdown time similar to \'settimer\'
+above, but a random countdown time.  It will accept either one or two
+time parameters, "[MIN] MAX".  The coundown time will be a random
+interval no shorter than MIN (default 1 second) amd no longer than MAX.
+Both time parameters may be expressed as hh:mm:ss, mm:ss, or just seconds.
+
+.PP
+Advanced Addressing Options:
+.br
+
+Codes are transmitted by the CM11A over the power line in several
+chunks of code - one or more address bytes followed by a function
+code.
+.br
+
+Each address byte includes the housecode and a single unit code.
+Each function code redundantly includes the housecode plus the
+particular command function.  (For extended codes, the function chunk
+of code also includes a unit code and the dim level, if any.)  So
+for commands which apply to all units in the housecode (like the
+foregoing "lightson" command) or for extended codes, the address
+bytes are normally omitted by Heyu.
+.br 
+
+For some purposes it may be necessary to send only the function code
+for a command which normally requires a units address, or include
+a unit address for commands which don\'t require one.  For these
+purposes the following syntax has been implemented:
+.br
+
+Prefixing the Housecode|Unit address with a \'-\' sign will suppress
+sending the address bytes (equivalent to using the 
+\'heyu function ...\' command).  While prefixing the Housecode|Unit with
+a plus \'+\' sign will force sending the address bytes.  Examples:
+.br
+
+   heyu lightson  +B7,12
+.br
+   heyu off  -G7  (or just -G will do)
+.br
+
+If a housecode is prefixed with a \'+\' sign but not followed by
+a units list, Heyu will use unit 13.  (This is for compatibility
+with X-10\'s ActiveHome(TM) software, which always sends an address
+regardless of whether it\'s needed  or not.)
+.br
+
+.SH CM17A COMMANDS
+Heyu version 2 supports commands to actuate a CM17A device
+connected to the serial port to transmit X10 RF signals.
+(The CM17A is a transmit-only device; it does not receive RF.)
+There is no way of detecting the presence or absence of a CM17A
+on the serial port other than by the power line signal from a
+transceiver (like an X-10 TM751 or RR501) which receives the RF
+transmission from the CM17A and converts it to a power line signal.
+These commands will have no effect if the CM17A is absent other than
+a short delay.  All of them may be used in Heyu scenes and usersyns.
+.br
+
+The CM17A commands are merely listed here.  See man page x10cm17a(5)
+for a complete description.
+.br
+
+freset                   Reset the CM17A device.
+.br
+fon        HU            Transmit RF On
+.br
+foff       HU            Transmit RF Off
+.br
+fbright    H[U] <count>  Transmit RF Brights [after On]
+.br
+fdim       H[U] <count>  Transmit RF Dims [after On]
+.br
+fdimbo     HU <count>    Transmit RF Dims after Off
+.br
+flightson  H             Transmit RF All Lights On
+.br
+flightsoff H             Transmit RF All Lights Off
+.br
+falloff    H             Transmit RF All Units Off
+.br
+farb       xx xx <count> Transmit RF Abitrary two hex bytes
+.br
+farw       xxxx xxxx ... Transmit RF Arbitrary 16-bit words.
+.br
+flux       <count> <post-delay> xxxx xxxx ... (*)
+.br
+
+
+The following "fast" CM17A commands require special timing
+configuration.  See man x10cm17a(5).
+.br
+
+ffbright    H[U] <count>  Transmit RF Brights [after On]
+.br
+ffdim       H[U] <count>  Transmit RF Dims [after On]
+.br
+ffdimbo     HU <count>    Transmit RF Dims after Off
+.br
+ffarb       xx xx <count> Transmit RF Abitrary two hex bytes
+.br
+ffarw       xxxx xxxx ... Transmit RF Arbitrary 16-bit words.
+.br
+fflux       <count> <post-delay> xxxx xxxx ... (*)
+.br
+
+(*) Note: flux and fflux are similar to farw and ffarw except
+that the burst count and post-delay are specified on the 
+command line.  They are customized for the LUX17/23 front ends
+to Heyu but are available for general use if convenient.
+
+.SH COMPOUND COMMANDS
+Individual Heyu _direct_ commands may be strung together into a
+command list and executed with a single invocation of Heyu.
+To use this feature, delimit the individual commands with
+semicolons and enclose the entire command list within double
+quotes so it\'s passed to Heyu in a single chunk. 
+
+.SH EXAMPLES
+.TP 5
+heyu turn a5 on
+Turns X10 module A5 on.
+.TP 5
+heyu on a5
+Same as above
+.TP 5
+heyu fon a1
+Transmits X10 RF On signal via a CM17A device.
+.TP 5
+heyu turn b7 dim 8
+Dims X10 lamp module B7 by 8/22 of its total range.
+.TP 5
+heyu "on a1; off b1; dim c7 3"
+A compound command.
+.TP
+heyu info
+Displays CM11A clock time, base housecode and unit status. It also has a bitmap
+that shows what it thinks is the state of the X10 modules on the same housecode.
+.TP 5
+heyu status B1
+Returns the status of the 2-way X10 module B1 if the unit replies.
+.TP 5
+heyu stop
+Stops the relay daemon that controls the tty port.  The monitor program and/or 
+state engine daemon will also stop if they are running.  Heyu has to be stopped
+before running a new version to avoid \'text busy\' messages.
+.TP 5
+heyu setclock
+Sets the CM11A clock to the current time of day per the MODE specified in
+the user\'s config file and the record of an uploaded schedule, if any.
+.TP 5
+heyu reset
+Sets the CM11A to the default housecode specified in the x10config file.
+.br
+.TP 5
+heyu reset c
+Sets the CM11A to track events on housecode C
+.br
+.TP 5
+heyu newbattery
+Resets the CM11A battery timer to zero. (There\'s no way to set the CM11A battery
+timer to any specific time other than 0.)
+.TP 5
+heyu date
+Displays date in date(1) input format.  The year is taken from your system clock.  
+Please don\'t use this to set your computer\'s clock.
+
+.SH CM10A SUPPORT
+Heyu provides CM10A support only for Direct commands and applicable Administrative
+commands - e.g., the CM10A does not have a clock, so commands to set or read the
+clock don\'t work.  (The CM10A includes a very limited memory for uploaded macros
+but Heyu does not support this feature.)
+.PP
+Heyu must be configured to recognize the CM10A - see the instructions for the
+TTY directive in man page \fix10config(5)\fR.  Once Heyu is thus configured, the 
+CM10A will be properly initialized at startup or in the event of an AC power
+interruption.
+
+.SH WEB INTERFACE SUPPORT
+Heyu endeavors to support web interface development by providing in a
+customizable format simple information ("web hooks") about it\'s configuration
+which might otherwise require extensive parsing of the Heyu configuration
+file.
+.TP 5
+heyu webhook 
+By itself, displays a summary of the available options.  Further details and
+usage examples are provided in the file "README.webhook" included with the Heyu
+source distribution.
+
+.SH HEYU CLEANUP
+On occasion, generally due to initial misconfiguration or system crash, there
+may exist stale files and/or processes which interfere with the operation of
+Heyu.  To clean up these files and/or processes, do the following:
+.PP
+.IP
+Run \'heyu stop\'
+.PP
+.IP
+Check for any Heyu processes and kill them.  Under Linux, running the command
+\'ps aux | grep heyu\' will display any such processes.
+.PP
+.IP
+Run \'heyu list\' to display the LOCKDIR and SPOOLDIR directories compiled into Heyu.
+.PP
+.IP
+Go into the displayed LOCKDIR directory and, if they exist, delete files LCK..ttySxx
+(where ttySxx are serial ports to which either the CM11A or an RF receiver is
+connected) and delete any other files LCK..heyu.*
+.PP
+.IP
+Go into the displayed SPOOLDIR directory and delete all files with "heyu" in the
+filename.
+
+.PP
+Heyu should now start and run properly.
+
+
+.SH EXPERIMENTAL STUFF
+The following commands don\'t appear in the \'heyu help\' menu or
+regular list of commands higher up in this man page.  They may be of
+interest to some for testing and hacking the CM11A.  There is no guarantee they
+won't lock up the CM11A or cause it to go into a loop or go up in smoke.
+There\'s also no guarantee these commands won\'t be eliminated in later
+versions of Heyu.  (Let us know if you find a good use for any of them.)
+Those identified by "(Admin)" work only at the command line; the others
+ought to work in scenes and usersyns (but not necessarily in macros).
+See also the similarly named section in man page x10config(5).
+.br
+
+.TP 5
+heyu status_emu Hu
+Execute by a script to emulate the response to a received Status
+Request by a module which has no status reporting capability,
+e.g., any 1-way module.  If the state of module Hu as recorded
+by the Heyu engine is is ON, the command sends a StatusOn signal,
+otherwise a StatusOff signal.  (There are third-party X10 transmitters,
+e.g., some ACT transmitters, which send a Status Request and always
+expect a response.)
+
+.TP 5
+heyu rts_pulser  <msec_on>  <msec_off>  <repetitions>  (Admin)
+This command turns the RTS status line On (high, positive) for <msec_on>
+milliseconds, turns it Off (low, negative) for <msec_off> milliseconds,
+then repeats the On/Off cycle for a total of <repetitions> cycles.  It is
+useful for driving an N-channel MOSFET as an electronic switch.
+.br
+
+Unless you have a serial connector "Y" adapter, the CM11A will have to be
+disconnected.
+.br
+
+.TP 5
+heyu xpresetramp HU <level> <ramp>
+The document "xtdcode.pdf" on X10\'s website indicates that the upper two
+bits of the data byte for the extended preset dim command control
+the rate at which the lamp ramps up to its programmed brightness level.
+A previous release of this document as "XTC798.DOC" showed these bits as
+"don\'t care".
+.br
+
+This command allows setting the ramp value in the range 0-3.  Tests of
+modules I own show that the ramp value has no effect for the X-10 LM14A and
+redesigned WS467 modules, whereas the redesigned LM465 module immediately
+goes to full brightness, the same as programming a preset level of 63,
+for any preset level and any ramp value other than zero.  Modules
+supporting extended codes from other labels or manufacturers may or may not 
+support the ramp.
+
+.TP 5
+heyu xgrpoff H G
+This Extended Group command is supposed to turn Off all units in housecode
+H which are members of group G.  It is included as an experimental command
+because most modules either don\'t support it or get it wrong.
+.br
+
+The redesigned LM465 (module type LM465-1) supports it; the redesigned
+WS467 (module type WS467-1) doesn\'t.  The LM14A and AM14A 2-way modules
+treat it the same as the 'xgrpexec' command, which is all wrong. (The
+Heyu module types for all the above attempt to model the actual
+physical device behavior, whether correct or incorrect.)
+
+.TP 5
+heyu xgrpdim H G
+.TP 5 
+heyu xgrpbright H G
+These Extended Group commands are supposed to dim or brighten the
+modules in a group by one extended level out of 62 (starting at
+the resumed level if Off).  They are included as experimental
+commands because most modules don\'t support them. The redesigned
+LM465 (module type LM465-1) does support them (approximately); the
+other extended code devices don\'t.  In actuality, the number of
+these commands required to span the full range 1-62 is phase-dependent,
+observed to be about 78 if triggered on the rising zero crossing 
+(heyu -tr ...) or about 53 if triggered on the falling zero crossing
+(heyu -tf ...).  These average in the long run to about 65 with random
+zero crossings
+
+.TP
+Group "reference"
+X-10\'s Extended Code protocol allows the total number of groups
+to expand beyond four (although any particular housecode|unit is
+limited to membership in four) through what they refer to as a
+"group reference".
+.br
+Heyu implements the group reference as a number from 1 through 16
+which may be dot-appended to the "absolute" group number for many of,
+but not all, the extended code group commands.  All groups for a
+particular housecode|unit must have the same group reference.
+.br
+
+Heyu extended group commands listed in this man page or in
+\'heyu help\' showing the group parameter as a capital \'G\'
+may be executed with a group reference.
+.br
+The following examples illustrate assigning the module A1 to an
+absolute group (2) or to a group with a reference (2.10), in both
+cases at their current brightness level.
+.br
+   heyu xgrpadd A1 2
+.br
+   heyu xgrpadd A1 2.10
+.br
+
+Then in the latter example, issuing the command \'heyu xgrpexec A 2.10\'
+will set all members of group 2.10 to the levels stored for that group
+in the modules\' memory.
+.br
+
+The behavior of X-10 extended code devices when assigning relative
+groups varies from device type to device type, and it\'s anyone\'s
+guess whether X-10 will make unannounced changes.  The behavior
+listed for the following module types is supported by Heyu:
+.br
+
+LM14A, AM14A: Assigning a reference to one group automatically
+changes all group memberships for that housecode|unit to use the
+same reference.
+.br
+
+WS467-1: As above, but the housecode|unit is simultaneously a member of
+the absolute group.
+.br
+
+LM465-1: Assigning a group reference removes the housecode|unit from
+membership in all other groups which don\'t already use the same 
+reference.
+.br
+
+The command \'heyu show group H\' will display the group memberships
+for all units in Housecode H, absolute and, if assigned, referenced.
+.br
+
+Note: There is no provision in the Extended Code protocol for assigning
+a group reference and level with one command - the module must first
+be brought to the desired level with the xpreset or dim or bright 
+command and then added to a group at its current level.  As a consequence,
+the \'heyu restore_groups\' command can result in a lot of blinking
+lights when groups with a reference are restored.
+
+.TP 5
+heyu port_line_test (Admin)
+Test whether the serial port supports the Ring Indicator (RI) and/or other
+serial input status lines.  This test is run on the port itself - no CM11A -
+and requires hooking a jumper between the serial port\'s DTR line (DB-9 pin 4)
+and one (or more) of the input status lines to be tested: RI (pin 9),
+CD (pin 1), DSR (pin 6), CTS (pin 8).
+.br
+
+Heyu toggles the DTR line and the input line(s) should replicate the "SET"
+or "clr" state of the DTR line, e.g., for pin 4 jumpered to pin 9 there 
+should be displayed:
+.br
+
+$ heyu port_line_test
+.br
+Jumpered pin  4   to    9    1    6    8
+.br
+Status Line: DTR  =>   RI   CD   DSR  CTS
+.br
+             ---       ---  ---  ---  ---
+.br
+             clr  =>   clr  clr  clr  clr 
+.br
+             SET  =>   SET  clr  clr  clr 
+.br
+             clr  =>   clr  clr  clr  clr 
+.br
+             SET  =>   SET  clr  clr  clr
+.br
+
+Failure of the serial port to support a given input line is indicated
+by the state of the line under test being displayed as constantly clr or
+constantly SET.  This is the case under Linux with a USB->Serial adapter 
+containing an older Prolific chip.  (Whether this is a hardware bug or a
+Linux bug is unknown.)
+
+.TP 5
+heyu ri_disable and heyu ri_enable  (Admin)
+These commands disable and enable the CM11A feature of asserting
+the Ring Indicator (RI) serial line just prior to reporting an
+X10 signal received over the powerline.
+
+Some PC motherboards have the capability to power up the system
+when the RI signal is asserted, yet lack the ability in the BIOS to
+turn off this feature.  To prevent the CM11A from inadvertantly
+powering up a PC like this, run the heyu ri_disable command as the
+last command (other than heyu stop) before shutting down the PC.
+Then run the heyu ri_enable command after starting up the PC and
+Heyu again.
+
+Note that in the event of an interruption of AC power, the CM11A
+powerup condition is with the RI assertion capability enabled.
+And Heyu uses the command for enabling the RI line in various
+places for unrelated reasons.
+
+.TP 5
+heyu ping  (Admin)
+A quick check to see if the CM11A is responding.  It sends the command
+to enable the CM11A\'s serial RI line and waits for the expected echo.
+.br
+
+.TP 5
+heyu pausetick
+Pauses until the system clock rolls over to the next second.  Sometimes
+useful in timing commands.
+.br
+
+.TP 5
+heyu sendbytes xx xx xx ...
+Similar to the \'address\' command
+except that the addresses are entered as hexadecimal bytes
+housecode|unitcode (encoded value 0x00 - 0xFF).  See the X10 protocol.txt
+document for the encoding.
+.br
+
+.TP 5
+heyu sendtext H "quoted text string"
+Sends a string of quoted ASCII text as
+addresses on the specified housecode.  Each character in the
+string is represented by two address bytes with their unit codes
+being the high and low nybbles of the character.  The text is
+transmitted at the phenominal speed of about 0.9 characters/second
+and the PC\'s resources are tied up while the transmission is taking
+place.  It works only from the command line - not in a macro
+and (currently) not in a scene or usersyn.  Perhaps someone will
+discover a use for this otherwise-useless experimental command. :-)
+.br 
+Example:
+.br
+
+   heyu sendtext A "Hello world."
+.br
+
+.TP 5
+heyu upload imagefile <filename>  (Admin)
+Uploads any 1024 byte binary image file to the CM11A's EEPROM, whether
+created by Heyu or not, including binary image files created by X-10\'s
+ActiveHome software under MS Windows.  Note: there won't be any x10record
+or x10macroxref files created, nor are those existing files deleted.
+.br
+.TP 5
+heyu command2cm11a xx xx xx ...
+Sends any arbitrary string of hex bytes to the CM11A and attempts the
+normal software handshake for commands.
+.br
+.TP 5
+heyu bytes2cm11a xx xx xx ...
+Sends any arbitrary string of hex bytes to the CM11A without making any
+attempt at the normal handshaking for commands.
+.br
+.TP 5
+heyu reserved  (Admin)
+There\'s a bit in the status update block identified as "reserved" in
+the X10 protocol.txt and which is normally reset to 0.  This
+command sets it to 1 to see if it has any effect on anything. (So
+far I haven\'t noticed that it does anything at all, but who knows.)
+.br
+.TP 5
+heyu powerfailtest boot|notboot (Admin)
+Emulate interruption of AC power to the CM11A.  This allows testing
+of -powerfail scripts without having to actually interrupt power.
+The parameter \'boot\' or \'notboot\' specifies whether to emulate
+as if Heyu was just started or already running, respectively, when
+power to the CM11A is restored. This command requires that the Heyu
+state engine daemon be running.  Note that this command does not
+update the CM11A clock (or re-initialize a CM10A) as would be done
+by the heyu_relay daemon following an actual power interruption.
+.br
+.TP 5
+options -tr, -tf
+Many X10 modules are found to respond differently to commands,
+specifically dims and brights, depending on whether the power line
+signal begins on the rising or falling zero crossing.  Which one
+the signal starts at is random with the CM11A and most other transmitters.
+With additional hardware, these experimental options will allow
+transmission of (direct) commands to synchronize with
+only the rising (-tr) or only the falling (-tf) zero crossing.  Fast timing is
+required so a timing loop will have to be calibrated by running
+\'heyu utility calibrate\'.
+.br
+Example:
+.br
+  heyu -tr dim A1 10
+.br
+
+The additional hardware required is to connect the secondary of a
+4 to 8 VAC (RMS) transformer between the Signal Ground (DB9 pin 5) and
+Carrier Detect (DB9 pin 1) pins of the serial port to which the CM11A
+is connected.  (Neither the CM11A nor the CM17A normally use the
+Carrier Detect pin.)  The polarity of the AC voltage on the CD pin
+must be in-phase with the AC power line for the -tr and -tf options
+to match the rising and falling zero-crossings respectively, otherwise
+they'll work backwards.
+.br
+
+An adapter between the CM11A cable and serial port will be required
+to make this connection - I use a male/female pair of DB9 solder-type
+connectors with corresponding pins joined with 3/4" lengths of bus bar,
+and connect to the SG and CD pin bus bars with Radio Shack hook clips.
+.br
+
+Note: prudence dictates using an inexpensive serial port add-on card for
+experiments like this to reduce the risk to motherboard components.
+The output voltage of a transformer may be substantially higher than
+its rating (at rated current) when supplying only the very low current
+to the serial port pin.  Although the RS232 specification allows for a
+voltage as high as 25 Volts, PC serial ports are normally operated
+between +/- 12 Volts and it would be unwise to exceed that level, and
+certainly no higher than 15 Volts peak.  (12 Volts peak -> 8.49 Volts RMS.)
+.br
+.TP 5
+heyu tdim HU <level>, heyu tbright HU <level>
+These commands operate as if the dim or bright commands were issued
+with the -tr option.  They are now deprecated.
+
+.SH ENVIRONMENT
+.br
+X10CONFIG - Points to a fully qualified file name of your configuration file,
+if located elsewhere than in one of the standard places. See \fix10config(5)\fR 
+for more information on its makeup.
+.br
+HEYUSUB - Optionally specifies an additional subdirectory level under the
+standard places where the configuration file will be found, i.e.,
+.br
+   $HOME/.heyu/$HEYUSUB/
+.br
+   /etc/heyu/$HEYUSUB/
+.br
+X10SCHED - Points to a fully qualified file name of your schedule file 
+(timers and macros), if located elsewhere than in one of the standard
+places.  See \fix10sched(5)\fR for more information on its layout.
+.br
+ASIF_DATE - Instruct Heyu to process the data in your schedule file as of the
+specified date ( format yyyymmdd ) instead of the current system date.  (Its
+primary use is with \'heyu upload check\' - to examine the details when something
+suspicious is brought to light with the \'heyu upload croncheck\' command.)
+
+.SH FILES
+.br
+ $HOME/.heyu/x10config - Heyu configuration file when in user\'s home directory.
+.br
+ SYSBASEDIR/x10.conf - Heyu configuration file when in system-wide directory.
+.br
+ Included in the same directory as the configuration file are:
+.br
+   x10state - module on/off/dim state file (binary).
+.br
+   x10.sched - default filename for schedule of uploaded timers and macros.
+.br
+   x10record - record of the uploaded schedule parameters.
+.br
+   x10macroxref - addresses of uploaded macros.
+.br
+   x10image - binary image of the uploaded schedule.
+.br
+ LOCKDIR/LCK..<tty> - lock file for serial port.
+.br
+ LOCKDIR/LCK..heyu.relay.<tty> - lock file for relay process.
+.br
+ LOCKDIR/LCK..heyu.engine.<tty> - lock file for state engine process.
+.br
+ LOCKDIR/LCK..heyu.write.<tty> - lock file for processes that write to the CM11A
+.br
+ SPOOLDIR/heyu.out.<tty> - fifo file for relay process.
+.br
+
+Where in the above <tty> is a suffix representing the serial port to
+which the CM11A is connected, e.g., 
+.br
+ /dev/ttyS0 -> ttyS0
+.br
+ /dev/usb/ttyUSB0 -> ttyUSB0  (implies a USB-Serial adapter)
+.br
+
+(\'heyu list\' will display the LOCKDIR, SPOOLDIR, and SYSBASEDIR
+compiled into Heyu for your operating system.)
+
+.SH BUGS
+Occasionally the interface will not accept the first command after
+a reboot of the CM11A or the computer.
+.br
+
+Heyu does not always handle well an X10 command received over the power line
+when it\'s in the middle of sending out a command.
+.br
+
+.SH AUTHORS
+Re-written to use the CM11A interface by Daniel B. Suthers (dbs@tanj.com).
+.br
+Originally written (Known as X10) by Larry Campbell (maynard!campbell).
+System V port, ID file, improved display formats, and other cleanup by
+John Chmielewski (rogue!jlc).  Module aliasing additions by Paul Fox (pgf@foxharp.boston.ma.us)
+.br
+Enhanced capability for uploaded schedules, state functions, and
+execution of scripts by Charles Sullivan (cwsulliv01@heyu.org)
+
+.SH TRADEMARKS
+Heyu is a trademark of Daniel B. Suthers.
+X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.
+TempLinc, SwitchLinc, and LampLinc are trademarks of Smarthome, Inc.
+W800RF32A is a trademark of WGL & Associates.
+
+.SH SEE ALSO
+http://www.heyu.org
+.br
+date(1),  x10config(5), x10sched(5), x10scripts(5), x10cm17a(5), x10aux(5), x10rfxsensors(5)

@@ -1,0 +1,1092 @@
+.TH X10OREGON 5 local
+.SH NAME
+.B x10oregon\^
+- Oregon sensor support for HEYU
+.SH DESCRIPTION
+.I Heyu
+is an X10 Automation program for Linux, Unix, and Mac OS X.
+See man page \fIheyu\fP(1) for usage information.
+.PP
+.I Oregon
+sensors transmit encoded RF signals for Temperature, Relative
+Humidity, Barometric Pressure, Wind speed, Rainfall, and other variables.
+When equipped with a compatible RF receiver, Heyu can receive and
+decode this information.  Also included in the same category are two
+miscellaneous sensors, the Electrisave CM113 and the OWL CM119, which
+transmit encoded data from AC current probes in the breaker box. 
+
+.SH SYSTEM REQUIREMENTS
+To use Oregon sensors with Heyu requires a 433.92 MHz RFXCOM X10
+RF receiver and Heyu version 2.3 or greater.  Support for the Electrisave
+CM113 was added in Heyu version 2.7.  Support for the OWL CM119 was added
+in Heyu version 2.8 but also requires the special CM119 option in the
+RFXCOM receiver.
+
+.SH COMPILER OPTION
+Support for Oregon sensors is compiled into Heyu by default.  A compiler
+option can be used to omit this support.  See the file INSTALL
+included in the Heyu distribution source directory for details.
+
+.SH CONFIGURATION
+It is assumed that a working installation of Heyu version 2.3 or
+greater exists on the computer, and that the user has a basic
+familiarity with Heyu.
+.PP
+Include the following directive in the Heyu configuration file:
+.br
+  TTY_AUX  <serial_port>  RFXCOM
+.br
+where <serial_port> is the port where the RFXCOM receiver is connected.
+The RFXCOM receiver connects to a USB port but includes a USB->Serial
+converter chip.
+
+.PP
+Start Heyu with \'heyu start\', then open another xterm window and
+run \'heyu monitor\' in it to start the Heyu Monitor.  Wait for the
+sensor to make a transmission, usually about every 40 seconds, and
+in the Heyu monitor window you should then see something like
+this (ignoring the date and time):
+.PP
+  rcva func   RFdata : Type ORE_TH1 Ch 1 ID 0x1F Data 0x1a2d101f6027908344
+
+.PP
+The example is for an Oregon Remote Temperature and Humidity sensor,
+which is in the group of Oregon sensors using the protocol identified
+by the mnemonic ORE_TH1.
+.PP
+Map the Oregon ID to an otherwise unused housecode and unitcode
+address with an ALIAS directive in your Heyu configuration file
+using the module type ORE_xxx corresponding to your sensor group.
+(A list of Oregon sensor module types appears farther down in this page.)
+.PP
+Syntax:
+.br
+  ALIAS  <label>  <Housecode/Unit>  <module_type>  <ID>
+.br
+Example:
+.br
+  ALIAS Attic  D5  ORE_TH1  0x1F
+
+.PP
+Run \'heyu restart\' to incorporate this change into the running
+Heyu daemons.  Then the next time the sensor makes a transmission
+you should see (with the above example) something like this:
+.PP
+  rcva func  oreTemp : hu D5 Ch 1 Temp 27.7C (Attic)
+.br
+  rcva func    oreRH : hu D5 Ch 1 RH 39% (Attic)
+
+
+.SH STORED OREGON DATA
+If the Heyu Engine daemon is running, current Oregon data
+is stored in the Heyu state tables and displayed in the Heyu log
+file (if thus configured).
+.PP
+Stored data can be retrieved with the (lower case) Heyu state commands
+corresponding to the displayed function labels.  In the following, "Hu"
+is the Housecode|Unit address to which the sensor has been mapped in
+the ALIAS directive, or the alias label itself.
+.br
+Examples:
+.br
+  heyu oretemp    Hu    - Temperature
+.br
+  heyu orerh      Hu    - Relative Humidity
+.br
+  heyu orebp      Hu    - Barometric Pressure
+
+.PP
+The command \'heyu show oregon\' will display stored data
+from all configured Oregon units in tabular form.
+.PP
+
+.SH UNIT SCALING
+The native units for output of Oregon sensors are Celsius for temperature,
+hPa (hectoPascals) for Barometric Pressure, and kilograms for Weight.
+(See the sections WIND SENSORS and RAIN SENSORS for information about
+those sensors.)
+These may be scaled by Heyu to different units with the following
+configuration file directives:
+.PP
+Directive ORE_TSCALE  <temp_scale>
+.PP
+where <temp_scale> is F[ahrenheit], C[elsius], K[elvin], or R[ankine].
+.br
+Example:
+.br
+  ORE_TSCALE  F
+.PP
+Directive ORE_BPSCALE <BP_unit> <scale_factor> [<offset>]
+.PP
+where <BP_unit> is the name of the new unit, e.g. mmHg,
+and <scale_factor> is the number by which the BP in hPa is
+multiplied to get its value in the new unit.
+.PP
+Directive ORE_WGTSCALE <Weight_unit> <scale_factor>
+.PP
+where <Weight_unit> is the name of the new unit, e.g., Lbs,
+and <scale_factor> is the number by which the Weight in kilograms
+is multiplied to get its value in the new unit.
+.br
+Some examples:
+.br
+  ORE_BPSCALE  mmHg  0.75006158
+.br
+  ORE_BPSCALE  inHg  0.029529983 1.06
+.br
+  ORE_BPSCALE  millibars  1.0
+.br
+  ORE_WGTSCALE Lbs  2.200
+.PP
+The optional <offset> parameter is added to the BP after scaling.
+.PP
+In the USA at least, barometric pressures reported by the National
+Weather Service are adjusted to the BP at sea level.  The offset
+can be used to approximate this adjustment for altitude.
+Typical values for BP versus altitude can be found on the
+Internet.
+
+.SH SUPPORTED OREGON MODEL NUMBERS
+The following chart shows the Oregon model numbers known to be
+supported by the Heyu ORE_xxx module types.
+.PP
+Temperature sensors:
+.br
+  ORE_T1 :  THR128 THR138 THC138
+.br
+  ORE_T1 :  (THR128) Brookstone Projection Weather/Clock
+.br
+  ORE_T2 :  THC238 THN132N THWR288A THRN122N THN122N AW129 AW131
+.br
+  ORE_T2 :  Radio Shack P/N 63-1091 Projection Weather/Clock
+.br
+  ORE_T3 :  THWR800 (Alpha)
+.PP
+Temperature / Humidity sensors:
+.br
+  ORE_TH1 : THGN122N THGN123N THGR122NX THGR228N THGR238 THGR268 THGR238N
+.br
+  ORE_TH2 : THGR810 THGR800 THGN800
+.br
+  ORE_TH3 : RTGR328N RTGN318
+.br
+  ORE_TH4 : THGR328N  (Alpha)
+.br
+  ORE_TH5 : WTGR800
+.br
+  ORE_TH6 : THGR918 THGR918N THGRN228NX
+.PP
+Temperature / Humidity / Barometric Pressure sensors:
+.br
+  ORE_THB1 : BTHR918  (Alpha)
+.br
+  ORE_THB2 : BTHR918N BTHR968
+.PP
+Weight sensors
+.br
+  ORE_WGT1 : BWR101 BWR102
+.PP
+Wind sensors
+.br
+  ORE_WIND1 : WTGR800
+.br
+  ORE_WIND2 : WGR800   (In Oregin model WMR80A Weather Station bundle)
+.br
+  ORE_WIND3 : WGR918N  (In Oregin model WMR928N Weather Station bundle)
+.PP
+Rain sensors
+.br
+  ORE_RAIN1 : PCR918N  (In Oregon model WMR928N Weather Station bundle)
+.br
+  ORE_RAIN2 : PCR800   (In Oregon model WMR80A Weather Station bundle)
+.br
+  ORE_RAIN3 : (Alpha)
+.PP
+UV sensors
+.br
+  ORE_UV1 :  UVR138  (Alpha)
+.br
+  ORE_UV2 :  UVN800  (Alpha)
+.PP
+Current sensors
+.br
+  ELS_ELEC1 : Electrisave CM113  (See note below.)
+.br
+  OWL_ELEC2 : OWL CM119
+.PP
+
+Module types designated "Alpha" have not yet been tested with actual data.
+.PP
+Module type ORE_IGNORE can be used to ignore signals from Oregon
+sensors which may not be under your control, e.g., signals from a
+nearby neighbor\'s sensor.  An unused Housecode/Unit address must
+be sacrificed.  Specify the Oregon IDs for one or more sensors to
+be ignored. 
+.br
+Example:
+.br
+  ALIAS Neighbor_Sensors  P6  ORE_IGNORE  3C  4E  2A
+.PP
+Note: Use of this module type does not prevent RF intereference with
+signals from your own sensors.  See section MULTIPLE OREGON SENSORS below.
+
+.PP
+Note: It\'s possible for the signal transmitted from an ELS_ELEC1 sensor
+when the "Check" button is pressed to be confused with that from an
+Oregon temperature sensor type ORE_T2. Pressing the Check button a
+second time will generally clear up the confusion. 
+
+.PP
+The following module types are Oregon emulation (dummy) modules.
+See section "OREGON SENSOR EMULATION" below for usage.  These
+modules do not take an ID parameter.
+.br
+  ORE_TEMU - Temperature
+.br
+  ORE_THEMU - Temperature and Relative Humidity
+.br
+  ORE_THBEMU - Temperature and Relative Humidity and Barometric Pressure.
+
+.SH TEMPERATURE, HUMIDITY, and BAROMETRIC PRESSURE SETPOINTS
+Temperature, Relative Humidity, and Barometric Pressure Min and/or Max
+setpoints can be defined for any Oregon sensor by appending parameters
+"TMIN <setpoint>" and/or "TMAX <setpoint>" and/or "RHMIN <setpoint>" and/or
+"RHMAX <setpoint>" and/or "BPMIN|BPMINL <setpoint>" and/or "BPMAX|BPMAXL
+<setpoint>" to the ALIAS directive line for that sensor in the configuration
+file. When the data value reported by the sensor falls below or above the
+respective setpoint, corresponding local flags TMIN, TMAX, RHMIN, RHMAX,
+BPMIN, and BPMAX are raised which can be tested in the launch
+conditions for a Heyu script.
+.br
+Examples:
+.br
+  ALIAS CrawlSpace B7  ORE_TH2 0x14  TMIN 32F RHMAX 90%
+.br
+  ALIAS Attic  D5  ORE_T1  0x1F  TMAX 90F TMIN 60F
+.PP
+Then if the B7 sensor reports a crawl-space temperature lower than
+32 Fahrenheit, the TMIN flag will be raised. If the crawl-space humidity
+exceeds 90%, the RHMAX flag will be raised.  And if the D5 sensor reports
+an attic temperature outside the range 60F - 90F, then the appropriate
+TMIN or TMAX flag will be raised.  
+.PP
+If the temperature scale suffix (C, F, K, or R) is omitted from the setpoint,
+the config directive "ORE_DATA_ENTRY NATIVE|SCALED" determines whether the scale
+is the native Celsius scale or that defined by directive ORE_TSCALE.
+.PP
+The only scale for relative humidity is %, which may optionally be omitted.
+.PP
+The barometric pressure scale defined by the ORE_BPSCALE directive may
+optionally include an offset to adjust for altitude.  If the specified Min
+or Max setpoint includes the offset, use BPMIN or BPMAX, otherwise use
+BPMINL or BPMAXL to specify that this is the unadjusted local pressure.
+In other words, a setpoint specified by BPMIN corresponds to the adjusted
+value displayed by Heyu, whereas a setpoint specified by BPMINL corresponds
+to the local value displayed on the sensor\'s LCD screen.
+.PP
+A BP setpoint may include the suffix for the units defined in the ORE_BPSCALE
+directive or the native units "hPa".  If the setpoint is specified without
+a units suffix, the config directive "ORE_DATA_ENTRY NATIVE|SCALED" determines
+whether the scale is the native "hPa" or that defined by directive ORE_BPSCALE.
+
+.SH HEYU SCRIPTS
+Heyu scripts can be launched by the functions "oretemp", "orerh", and
+"orebp" the same as any other Heyu function.  Similarly the "elscurr",
+"owlpower", and "owlenergy" functions from the current sensors
+.br
+The launch
+conditions in the SCRIPT directive must include the source keyword
+"RCVA" and may optionally include the keyword "changed", any of the
+16 common flags, and the global security flags.  They may also
+optionally include the local flags.
+.br
+Examples:
+.br
+  SCRIPT  L9 oretemp rcva armed away tmin :: my_oretemp.sh
+.br
+  SCRIPT  L9 orerh changed rcva :: my_orerh.sh
+
+.PP
+Local flags for the Oregon functions are "lobat" for those
+sensors which transmit a low battery indicator, "tmin"/"tmax"
+for the "oretemp" function, "rhmin"/"rhmax" for the orerh
+function, and "bpmin"/"bpmax" for the orebp function.
+.br
+Example:
+.br
+  SCRIPT CrawlSpace oretemp tmin :: echo "Freezing pipes" | mail
+
+.SH SCRIPT ENVIRONMENT
+Any Heyu script has access to the stored Oregon data values through
+environment variables linked to the housecode|unit (Hu) and its
+alias (note lower case x10_) mapped to each Oregon unit.
+.br
+  X10_Hu_oreTemp     x10_<Hu_alias>_oreTemp
+.br
+  X10_Hu_oreBP       x10_<Hu_alias>_oreBP
+.br
+  X10_Hu_oreRH       x10_<Hu_alias>_oreRH
+.br
+  X10_Hu_oreLoBat    x10_<Hu_alias>_oreLoBat (1 = Low, 0 = OK);
+.br
+  X10_Hu_oreWgt      x10_<Hu_alias>_oreWgt
+.br
+  X10_Hu_oreWindSp   x10_<Hu_alias>_oreWindSp
+.br
+  X10_Hu_oreWindAvSp x10_<Hu_alias>_oreWindAvSp
+.br
+  X10_Hu_oreWindDir  x10_<Hu_alias>_oreWindDir
+.br
+  X10_Hu_oreRainRate x10_<Hu_alias>_oreRainRate
+.br
+  X10_Hu_oreRainTot  x10_<Hu_alias>_oreRainTot
+.br
+  X10_Hu_elsCurr     x10_<Hu_alias>_elsCurr
+.br
+  X10_Hu_owlPower    x10_<Hu_alias>_owlPower
+.br
+  X10_Hu_owlEnergy   x10_<Hu_alias>_owlEnergy
+.PP
+For sensor models which transmit this information:
+.br
+  X10_Hu_oreCh       x10_<Hu_alias>_oreCh   (Channel number)
+.br
+  X10_Hu_oreBatLvl   x10_<Hu_alias>_oreBatLvl
+.br
+  X10_Hu_oreForecast x10_<Hu_alias>_oreForecast 
+.PP
+If a Heyu script is launched by one of the functions "oretemp",
+"orerh", "orebp", "orewgt", "orewindsp", "orewindavsp", "orewinddir",
+"orerainrate", "oreraintot", "elscurr", "owlpower", or "owlenergy",
+the environment will additionally include variables for values
+and flags without the "Hu" identification, e.g., X10_oreTemp,
+X10_oreWgt, X10_elsCurr.
+.PP
+No variable is created for data which is invalid or "not ready".
+
+.SH CONFIGURATION DIRECTIVES
+In addition to the ALIAS and scaling directives mentioned 
+above, the following will also affect Oregon data.  See
+man page x10config(5).
+.PP
+Directive ORE_LOWBATTERY <percent> - Defines for those sensors which
+transmit a battery level the percentage at or below which Heyu will
+raise the "LoBat" flag.  The default is 20%.
+.PP
+Directive HIDE_UNCHANGED YES - Display transmission in the Monitor
+and Logfile only when there\'s a change from the previous transmission.
+.PP
+Directives ORE_CHGBITS_xx define the amount of change in the data
+required for it to be identified as "changed".  The parameter for
+these directives is the number of least significant bits for the
+data in question, which correspond to:
+.br
+  ORE_CHGBITS_T   Temperature 0.1C
+.br
+  ORE_CHGBITS_RH  Relative Humidity  1%
+.br
+  ORE_CHGBITS_BP  Barometric Pressure  1hPa
+.br
+  ORE_CHGBITS_WGT Weight  0.1kg
+.br
+  ORE_CHGBITS_WINDSP Wind Speed  0.1meters/second
+.br
+  ORE_CHGBITS_WINDAVSP Wind Average Speed 0.1meters/second
+.br
+  ORE_CHGBITS_WINDDIR  Wind Direction  (varies with sensor model)
+.br
+  ORE_CHGBITS_RAINRATE  Rainfall Rate (varies with sensor model)
+.br
+  ORE_CHGBITS_RAINTOT   Total Rain (varies with sensor model)
+.br
+  ORE_CHGBITS_UV  UV Factor  1
+.PP
+(See the sections WIND SENSORS and RAIN SENSORS for details about
+change bits for those sensor types.)
+.PP
+Example:
+.br
+  ORE_CHGBITS_T  2
+.br
+instructs Heyu to report a temperature as "changed" only when there\'s
+a difference of 0.2C or more from the previous value.  This avoids the 
+situation where even in a relatively constant temperature environment the 
+reported temperature may flip-flop back and forth by 0.1C in successive
+transmissions.
+.PP
+The actual value of the data is stored in the Heyu state tables 
+even though it\'s not identified as changed or displayed in the
+Monitor/Log file.
+.PP
+The default for each of the above directives is 1.
+.PP
+Directive ORE_DATA_ENTRY  NATIVE|SCALED
+.br
+Defines whether Oregon emulation data values (see below) are entered
+in Oregon native units (Celsius for Temperature, percent for RH, or
+hectoPascals for BP) or in the scaled units defined by directives ORE_TSCALE
+and ORE_BPSCALE.  This also applies to TMIN and TMAX setpoint temperatures
+when the entered temperature does not have a temperature scale suffix.
+
+.SH CURRENT SENSORS
+Heyu supports decoding of signals from the Electrisave CM113 and the
+newer OWL CM119 current sensors when received by an RFXCOM receiver
+in variable length packet mode. 
+.PP
+When Heyu receives a signal from these sensors, you will see displayed in
+the monitor/logfile something similar to:
+.br
+   rcva func   RFdata : Type ELS_ELEC1 Ch 1 ID 0xF5 Data 0x....
+.br
+or
+.br
+   rcva func   RFdata : Type OWL_ELEC2 Ch 1 ID 0x24 Data 0x....
+.PP
+Map the signal to a Housecode|init (Hu) with an ALIAS directive:
+.br
+  ALIAS <label> <Hu> ELS_ELEC1 <ID>
+.br
+or
+.br
+  ALIAS <label> <Hu> OWL_ELEC2 <ID>
+.br
+Example:
+.br
+  ALIAS MyElectric  B6  OWL_ELEC2 0x24
+.PP 
+Directive ELS_VOLTAGE  <voltage>
+.br
+Defines a nominal AC voltage which is multiplied by the current reading
+of an Electrisave sensor to display a nominal power.  The default (or the
+value 0.0) omits displaying this power. Example:
+.br
+  ELS_VOLTAGE  240.0
+.br
+Since the time relationship between current and voltage is unknown, the
+units of the displayed power are just "VA" (Volt-Amperes).  However this
+is probably not too different from Wattage for the typical residence which
+doesn't have large motors running.
+.PP
+Directive ELS_CHGBITS_CURR
+.br
+Defines the amount of change in the Electrisave current required for it to be
+identified as "changed".  The parameter is the number of least bits, each
+corresponding to 0.1 Amperes.  The default is 1.
+.PP
+The Electrisave CM113 sensor reports measured current (as func "elsCurr"),
+whereas the OWL CM119 sensor directly reports Power and total Energy usage
+computed internally in the sensor as functions "owlPower" and "owlEnergy".
+.PP
+Directive OWL_VOLTAGE  <voltage>
+.br
+Defines a nominal AC voltage which corrects the computation of Power and
+Energy by an OWL CM119 sensor for nominal voltage other than the
+default 230.0 Volts
+.PP
+Directive OWL_CHGBITS_POWER  <nbits>
+.br
+Directive OWL_CHGBITS_ENERGY <nbits>
+.br
+Define the amount of change in the reported Power or Energy required for
+it to be identified as "changed".  The parameter is the number of least
+bits, corresponding to 0.001 kW or 0.0001 KWh respectively.
+.PP
+Directive OWL_CALIB_POWER  <factor>
+.br
+Directive OWL_CALIB_ENERGY <factor>
+.br
+Define decimal factors by which the Power and Energy values from an
+OWL sensor are multiplied by Heyu to get a better approximation of the
+actual Power and Energy.  Since the OWL sensor measures only current
+and the actual AC voltage will usually vary from the nominal depending
+on time of day and day of the week, it can be useful to choose calibration
+factors to make the values reported by Heyu agree with the utility company
+electric meter when compared over a 24 hour or longer interval.  The
+default factors are 1.0 for both directives.
+.PP
+Directive OWL_DISPLAY_COUNT  YES|NO
+.br
+Determines whether the raw data count is displayed in the monitor/logfile
+for Owl CM119 sensors.  The default is NO.
+.PP
+HEYU COMMANDS:
+.PP
+The most recent values of current, power, or energy are stored in the
+state table and can be recovered with the commands:
+.br
+  heyu elscurr <Hu>
+.br
+  heyu owlpower <Hu>
+.br
+  heyu owlenergy <Hu>
+.PP
+HEYU ENVIRONMENT:
+.PP
+Any Heyu script can retrieve the Electrisave or Owl data via the following
+environment variables, where Hu is the Housecode|unit to which
+the sensor is mapped.
+.br
+  X10_Hu_elsCurr    x10_<Hu-alias>_elsCurr
+.br
+  X10_Hu_owlPower   x10_<Hu-alias>_owlPower
+.br
+  X10_Hu_owlEnergy  x10_<Hu-alias>_owlEnergy
+.PP
+Scripts launched by one of the sensor functions elscurr,
+owlpower, or owlenergy will also have the corresponding
+environmental variable name without the _Hu_, e.g., X10_owlPower.
+Additionally available are the signal counters which are decremented
+and cycled 9-0 (or 15-0 if transmitted by pressing the check/test
+button).
+.br
+  X10_elsSigCount
+.br
+  X10_owlSigCount
+
+
+.SH WIND SENSORS
+There are currently three different protocols extant for Oregon Wind
+Sensors data: Wind1, Wind2, and Wind3.  These are identified by
+"RFdata:Type" and decoded by the Heyu module types:
+.br
+  ORE_WIND1
+.br
+  ORE_WIND2
+.br
+  ORE_WIND3
+.PP
+Having identified the protocol and ID byte from the RFdata:Type displayed
+in the monitor/logfile, map the sensor to a housecode|unit address with
+an ALIAS directive, e.g.,
+.br
+  ALIAS MyWind  D3  ORE_WIND2  0x48
+.PP
+Transmissions from wind sensors are single RF bursts and will
+be ignored if the <min_count> in directive AUX_REPCOUNTS is set greater
+than 1.
+.PP
+The main difference between protocols insofar as the data is concerned
+is the wind direction.  The Wind1 and Wind2 sensors report the direction as
+one of 16 compass points 22.5 degrees apart, whereas Wind3 sensors report
+the direction as degrees 0-359 with a precision of 1 degree.  Therefore each bit
+specified with directive ORE_CHGBITS_WDIR will correspond to 22.5 degrees for
+Wind1 and Wind2 or 1 degree for Wind3.
+.PP
+Directive ORE_WINDDIR_MODE  DEGREES|POINTS|BOTH
+.br
+Instructs Heyu whether to display wind direction as degrees (0-359.9) or
+compass points (e.g., N, NE, NNE, etc.) or both.  The default is BOTH.
+.PP
+Directive ORE_WINDSCALE  <units_label>  <scale_factor>
+.br
+Converts the wind sensor native units m/s (meters/second) into different
+units.  Some common examples (courtesy of the Unix \'units\' program):
+.br
+  ORE_WINDSCALE  mph  2.2369363
+.br
+  ORE_WINDSCALE  kph  3.6
+.br
+  ORE_WINDSCALE  furlongs/fortnight 6012.8848
+.PP
+Directive ORE_WINDSENSOR_DIR  <degrees>
+.br
+Oregon\'s setup instructions call for the wind sensor to be mounted
+pointing due North.  If this is not possible, use this directive
+to define the direction (+/- 0-359 degrees from due North) your sensor
+is actually pointing.  This will correct the wind direction displayed by
+Heyu (although not that displayed in a Oregon Weather Base Station).
+.br
+For Wind1 and Wind2 sensors, best results will be obtained if the 
+sensor can be mounted pointing towards one of the 16 compass points.
+.PP
+Directive ORE_DISPLAY_BEAUFORT  YES|NO
+.br
+In addition to the scaled wind speeds, the speeds on the (nonlinear)
+Beaufort scale (0-12) will be displayed in the monitor/logfile.  The default
+is NO.
+.PP 
+Directive ORE_DISPLAY_COUNT  YES|NO
+.br
+With the parameter YES, the actual sensor data readings for
+wind speed and average speed are displayed in square brackets in
+the monitor/logfile.  The default is NO.
+.PP
+Directive ORE_CHGBITS_WINDSP   <nbits>
+.br
+Directive ORE_CHGBITS_WINDAVSP <nbits>
+.br
+Directive ORE_CHGBITS_WINDDIR  <nbits>
+.br
+These directives define the amount of change in the variable required for
+it to be marked as "changed", expressed as the number of least significant
+bits in the difference between successive values.
+.br
+For ORE_CHGBITS_WINDSP and ORE_CHGBITS_WINDAVSP, each bit corresponds to
+0.1 meters/sec.  For ORE_CHGBITS_WINDDIR and Wind1 or Wind2 sensors, each bit
+corresponds to 1 compass point (22.5 deg), while for Wind3 sensors, each bit
+corresponds to 1 degree.
+.PP
+HEYU COMMANDS:
+.PP
+The lowercase functions orewindavsp, orewindsp, orewinddir can be
+executed as Heyu commands to recover the most recent data stored in the
+Heyu state tables.  Example:
+.br
+  heyu orewindsp  E2
+.PP
+The command 'heyu show oregon' displays the stored data for all
+Oregon sensors in tabular form.
+.PP
+The command 'heyu show sensors' displays the Active/Inactive state
+and battery state of all sensors along with the timestamp of the
+last received signal.
+.PP
+HEYU SCRIPTS:
+.PP
+The lowercase functions orewindavsp, orewindsp, and orewinddir can
+be used in a SCRIPT directive the same as any other Heyu function
+to launch a Heyu script.
+.br
+Example:
+.br
+  SCRIPT E2 orewindsp rcva :: <my command line>
+.PP
+Global flags and local flags "lobat" and "changed" can be included
+in the launch conditions as required.  The source "rcva" must be
+included (unless it has been configured as a default source).
+.PP
+HEYU ENVIRONMENT:
+.PP
+Any Heyu script can retrieve the Wind data via the following
+environment variables, where Hu is the Housecode|unit to which
+the sensor is mapped.
+.br
+  X10_Hu_oreWindAvSp   x10_<Hu-alias>_oreWindAvSp
+.br
+  X10_Hu_oreWindSp     x10_<Hu-alias>_oreWindSp
+.br
+  X10_Hu_oreWindDir    x10_<Hu-alias>_oreWindDir
+.PP
+Scripts launched by one of the sensor functions orewindavsp,
+orewindsp, or orewinddir will also have the corresponding
+environmental variable name without the _Hu_, e.g., X10_oreWindSp
+
+
+.SH RAIN SENSORS
+There are currently three different protocols extant for Oregon Rain
+Sensors data: Rain1, Rain2, and Rain3.  These are identified by
+"RFdata:Type" and decoded by the Heyu module types:
+.br
+  ORE_RAIN1
+.br
+  ORE_RAIN2
+.br
+  ORE_RAIN3
+.PP
+Having identified the protocol and ID byte from the RFdata:Type displayed
+in the monitor/logfile, map the sensor to a housecode|unit address with
+an ALIAS directive, e.g.,
+.br
+  ALIAS MyRain  D3  ORE_RAIN2  0x4E
+.PP
+Transmissions from rain sensors are single RF bursts and will
+be ignored if the <min_count> in directive AUX_REPCOUNTS is set greater
+than 1.
+.PP
+Mechanically, all the sensors work with a bucket arrangement. When a
+bucket is filled with a certain amount of rain water, it tips and dumps
+its contents and the tip is counted.
+.PP
+The main difference between the protocols insofar as data is concerned
+is in the native units.  For Rain1, the units are millimeters/hr and
+millimeters with a precision of 1 millimeter(/hr). For Rain2 and Rain3,
+the units are inches/hr and inches with a precision of 0.001 inch(/hr).
+.PP
+What somewhat confuses things is that for Rain2 at least, the total
+rain count is not incremented by the exact same amount for each tip
+of the bucket.  The increments 39, 40, 43, 44 (i.e., 0.039, 0.040,
+0.043, 0.044 inches) appear in what seems to be a complex pattern which
+is yet to be comprehended.
+.PP
+Directive ORE_RAINRATESCALE  <units_label>  <scale_factor>
+.br
+Directive ORE_RAINTOTSCALE  <units_label>  <scale_factor>
+.br
+By default the rainfall rate and total rainfall are displayed in the
+native units, which for the Rain1 protocol is mm(/hr) while for the
+others it is inches(/hr).  This directives allow display in any
+arbitrary units by providing the name for the units and the scale
+factor by which the native units are multiplied to convert to the
+new units.  Some common units and scale factors (courtesy of the Unix
+"units" program):
+.br
+For Rain1:
+.br
+  ORE_RAINRATESCALE  inches/hr  0.039370079
+.br
+  ORE_RAINTOTSCALE  inches  0.039370079
+.br
+For Rain2 or Rain3:
+.br
+  ORE_RAINRATESCALE  mm/hr  25.4 
+.br
+  ORE_RAINTOTSCALE  mm  25.4 
+.PP
+Directive ORE_DISPLAY_COUNT  YES|NO
+.br
+With the parameter YES, the actual sensor data readings for
+rain rate and total rain are displayed in square brackets in
+the monitor/logfile.  The default is NO.
+.PP
+Directive ORE_CHGBITS_RAINRATE  <nbits>
+.br
+Directive ORE_CHGBITS_RAINTOT  <nbits>
+.br
+These directives define the difference between the current
+and previous raw data reading required for the data to be marked as
+"changed".  The default is 1 for both.
+.br
+For Rain1:
+.br
+  ORE_CHGBITS_RAINRATE  <nbits>  (Each bit is 1 mm/hr)
+.br
+  ORE_CHGBITS_RAINTOT   <nbits>  (Each bit is 1 bucket tip = 1 mm)
+.br
+For Rain2 or Rain3:
+.br  
+  ORE_CHGBITS_RAINRATE  <nbits>  (Each bit is 0.01 inch/hr)
+.br
+  ORE_CHGBITS_RAINTOT   <nbits>  (Each bit is 1 bucket tip = 0.04 inch)
+.PP
+FLAGS:
+.PP
+Each sensor has a battery monitor.  For Rain2 and Rain3, a low-battery
+indicator is transmitted and Heyu will display the LoBat flag with the
+data when it is received.
+.br
+For Rain1, the battery level 0-100% is
+transmitted (and by default is displayed with the data).  The configuration
+directive ORE_LOWBATTERY defines the level (default 20%) at or below
+which the LoBat flag is raised and displayed.
+.PP
+When the total rain counter rolls over to zero, the Heyu "rollover" flag
+is raised and displayed.  For Rain2, rollover has been determined to occur
+after an accumulation of 393.70 inches, which appears to be a strange number
+until the realization that it\'s equivalent to 10000 millimeters. The
+Rain1 and Rain3 rollover points are assumed to be the same as for Rain2,
+but this has not been verified.
+
+.PP
+HEYU COMMANDS:
+.PP
+The lowercase functions orerainrate and oreraintot can be
+executed as Heyu commands to recover the most recent data stored in the
+Heyu state tables.  Example:
+.br
+  heyu oreraintot  E2
+.PP
+The command 'heyu show oregon' displays the stored data for all
+Oregon sensors in tabular form.
+.PP
+The command 'heyu show sensors' displays the Active/Inactive state
+and battery state of all sensors along with the timestamp of the
+last received signal.
+.PP
+HEYU SCRIPTS:
+.PP
+The lowercase functions orerainrate and oreraintot can
+be used in a SCRIPT directive the same as any other Heyu function
+to launch a Heyu script.
+.br
+Example:
+.br
+  SCRIPT E2 oreraintot rcva :: <my command line>
+.PP
+Global flags and local flags "lobat" and "changed" can be included
+in the launch conditions as required.  The source "rcva" must be
+included (unless it has been configured as a default source).
+.PP
+HEYU ENVIRONMENT:
+.PP
+Any Heyu script can retrieve the Wind data via the following
+environment variables, where Hu is the Housecode|unit to which
+the sensor is mapped.
+.br
+  X10_Hu_oreRainRate   x10_<Hu-alias>_oreRainRate
+.br
+  X10_Hu_oreRainTot    x10_<Hu-alias>_oreRainTot
+.PP
+Scripts launched by one of the sensor functions orerainrate
+oreraintot will also have the corresponding
+environmental variable name without the _Hu_, e.g., X10_oreRainRate
+
+
+.SH APPLICABLE OLDER DIRECTIVES for WIND and RAIN sensors.
+.PP
+Directive HIDE_UNCHANGED  YES|NO
+.br
+Determines whether unchanged data signals are displayed in the 
+Heyu monitor/logfile.
+.PP
+Directive INACTIVE_TIMEOUT  <hh:mm:ss>
+.br
+Any sensor with a heartbeat will be reported as Inactive if no
+signals have been received from it within the specified timeout
+(default is 4 hours).
+.PP
+Directive ORE_DISPLAY_BATLVL  YES|NO
+.br
+Determines whether the battery level 0-100% is displayed in the
+monitor/logfile for those sensor models which report a battery
+level as opposed to just a low-battery flag.  The default is
+YES.  The LoBat flag is unaffected by this directive. 
+(The battery level defined with directive ORE_LOWBATTERY defines
+the level at or below which the LoBat flag will be raised.)
+.PP
+Directive ORE_DISPLAY_CHAN  YES|NO
+.br
+Determines whether the Oregon channel number is displayed in
+the monitor/logfile.  (The Wind and Rain sensors have no channel
+and are assigned by Heyu to be Channel 1.)  The default is YES.
+.PP
+Directive DISPLAY_SENSOR_INTV  YES|NO
+.br
+Determines whether the time elapsed between the current and previous
+signals is displayed in the monitor/logfile.  The default is NO.
+
+
+.SH OREGON SENSOR EMULATION
+An external program can store Temp/RH/BP data in the state table
+for an emulation (dummy) Oregon module for processing by Heyu, just
+as if the data were received from an actual Oregon sensor.  The
+available emulation modules (described previously) are ORE_TEMU,
+ORE_THEMU, and ORE_THBEMU which are mapped to a housecode|unit address
+with an ALIAS directive, similar to an actual Oregon sensor.
+.PP
+To store data, use the command:
+.br
+   heyu ore_emu  Hu  <func>  <value>
+.PP
+where:
+.br
+  Hu is the address to which one of the following emulation modules
+has been mapped with an ALIAS configuration directive, or its alias label.
+.br
+  <func> is \'oretemp\', \'orerh\', or \'orebp\'.
+.br
+  <value> is the numerical value of the Temperature, RH, or BP data.
+.br
+  (Temperature may optionally have an appended scale suffix C, F, K, or R.)
+.PP
+The configuration directive ORE_DATA_ENTRY determines the units in which
+Heyu expects the data values to be entered, unless for Temperature it
+has been overridden by a scale suffix.
+.br
+With the default "ORE_DATA_ENTRY NATIVE", the data is entered in the
+native units for Oregon sensors, i.e., Celsius for Temperature, percent
+for RH, and hectoPascals (hPa) for BP.
+.br
+With "ORE_DATA_ENTRY  SCALED", data is entered in the units defined by
+configuration directives ORE_TSCALE and ORE_BPSCALE.  Note that with
+unit conversion and rounding between scaled and native units, the
+displayed value of the scaled data may be slightly different than
+what is entered.
+.PP
+Entered BP data is expected to be the local value, without the offset
+(typically for adjustment to sea level) which is optionally specified
+with ORE_BPSCALE.  (The offset is applied to the value displayed in
+the monitor or log file and to the Heyu environment variables when
+a script is launched.)
+
+.PP
+Example:
+.br
+In the Heyu config file:
+.br
+  ALIAS  basement  D4  ORE_THEMU
+.br
+  ORE_DATA_ENTRY  SCALED
+.br
+  ORE_TSCALE F
+.PP
+At the command prompt:
+.br
+  heyu ore_emu  basement oretemp  65.0
+.br
+  heyu ore_emu  basement orerh  50
+.PP
+The signal will appear in the logfile and monitor with source SNDC.  Remember
+to include this in the launch conditions if the signal is expected to launch
+a Heyu script.
+
+.SH MULTIPLE OREGON SENSORS
+If multiple Oregon sensors are to be used, they should be different models
+and/or set to different channel numbers so each has a different transmission
+interval (and not an interval which is an integer multiple of another interval).
+Not doing so risks having "blackout" periods during which the RF signals from
+two or more sensors with the same transmission interval interfere with each
+other over an extended period of time.
+.PP
+The transmission interval for Oregon sensors is typically 30, 40 or 60 seconds
+offset by an interval depending on the channel number.  E.g., here are the
+nominal intervals in seconds for several Oregon models.  (Users owning other
+models are encouraged to submit the information for those models so we can
+expand this table.)
+.PP
+  Model      ORE_  Ch 1 Ch 2 Ch 3 Ch 4 Ch 5 Ch 6 Ch 7 Ch 8 Ch 9 Ch 10
+.br
+  -----      ----  ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+.br
+  THR138     T1     30   29   31
+.br
+  THRN122N   T2     78
+.br
+  THN122N    T2     39   41   43
+.br
+  THN132N    T2     39   41   43
+.br
+  THGR122NX  TH1    39   41   43
+.br
+  THGN123N   TH1    39   41   43
+.br
+  THGR228N   TH1    39   41   43
+.br
+  THGR238    TH1    ??   ??   ??
+.br
+  THGR238N   TH1    39   41   43
+.br
+  THGR810    TH2    53   59   61   67   71   79   83   87   91   93
+.br
+  THGR800    TH2    53   59   61
+.br
+  THGN800    TH2    53   59   61             (WMR80A Weather Station)
+.br
+  RTGN318    TH3    53   59   61   67   71   (BAR800 Weather Station)
+.br
+  RTGR328N   TH3    53   59   61   67   71
+.br
+  THGR918N   TH6    37                       (WMR968N Weather Station)
+.br
+  BTHR968    THB2   38
+.br
+  BTHR918N   THB2   38
+
+.PP
+Rebranded Units: 
+.br
+  GEONAUTE   T2     78            (Geonaute WS-300 Weather Station)
+.br
+  63-1091    T2     39   41   43  (Radio Shack Proj Weather/Clock)
+.br
+  n/a        T1     30   29   31  (Brookstone Proj Weather/Clock)
+.PP
+Weather sensors:
+.br
+  PCR800     RAIN2  47            (WMR80A Weather Station) 
+.br
+  WGR800     WIND2  14            (WMR80A Weather Station)
+.br
+  PCR918N    RAIN1  47            (WMR968N Weather Station)
+.br
+  WGR918N    WIND3  14            (WMR968N Weather Station)
+.PP
+Current sensors:
+.br
+  CM113  ELS_ELEC1   6            (Electrisave cent-a-meter)
+
+.PP
+The STR928N Solar Panel houses the transmitters for both PCR918N (ORE_RAIN1)
+and THGR918N (ORE_TH6) sensors within the panel housing.
+.br
+The STR938 Solar Panel housing houses the transmitter for the WGR918N (WIND3)
+anemometer.
+
+.PP
+The length of an Oregon RF transmission depends on the type, but is somewhere
+around 150-400 milliseconds.
+.PP
+With two THR138 sensors set to channels 1 and 2 respectively, one might expect
+that the two sensors would transmit at the same time _at most_ once every
+(30 * 29) = 870 seconds.  The most likely result of an overlap of
+the RF transmissions is that the RFXCOM receiver will not recognize the
+signal as a valid Oregon signal and remain silent, but losing one out of
+every 30 transmissions is normally not that serious a problem.
+.PP
+However consider the case of two sensors with the same nominal transmission
+interval.  Each Oregon sensor has an independent timebase and the
+transmission intervals will be slightly different.  The two sensors
+may run for a long time without the transmissions overlapping, but one
+will eventually catch up with the other.  Suppose the intervals of two
+sensors differ by 10 milliseconds.  Then when the catchup occurs, the
+RF signal overlap will last for approximately (3 * 150) = 450 milliseconds
+divided by 10 milliseconds, or 45 intervals of 30 seconds - a blackout period
+of about 22 minutes when no signal will be reported.  The smaller the
+difference between sensor intervals, the longer the blackout period will last.
+.PP
+If you are forced to run more than one sensor with the same nominal
+transmission interval, a more precise measurement of the each interval
+can be obtained from the Heyu monitor by putting the directive
+"LOGDATE_UNIX  YES" in the configuration file.
+.PP
+An extended blackout longer than the time set by configuration directive
+INACTIVE_TIMEOUT (default 4 hours) will generate an Inactive message in the
+monitor/logfile.
+.PP
+Although Heyu can be instructed to ignore signals from a
+neighbor\'s sensors by using the ORE_IGNORE module type, those signals
+can still interfere with signals from your own sensors and result in a
+blackout if the transmission intervals are the same.
+
+.SH SPECIAL BWR102 SETUP
+The Oregon BWR102 scale has a switch on the scale for units kg, lbs,
+or stone-lbs, but this controls only the display on the scale\'s LCD.
+The transmitted data is always in kg.  Use the config directive
+ORE_WGTSCALE to define the units for Heyu\'s display.
+.PP
+Oregon appears to use the scale factor 2.200 for conversion from kg
+to lbs rather than the official value 2.2046226.  However neither of
+these produces an exact match to the BWR102 LCD display for weights below
+about 50 lbs.
+.PP
+The BWR102 transmits data as follows: After stepping on the scale and
+displaying the measurement, the scale retransmits the data up to seven
+times at approximately 10 or 11 second intervals (for use by the remote
+display unit provided with the scale).  Heyu sets the \'changed\' flag for
+the first of these regardless of whether the weight in this measurement
+is the same or different as the previous measurement, i.e., if you
+step on the scale twice in a row and get the exact same reading (which
+is unusual), Heyu will still record the weight as changed.
+.PP
+Note: Transmissions from the BWR102 are single RF bursts and will
+be ignored if the <min_count> in directive AUX_REPCOUNTS is set greater
+than 1.
+ 
+.SH EXPERIMENTAL STUFF
+
+Directive "ORE_ID_16  YES" expands the ID of Oregon sensors to 16-bit
+by using the channel code as the upper byte of a 16-bit ID word and the
+normal sensor-assigned ID as the lower byte.  This may be useful if you
+have some of the Oregon sensor models which can only generate a very
+limited number of different IDs.
+
+.PP
+Heyu recognizes protocols for Oregon signals beyond those listed as
+supported, but by default ignores them.
+.PP
+Directive DISPLAY_ORE_ALL  YES - Instructs Heyu to display "RFdata"
+signals with all recognized Oregon protocols even though the support may
+not yet exist for them in Heyu.  Recognized but unsupported protocols are:
+.PP
+  ORE_DT1 - Real time clock/calendar.
+.br
+  ORE_WGT2 - Weight
+
+.SH AUTHORS
+Oregon support was added to Heyu by Charles W. Sullivan using the
+protocols gratefully provided by RFXCOM.
+
+.SH SEE ALSO
+http://www.heyu.org
+.br
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5),
+x10cm17a(5), x10rfxsensors(5), x10rfxmeters(5), x10digimax(5)

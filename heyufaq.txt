@@ -1,0 +1,379 @@
+Frequently Asked Questions
+
+This FAQ applies to Heyu Version 2.
+Last updated 09/24/2007
+
+Q: What is Heyu?
+
+A: Heyu is a program that allows your computer to control devices by
+   transmitting information over your house's power lines.
+
+Q: What hardware is needed?
+
+A: The X-10 CM11A power-line communications interface connects to a
+   serial port on your computer.  It translates Heyu commands
+   to a signal that's transmitted over the AC wiring in your house.
+   A CM12U is essentially the same thing for 230 Volt systems.
+
+   X10 receiver modules (lamp, appliance, etc) listen for the signal
+   on the AC lines and respond appropriately.
+
+   Heyu can also receive and process X10 RF signals from a WGL
+   W800RF32A, an X-10 MR26A, or RFXCOM RF receiver connected to a
+   second serial port.
+
+Q: Why the silly name?
+
+A: In the words of Heyu's creator: "My kids are grown and on their own,
+   and I kind of missed being able to shout out "Hey You! Turn the
+   lights off!"
+
+Q: My computer doesn't have RS232 serial ports, only USB ports.  Can
+   I use a USB-Serial adapter?
+
+A: Yes, provided that your OS has kernel drivers for the specific adapter.
+
+Q: Does Heyu support the European model CM11E which has a USB plug?
+
+A: This is the same CM11 serial interface but supplied with a USB-Serial
+   adapter cable.  See the previous question and answer.  Note however
+   that some Linux users have reported frequent lockups with this adapter
+   (and other adapters using a Prolific chipset) which ceased when the
+   adapter was replaced by one using a FTDI chipset.
+
+Q: I'm using a USB-Serial adapter and when I try to send a Heyu command
+   from the command line I get the message "RI serial line may be stuck"
+   after a long delay.
+
+A: This is a problem with some adapters using an older Prolific chip.
+   The workaround is to put the directive 'CHECK_RI_LINE  NO' in your
+   Heyu configuration file.
+
+Q: Does Heyu support the new X-10 CM15A "ActiveHome Pro" interface?
+
+A: No.  The CM15A is a USB-only device requiring a custom driver.
+
+Q: Hey Dude, is Heyu cool?
+
+A: Nope. There's no cute graphical interface to impress your friends.
+   Instead, Heyu is a program which actually works.
+
+Q: Why do you sometimes mention "X-10" and other times "X10".  What's
+   the difference?
+
+A: X-10 refers to the company "X-10 (USA) Inc." or one of its products.
+   X10 refers to the protocol for AC power-line signals or RF signals
+   developed by that company but also supported by products from other
+   companies.
+
+Q: What OS will Heyu run on?
+
+A: The program was developed on a Linux system.  The compiled program
+   should work on any Linux system, although some of the directories
+   may differ between Slackware, Red Hat and Debian.  Check the system
+   logs if the program does not run as expected.
+
+   The program has been ported to other Unix variants.  The source code
+   on the web site includes configurations for Linux, Mac OS X (darwin),
+   FreeBSD, OpenBSD, NetBSD, SunOS, Solaris, SysV, SCO, AIX, OSF, ATTSysVr4,
+   and NEXTSTEP 3.3
+
+Q: I downloaded the Heyu source file, now what?
+
+A: The whole package is included in the file heyu-VERSION.tgz  This is a
+   tar file that has been gzipped.  Some of the individual parts are
+   also available from the web site.
+
+   The tar file will unpack into subdirectory ./heyu-VERSION/
+   CD to the directory of your choice.  Copy the tarred file there and type:
+   gunzip -c heyu-VERSION.tgz | tar xvf -
+
+   To compile the program, run the Configure program (./Configure) as an
+   ordinary user and then type 'make'.  The resulting executable program
+   is named simply 'heyu'.
+
+   To install the program and man pages, type 'make install' while logged
+   in as root.  It will try to locate your existing configuration file
+   (if any) or will otherwise offer to install a default configuration
+   file if appropriate.
+
+   If necessary, you can copy an existing configuration file to Heyu's base
+   directory and edit it to suit your environment.
+
+Q: What is meant by "Heyu's base directory"?
+
+A: The base directory is where the configuration file is stored and where
+   Heyu will read and write certain other files.  Heyu will first look
+   for the file .heyu/x10config under the user's home directory.  If not
+   found there it will look for /etc/heyu/x10.conf (under Linux - the
+   location may vary for other operating systems).
+
+Q: What is the x10config (or x10.conf) file?
+
+A: The x10config file is the configuration file used to set various
+   definitions and options for Heyu, for example the serial port to
+   which the CM11A is connected.
+
+   X10 devices are normally addressed by a code represented by a letter
+   and a number.  The x10config file provides a way to associate 'names'
+   (aliases) with devices.  For example, the name "lamp" can be used
+   instead of D4, or "porch-light" could be used instead of device K15.
+
+   The x10config file also provides the means for the user to control
+   many details about the way Heyu operates.  See the man page
+   x10config(5). 
+
+Q: What's the heyu_relay process that's always running in the background?
+
+A: This is the process that gathers the output from the CM11 and stores
+   it for any program that may need it.  It also responds to the CM11's
+   requests for time updates and power failures.
+
+   The relay allows several programs to communicate with the CM11.
+   As an example, you can run the program in monitor mode in one window
+   to watch what's happening with the CM11, while cron's sending a
+   a command to the CM11 based on the system clock.
+
+Q: How does the heyu_relay process get started?
+
+A: The relay is automatically started the first time the program runs.
+   If it's killed for any reason, it will start up again the next time
+   the program runs.
+
+Q: What is the Heyu State Engine?
+
+A: This is the optional heyu_engine process which runs in the background.
+   It maintains a record of the state (On, Off, Dim level) of each module
+   as determined by sent and received X10 power line signals.  It is
+   responsible for launching scripts or executable binaries based on X10
+   signals. It can also write a log file on the user's hard drive.
+
+   This process can be started manually by entering 'heyu_engine' at the
+   command line.  If the directive "START_ENGINE AUTO" is included in the
+   configuration file, it will be started along with Heyu's other
+   background process when the command 'heyu start' is entered.
+
+Q: What is the Heyu Auxiliary process?
+
+A: This is a background process, heyu_aux, which will read and decode
+   X10 RF signals from an RFXCOM, WGL W800RF32A, or X-10 MR26A RF receiver
+   connected to a second serial port.  The signals can be either transceived
+   directly to the power line via the CM11A or are sent to the Heyu State
+   Engine for further processing, such as launching scripts.  See the man page
+   x10aux(5) for details.
+
+   If the auxiliary serial port and RF receiver type are specified in the
+   configuration file with the TTY_AUX directive, this process can be
+   started manually by entering 'heyu aux' at the command line, or will
+   be started automatically along with Heyu's other background processes
+   when the command 'heyu start' is entered.
+
+Q: What is the Heyu Monitor?
+
+A: This is a process which will display sent or received X10 power line
+   signals in a terminal window.  To start the process, open a new 
+   terminal window and enter 'heyu monitor' at its command line.
+
+Q: I'm running the program for the first time, and it's saying:
+   "Invalid status response (was 0 bytes instead of 14)" and it's
+   not turning anything on or off.
+
+A: This may indicate several things.
+   a)  The CM11 may not be connected to the correct serial port.  COM1
+       in DOS/Windows is /dev/ttyS0 in Linux. 
+   b)  The CM11 may not be plugged into the wall or the outlet may be
+       turned off.
+   c)  The CM11 may need to be prodded.  Some CM11's go to sleep when
+       first plugged in.  They wake up when they see the first X10 traffic
+       on the AC lines.  Use a mini-controller or wireless transmitter
+       to turn an X10 module on or off.
+   d)  You may be running another program (getty or a mouse driver) on the
+       same port.
+
+Q: I have my CM11 set to house code A.  Will it report X10 events for
+   other housecodes?
+
+A: Yes, any activity will be reported in both a Heyu Monitor and in the
+   log file written by the Heyu State Engine (if thus configured).  The
+   'monitored devices' line of the 'heyu info' report shows the limited
+   information stored in the CM11A's internal registers, which is restricted
+   to a single housecode.
+
+Q: Is there a web page?
+    
+A: Yes.  http://www.heyu.org should bring you to the web page.
+    
+Q: I run the program and get the output:
+     "Unable to open file ..."
+
+A: This generally means that the program can't open a necessary file.
+   Check the system log files (typically /var/log/messages under Linux) for
+   error messages complaining about files or directories.  Unfortunately not
+   all Unix systems use the same directories for log files, temp files,
+   lock files and such. Running 'heyu list' will display the lock, spool,
+   and (systemwide) Heyu base directories compiled into your Heyu program.
+
+Q: I have an X-10 CP290 instead of a CM11.  Will Heyu work with it?
+
+A: No.  Check the web page of Paul Fox.  There's a pointer to it in the
+   links section of the Heyu website listed above.
+
+Q: What version number of Heyu am I running?
+
+A: At the command line, enter 'heyu version'.
+
+Q: Are there other Linux programs that will run a CM11?
+
+   There is another one called x10d that uses a network driver approach,
+   so you set up a network service and telnet to that port to issue
+   commands.  The author is Daniel D. Lanciani and a modified version
+   was posted to the net by Neil Cherry.
+    
+   The web location for Dan Lanciani's x10d is http://www.danlan.com/
+
+   There's the freeBSD daemon also called x10d at 
+   http://freebsd.org/~fsmp/HomeAuto/HomeAuto.html
+
+Q: I want to control other programs based on X10 signals.  Can I?
+
+A: Yes.  Heyu has the capability to run shell commands and launch
+   scripts or executable binaries.  See the man page x10scripts(5).
+
+Q: Don't I need the Xtend program to run other programs?
+    
+A: With Heyu version 1, the auxiliary program by David Shaw named
+   Xtend was required, however the functionality is built into Heyu
+   version 2 and no auxiliary program is required.
+
+Q: I made the required entries in the configuration file to run
+   a script when an X10 signal is received, but it doesn't run.
+
+A: Whenever changes are made in the configuration file, you must
+   run 'heyu restart'.  This will incorporate the changes in all
+   the Heyu background processes.
+
+Q: My script runs when it receives the X10 signal over the power
+   line, but it won't run when I send the same signal from the
+   Heyu command line.  What's wrong? I'm using the directive:
+      SCRIPT  A1  on  ::  myscript.sh
+
+A: The launch conditions for your script must specify the sources
+   of the signal you want to allow to execute your script in
+   addition to the default ("RCVI").  For signals sent from the
+   command line, add the source SNDC, i.e., 
+      SCRIPT  A1  on  sndc ::  myscript.sh
+   See man page x10config(5) and x10scripts(5) for descriptions
+   of other sources.
+
+Q: The heyu_relay daemon doesn't die when I do a 'heyu stop'.
+
+A: You have to have permissions to kill(1) the daemon to stop it.
+
+Q: The program does not work from my crontab.
+
+A: One problem may be that Heyu cannot find the configuration
+   file.  Use either Heyu's -c command line option or the X10CONFIG
+   environment variable to specify the full pathspec of the Heyu
+   configuration file.
+
+   Another problem may be that the directory where the Heyu executable
+   is installed (typically /usr/local/bin) is not on cron's PATH.
+   Provide the full pathspec, e.g., /usr/local/bin/heyu, in your
+   crontab entry.
+
+Q: Does Heyu do schedules, as in timers and fast macros?
+
+A: Yes.  See man page x10sched(5).  By default, Heyu looks for 
+   a file named x10.sched in the Heyu base directory.  An
+   example file named x10.sched.sample is included in the
+   Heyu source tar file. 
+
+Q: Do I have to do anything special with a schedule in order to have it
+   executed by the CM11A?
+
+A: Yes, you must specifically load the schedule into the CM11A memory
+   by entering 'heyu upload' at the command line.
+
+Q: Does Heyu handle Leap Year properly?  How about Daylight Saving Time?
+
+A: Yes.  The dates and times you program in the schedule file are
+   automatically adjusted by Heyu for Leap Years and Daylight Saving Time.
+
+Q: Will my CM11A schedule stop working on New Years Day as it does
+   with the ActiveHome program for Windows?
+
+A: No. Heyu has several options for working around the relatively
+   primative clock/calendar hardware in the CM11A. 
+
+Q: I unplugged the CM11A from the computer and my uploaded schedule
+   worked fine for a few days, but then it started doing crazy things.
+
+A: When disconnecting from the computer, always unplug the serial cable at
+   the CM11A end.  The CM11A is very susceptible to stray noise pickup
+   from a dangling cable which causes it to lose its settings.
+
+Q: I just installed Heyu and only an 'info' will work (but takes about
+   10 seconds), all other commands fail.  ActiveHome works fine on the
+   same machine under Win95.
+
+A: The clue here is 'real slow'.  Sometimes plug and play systems change
+   the interrupts on the serial ports.  Sometimes you end up sharing 
+   interrupts with another device.  When that happens, you may end up having
+   to wait for the other device to need attention before your system will
+   look at the serial port.
+
+Q: My computer has a serial port but it doesn't seem to work.
+
+A: Many PCs, especially laptops, will by default have the serial port
+   hardware configured for an internal modem.  Boot into the BIOS setup for
+   your computer and check the serial port configuration.
+
+Q: Heyu works, but it take 6 to 10 seconds to send a command.
+
+A: See the answer to the previous question.  Heyu should take about
+   1 second to send an on or off comamnd.  The only exception is the
+   very first time, as it sets up the heyu_relay daemon.
+
+   Dim and bright may take a few seconds longer, but not much more than 
+   about 4 seconds.
+
+Q: What are some things that get in the way of Heyu communicating with the
+   CM11?
+
+A: There are only a few things that interfere with Heyu and the CM11.
+
+   a) A running getty against the serial port.
+   b) Shared interrupts on an ISA based serial port.  This sometimes happens
+      when a Plug and Play card is reconfigured.
+      (COM1 and 3 or 2 and 4 are frequently shared under DOS and Windows.)
+   c) A powerline signal coming in while the computer is sending a command.
+
+Q: I use OpenBSD and don't see any information from the CM11.
+   Running 'heyu info' says Firmware revision Level = 0 and Interface clock
+   not yet set.
+
+A: OpenBSD requires that you add the following to /etc/ttys:
+     tty00   "/usr/libexec/getty std.9600"   unknown off local
+
+   See also the OpenBSD FAQ on the Heyu web page.
+
+Q: I made a local modification to Heyu.  How do I build the program?
+
+A: First, stop the running version of the program with 'heyu stop'.
+
+   A makefile is included that will create the program.  Just type the
+   command 'make' in the directory where you unpacked the source.
+
+   When satisfied with the modifications, type 'make install' while
+   logged in as root.
+
+Q: I don't need the Heyu program anymore.  I like Windows better.  How 
+   do I get rid of it?
+
+A: There is an uninstall option built into the Makefile.  Cd to the
+   source directory for Heyu and, as root, type 'make uninstall'.
+
+Copyright 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003 Daniel B. Suthers,
+Pleasanton Ca, 94588 USA.  E-mail: dbs -at- tanj.com
+Updated for Heyu version 2 by Charles W. Sullivan.
+

@@ -1,0 +1,435 @@
+.TH X10CM17A 5 local
+.SH NAME
+.B x10cm17a\^
+- HEYU support for the X-10 CM17A "Firecracker"
+.SH DESCRIPTION
+.I Heyu
+is a program primarily intended for controlling an X-10 CM11A home
+automation computer interface, however optional support is also included
+for the X-10 CM17A "Firecracker".  The CM17A is a small serial dongle which
+can transmit X10 commands via RF signals to a transceiver plugged into the
+power line.  The CM17A and CM11A coexist on the same serial port - no
+additional serial port is required.
+.PP
+The combination of a CM17A and transceiver may be useful as an X10 signal
+bridge between two or more disjoint AC power lines.  Inclusion of support
+within Heyu allows the CM17A commands to utilize Heyu aliases for module
+addresses and also allows these commands to be used in Heyu scenes and
+usersyns.  With Heyu support, the CM17A can be used to emulate standard
+X-10 RF remotes and also the RF signals from X-10\'s "Entertainment Anywhere"
+universal remotes.  Unfortunately the CM17A doesn\'t seem to be capable
+of transmitting the X-10 RF Pan & Tilt commands.
+.PP
+As far as can be determined there is no version of the CM17A which
+transmits at an RF frequency other than the 310 MHz used for X10
+transceivers in North America.  Therefore an option is provided to
+compile Heyu without CM17A support for users outside North America or
+simply those who have no interest in this device. (See the file "INSTALL"
+included in the Heyu distribution directory.)
+
+.SH CM17A COMMANDS
+As with the CM11A, a design objective for Heyu is to support every
+feature of which the hardware is capable.  In the case of the CM17A,
+Heyu provides more precise control over the RF output than other software.
+This plus the differing response of different transceiver types to
+RF signals leads to a degree of complexity which may be confusing to the
+uninitiated.
+.br
+
+There is no way of detecting the presence or absence of a CM17A
+on the serial port other than by observing the power line signal
+from a transceiver (like an X-10 TM751 or RR501) which receives the
+RF transmission from the CM17A and converts it to a power line signal.
+The CM17A commands will have no effect if the CM17A is absent other than
+a short delay.  All the CM17A commands may be used in Heyu scenes and
+usersyns.
+.br
+
+freset                   Reset the CM17A device.
+.br
+fon        HU            Transmit RF On
+.br
+foff       HU            Transmit RF Off
+.br
+fbright    H[U] <count>  Transmit RF Brights [after On]
+.br
+fdim       H[U] <count>  Transmit RF Dims [after On]
+.br
+fdimbo     HU <count>    Transmit RF Dims after Off
+.br
+flightson  H             Transmit RF All Lights On
+.br
+flightsoff H             Transmit RF All Lights Off
+.br
+falloff    H             Transmit RF All Units Off
+.br
+farb       xx xx <count> Transmit RF Abitrary two hex bytes
+.br
+farw       xxxx xxxx ... Transmit one or more 2-byte hex words.
+.br
+flux       <parameters>  Special for the LUX17 and LUX23 front ends.
+
+.PP
+The following "fast" commands are coded a little differently
+and on most systems require calibrating a timing loop by
+running the \'heyu utility calibrate\' command to work
+correctly. 
+.PP
+ffbright   H[U] <count>  Transmit RF Brights [after On]
+.br
+ffdim      H[U] <count>  Transmit RF Dims [after On]
+.br
+ffdimbo    HU <count>    Transmit RF Dims after Off
+.br
+ffarb      xx xx <count> Transmit RF Arbitrary two hex bytes
+.br
+ffarw      xxxx xxxx ... Transmit one or more 16-bit hex words.
+.br
+fflux      <parameters>  Special for the LUX17 and LUX23 front ends.
+.PP
+The LUX17 and LUX23 front ends for Heyu (available from the Heyu
+website) allow programming and operating respectively the X-10 UX17A and UX23A
+RF-to-IR converters in the mode for controlling up to three appliances
+(TV, VCR, DVD, Cable box, and/or Satellite receivers) using the cable with
+three IR emitters shipped with those converters.  The <parameters> for
+\'flux\' and \'fflux\' are <count> <post_delay> followed by one or more
+16-bit hex words. 
+
+.PP
+A few technical details about the CM17A operation:
+.br
+
+The CM17A draws its power directly from the serial port and requires
+no separate power supply.  It is actuated - triggered - by toggling the
+serial port\'s RTS and DTR control lines 80 times with a specific bit
+pattern for the particular command.  Following each actuation,
+the CM17A by default responds by retransmitting the same RF
+signal 5 times - what we\'ll call 5 "bursts" - spaced at intervals of
+about 110 milliseconds.  There are two significant bytes of
+information encoded in each burst.  The action performed by a transceiver
+in converting the RF bursts to a power line signal depends
+on the type of transceiver, the number of bursts, and the
+timing between bursts, but differences are normally of consequence
+only for dimming and brightening commands.
+.br
+
+Heyu can increase or decrease the number of bursts by 
+repeating the actuation and/or by cutting off power to the
+device at the appropriate time between bursts, and thus is
+able to force the CM17A to transmit any arbitrary number of
+bursts from one on up.  This differs from other CM17A control
+software like BottleRocket and Flipit which don't attempt any 
+special timing and merely transmit the default five bursts one or
+more times.  Unfortunately, multi-tasking operating systems like
+Linux and Unix cannot always provide the timing accuracy required,
+especially when heavily loaded, so some of Heyu\'s burst control
+features may not be reliable on all systems.
+.br
+
+RF burst control in the range 1 to 5 is provided by the RF_BURSTS
+configuration directive for CM17A commands other than \'fdim\',
+\'fbright\', and \'farb\'. When thus configured, each actuation
+of the CM17A will send that many bursts.  The default is 5 bursts.
+.br
+
+The RF signals transmitted by the CM17A for the \'fon\' and
+\'foff\' commands include both the housecode and unitcode.
+So although for convenience Heyu supports a units list, the
+signals will be transceived as successive individual pairs
+of address and function codes (in X10 order). E.g., the
+CM17A command \'heyu fon A1-3\' will be transceived as:
+.br
+  addr A3; func A On; addr A1; func A On; addr A2; func A On
+.br
+
+whereas sending the direct command \'heyu on A1-3\' via 
+the CM11A results in the power line code sequence:
+.br
+  addr A3; addr A1; addr A2; func A On
+.br
+
+The \'fdim\' and \'fbright\' CM17A commands on the other hand
+do not include the unit code.  So in order that a particular
+unit is addressed, Heyu first executes a single \'fon\' command,
+then follows it with the dim or bright command, transmitting as many
+bursts as are specified by the "count" parameter.
+.br
+To omit the \'fon\' signal from an RF dim/bright sequence,
+simply omit the unit number, or if more convenient in a scene
+or usersyn, prefix the HU with a \'-\'. 
+.br  
+
+With the normal \'fdim\' and \'fbright\' commands, sufficient 
+time is allowed between each actuation of the CM17A for the
+transceiver to convert the RF signal and send it out on the
+power line.  The transceiver will normally send a separate
+dim/or bright power line signal for each actuation and this will
+be evident in the Heyu monitor.
+.br
+
+With the "fast" \'ffdim\' and \'ffbright\' commands, Heyu
+attempts to space repeated actuations of the CM17A close
+enough together that the transceiver will consider the RF
+bursts to be arriving in one continuous stream - similar
+to holding down the button on a RF remote - and send the
+power line dims or brights in a continuous stream.  
+The resolution of the standard kernel timer functions in
+a multitasking OS like Unix or Linux is usually not fine
+enough, so a timing loop has to be individually calibrated
+for each system.  To do this, run \'heyu utility calibrate\'
+and follow the instructions.  (Kernel timers in Linux running
+kernel 2.6 and later appear to have finer resolution and
+the timing loop calibration may or may not be required.)
+The CM11A can mis-report the X10 power line dim/bright
+signals sent by some transceivers with the fast commands; see
+the transceiver section below.
+.PP
+Note that the dim/bright count specified for CM17A
+commands is not equivalent to the level specified for direct
+commands to the CM11A.  The actual power line dim/bright
+signal varies with the varies with the type of transceiver
+used and the number of RF bursts - with an RR501 transceiver
+and the \'ffdim\' command, a count of about 31-32 is required
+to span the range of fully bright to fully dim.
+.PP
+Also note that the number of power line dims/brights transmitted
+by a transceiver usually increases in steps, i.e., the number of
+RF bursts has to be increased by more than one for the next higher
+number of power line dims/brights to be transmitted.  The transition
+points are dependent on both the transceiver and on the number of
+bursts - you'll have to generate a table for your particular
+transceiver by using the Heyu monitor.  Here's a short table 
+generated with the \'ffdim\' command for some transceivers I have:
+.br
+
+  Transceived Dim/Bright (Percentage)
+.br
+
+  Bursts  RR501 CM15A TM751
+.br
+    1       6%    6%   12%
+.br
+    2       6    12    12
+.br
+    3       6    12    12
+.br
+    4      12    15    12
+.br
+    5      12    18    12 
+.br
+    6      17    22    12 
+.br
+    7      22    25    12
+.br
+    8      22    28    24
+.br
+    9      27    30    24
+.br
+   10      27    34    24
+
+.PP
+The \'fdimbo\' and \'ffdimbo\' commands work by first transmitting
+an \'foff\' RF signal followed by the specified count of RF bursts.
+(A standard X-10 Lamp Module in the Off state responds to
+power line dims by first turning on to full brightness
+before dimming.)  If the lamp is initially on, this method results
+in a very noticeable blinking of the lamp off then on again,
+but it is appreciably faster than first sending a suffient high
+count of bright signals to guarantee the lamp is at full
+brightness before dimming.
+.br
+
+The \'farb\' command allows sending any two arbitrary hex
+byte codes (0x00-0xFF) and specifying the number of of bursts in
+the third parameter.
+.br
+The audio/video control functions of remotes like the X-10 UR81A
+Universal Remote in PC mode can be emulated with this command.
+(The UR81A transmits 2 bursts of its RF signal in PC mode.)
+.br
+
+As previously mentioned, Heyu inserts a delay following each
+standard RF transmission to allow time for the transceiver to
+respond with the power line signal.  The default delay of 850
+milliseconds can be changed with the RF_POST_DELAY directive in
+the Heyu configuration file.
+.br
+
+Since the desired action from a \'farb\' or \'farw\' RF signal may not involve
+a transceiver and power line signals, the delay following this command is 
+separately specified, with a default of 850 milliseconds. 
+It may be changed with the RF_FARB_DELAY configuration 
+directive. (The \'heyu pause N.NNN\' command can be used to insert
+a delay on a command-by-command basis.)
+.br
+
+The \'freset\' command will reset the CM17A to a power-up
+state in case of lockup or other malfunction.  I've personally
+never found this to be necessary, but the command is available
+"just in case".
+
+.PP 
+Whether or not the CM17A commands themselves are displayed in the
+monitor and log file is determined by the configuration directive
+DISPLAY_RF_XMIT, which is set to YES by default.  One quirk is that
+there\'s a delay of a second or two in the CM11A before it reports
+receiving the power line command from the transceiver.  So 
+with repeated CM17A commands the monitor/log entries for the
+CM17A commands and the resulting power line commands sent by the
+transceiver may not be properly interleaved.  The only workaround
+for this would be to set an unreasonably long RF_POST_DELAY.
+
+.SH TRANSCEIVERS
+Note: Transceiver firmware revisions may be made at any time by the
+manufacturer, usually without notice, so the comments below may or may
+not not be valid for any particular transceiver unit.
+The older TM751 and RR501 transceivers evaluated were acquired about 1997.
+The newer ones and the CM15A and V572A were acquired in 2004 and 2005.   
+.PP
+The X-10 TM751 is the transceiver most commonly included in X-10 hardware
+bundles.  It receives a single house code and has a medium RF reception
+range.  Older models exhibit erratic responses to dims/brights and
+depending on the installation location and antenna orientation may be 
+susceptible to "runaway" dims - a feedback effect whereby
+any RF dim signal results in the transceiver sending a continuous
+stream of dims over the power line for some period of time or until
+it is unplugged from the power line.  Newer models seem resistant to
+this phenomenon but send a separate 12% power line dim for every so many RF
+dim signals received in a stream.  This works OK insofar as the lamp modules are
+concerned, but a CM11A with firmware version 1 will report a maximum of three
+such 12% dims in a row and the dim level maintained by the Heyu
+engine can be incorrect.  The 12% dim steps allow about 9 different
+brightness levels in a standard lamp module.
+.PP
+The X-10 RR501 receives a single housecode and has a medium RF 
+reception range.  The runaway dim phenomenon has been reported
+for some older models, but not to the extent of the TM751.  The
+RR501 seems to handle well the RF streams transmitted by the "fast" ffdim
+and ffbright commands.  Older models of the RR501 may not transceive
+the \'flightsoff\' command, but the RF signal for this has never been
+defined by X-10 or implemented in any of their remotes.  Note that the
+LightsOff power line signal is not supported by standard 1-way plug-in
+lamp modules like the LM465, but is supported by wall switches and
+2-way lamp modules.  The RR501 sends powerline dims at increments of
+6-7%, allowing about 16 different brightness levels in a standard
+lamp module.
+.PP
+The V572A transceiver by WGL Designs is an all-housecode transceiver
+with an exceptionally long RF receiving range.  By default it transceives
+all housecodes and units.  Transceiving may be disabled for housecodes
+and units in ranges 1-8 or 9-16, but to date the software to do this
+is available only for MS Windows.
+.PP
+Update: Based on our feedback, WGL Designs has fixed the problems mentioned
+immediatly below.
+.PP
+The V572A works fine for RF on and off
+commands but unfortunately I have found it to be problematic
+for transceiving RF dims and brights sent under computer control.
+The power line dim/bright level it sends for any given RF dim/bright
+command is not reproducible and can vary by a big factor either way.
+(Manual dimming control with a remote is usually not as much of a problem
+because of the visual feedback from the lamp.)  Update: Fixed in units
+manufactured after late 2007.
+.PP  
+The V572A does not support the on or off RF signal encoding for units 5-8
+and 13-16 transmitted by the older 2 and 4 button X10 wireless wall
+switches, or any of the switches where the housecode is set with an
+internal dial and the unit range with an internal slide switch.
+Update: Fixed in units manufactured after late 2007.
+.PP
+The V572A mis-transceives the flightsoff command as if it were the foff
+command for unit 1.  RF audio/video control signals sent by X-10\'s UR81A
+"Entertainment Anywhere" universal remote are mis-transceived as
+power line commands for housecode \'I\' although not in a one-to-one
+correspondence which would allow them to be useful.  Update: Fixed in
+units manufactured after late 2007.
+.PP
+The CM15A is X-10\'s intended replacement for the CM11A.  It is controlled
+via USB rather than RS232 Serial and support for any OS other than MS
+Windows is in its infancy.  (Even under Windows there are numerous problems
+evident with both the software and the CM15A firmware.)  The CM15A can both send
+and receive RF signals.  Transceiving is disabled by default for all
+housecodes and the ActiveHome Pro Windows software is required to (selectively)
+enable them, but once enabled the CM15A can be disconnected from the computer
+and used as an all-housecode transceiver.  Its RF receiving range is fairly
+low, but some users have improved it with a hardware modification to
+replace the short built-in antenna with an external antenna.  The CM15A
+works very well with all RF commands.  After the first few steps it sends
+powerline dims at increments of 3-4%, allowing about 30 different brightness
+levels in a standard lamp module.  Were it not for the short receiving range
+it would be an excellent choice for a transceiver.
+
+.SH RF RECEIVERS
+If you have an X-10 MR26A or a WGL W800RF32A RF receiver and an available
+serial port, the RF bytes transmitted by the CM17A (or an RF remote like
+the HR12A PalmPad) can be viewed directly by running one of the following
+shell scripts in a terminal window.  Update: Heyu now supports these two
+receivers to input RF data directly.  See man page x10aux(5).  The scripts may
+still be useful if you want to see the raw RF bytes.
+.br
+
+------------ mr26a.sh --(cut here)--------
+.br
+#! /bin/sh
+.br
+# Display output (hex) from an X-10 MR26A RF receiver
+.br
+# Significant bytes are bytes 3 and 4, i.e., XX and YY
+.br
+# in the displayed sequence "d5 aa XX YY ad"
+.br
+
+if [ $# -ne 1 ] ; then
+.br
+  echo "Usage: $0 <serial port>"
+.br
+  exit 
+.br
+fi
+.br
+
+echo "Reading MR26A on port: "$1
+.br
+stty -F $1 9600 cs8 raw cread clocal -parenb -cstopb -echo
+.br
+cat $1 | xxd -g1 -c5
+.br
+--------------(cut here)-----------------
+.br
+
+------------ w800rf32a.sh --(cut here)---
+.br
+#! /bin/sh
+.br
+# Display output (hex) from a WGL W800RF32A RF receiver
+.br
+# Significant bytes are bytes 1 and 3, i.e., XX and YY
+.br
+# in the displayed sequence "XX ~XX YY ~YY"
+.br
+
+if [ $# -ne 1 ] ; then
+.br
+  echo "Usage: $0 <serial port>"
+.br
+  exit 
+.br
+fi
+.br
+
+echo "Reading W800RF32A on port: "$1
+.br
+stty -F $1 4800 cs8 raw cread clocal -parenb -cstopb -echo
+.br
+cat $1 | xxd -g1 -c4
+.br
+--------------(cut here)-----------------
+
+.SH AUTHORS
+Charles W. Sullivan (cwsulliv01@heyu.org)
+
+.SH SEE ALSO
+http://software.x10.com/pub/manuals/cm17a_protocol.txt
+.br
+heyu(1), x10config(5), x10scripts(5)
