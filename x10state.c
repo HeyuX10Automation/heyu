@@ -13682,8 +13682,6 @@ char *translate_counter_action ( unsigned char *buf )
    count = buf[4] | (buf[5] << 8);
    mode  = buf[6];
 
-   set_counter(index, count, mode);
-
    sprintf(outbuf, "Counter %d %s to %d", index,
       ((mode == CNT_INC) ? "incremented" :
        (mode == CNT_DEC) ? "decremented" : "set"), x10global.counter[index - 1]);
