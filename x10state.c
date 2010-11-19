@@ -7620,7 +7620,7 @@ static struct {
       *ep++ = add_envptr(minibuf);
    }
    else if ( launcherp->type == L_TIMEOUT ) {
-      sprintf(minibuf, "X10_Timer=%s", countdown_timer[launcherp->timer].timername);
+      sprintf(minibuf, "X10_Timer=%d", launcherp->timer);
       *ep++ = add_envptr(minibuf);
    }
    else if ( launcherp->type == L_SENSORFAIL && config.aliasp != NULL ) {
