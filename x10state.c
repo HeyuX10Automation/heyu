@@ -9633,6 +9633,7 @@ int launcher_index ( LAUNCHER **launcherpp )
          (*launcherpp)[j].matched = NO;
          (*launcherpp)[j].scanmode = 0;
          (*launcherpp)[j].line_no = -1 ;
+         (*launcherpp)[j].scriptnum = -1;
          (*launcherpp)[j].label[0] = '\0';
          (*launcherpp)[j].bmaptrig = 0;
          (*launcherpp)[j].chgtrig = 0;
@@ -9690,6 +9691,7 @@ int launcher_index ( LAUNCHER **launcherpp )
          (*launcherpp)[j].matched = NO;
          (*launcherpp)[j].scanmode = 0;
          (*launcherpp)[j].line_no = -1 ;
+         (*launcherpp)[j].scriptnum = -1;
          (*launcherpp)[j].label[0] = '\0';
          (*launcherpp)[j].bmaptrig = 0;
          (*launcherpp)[j].chgtrig = 0;
@@ -11202,6 +11204,12 @@ int finalize_launchers ( void )
          continue;
       }
 
+      if ( launcherp[j].scriptnum < 0 ) {
+         fprintf(stderr, "Config Line %02d: No SCRIPT with label '%s' found\n",
+                    launcherp[j].line_no, launcherp[j].label);
+         errors++;
+      }
+         
       if ( noloc &&
            ((launcherp[j].sflags | launcherp[j].notsflags) & (NIGHT_FLAG | DARK_FLAG)) ) {
          fprintf(stderr,
