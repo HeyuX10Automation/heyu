@@ -12087,7 +12087,7 @@ int c_counter ( int argc, char *argv[] )
 
    if ( strcmp(argv[1], "counter") == 0 )  {
       index = (int)strtol(argv[2], &sp, 10);
-      if ( !strchr(" /t/n", *sp) || index < 1 || index > 16 ) {
+      if ( !strchr(" /t/n", *sp) || index < 1 || index > 32 * NUM_COUNTER_BANKS ) {
          fprintf(stderr, "Invalid counter number.\n");
          return 1;
       }
