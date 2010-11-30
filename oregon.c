@@ -367,7 +367,7 @@ TEMP3:    THWR800
 TH1:      THGN122N,THGR122NX,THGR228N,THGR268
 TH2:      THGR810
 TH3:      RTGR328N
-TH4:      THGR328 (WIP)
+TH4:      THGR328N
 TH5:      WTGR800
 TH6:      THGR918
 THB1:     BTHR918
@@ -423,7 +423,7 @@ static struct oregon_st {
    {72,   9, 0xff, 0xff, 0x1a, 0x2d, 2, CM1, BM1, 0, 0,   1, 0xff, 4, "ORE_TH1",   OreTH1,     cs8   },
    {72,   9, 0xff, 0xff, 0xfa, 0x28, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH2",   OreTH2,     cs8   },
    {72,   9, 0x0f, 0xff, 0x0a, 0xcc, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH3",   OreTH3,     cs8   },
-   {72,   9, 0x0f, 0xff, 0xca, 0x2c, 2, CM1, BM1, 0, 0,   1, 0xff, 4, "ORE_TH4",   OreTH4,     cs8   },
+   {72,   9, 0xff, 0xff, 0xca, 0x2c, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH4",   OreTH4,     cs8   },
    {72,   9, 0xff, 0xff, 0xfa, 0xb8, 2, CM0, BM2, 0, 0,   1, 0xff, 4, "ORE_TH5",   OreTH5,     cs8   },
    {72,   9, 0xff, 0xff, 0x1a, 0x3d, 2, CM1, BM2, 0, 0,   1, 0xff, 4, "ORE_TH6",   OreTH6,     cs8   },
    {64,   8, 0xff, 0xff, 0xda, 0x78, 1, CM0, BM1, 0, 0,   1, 0xff, 4, "ORE_UV2",   OreUV2,     cs7   },
