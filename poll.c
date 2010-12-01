@@ -219,9 +219,10 @@ int check4poll( int showdata, int timeout )
 
 
   
-    static char *rcs_status[10] = {
+    static char *rcs_status[] = {
        "System_mode = OFF", "System_mode = HEAT", "System_mode = COOL", "System_mode = AUTO",
-       "Fan = ON", "Fan = OFF", "Setback = ON", "Setback = OFF", "Temp Change", "Setpoint Change"
+       "Fan = ON", "Fan = OFF", "Setback = ON", "Setback = OFF", "Temp Change", "Setpoint Change",
+       "Outside Temp", "Heat Setpoint", "Cooling Setpoint",
     };
     static unsigned int source_type[] = {SNDC, SNDS, SNDP, SNDA, RCVA};
     static char *source_name[] = {"sndc", "snds", "sndp", "snda", "rcva"};
@@ -824,7 +825,7 @@ int check4poll( int showdata, int timeout )
                                           fprintf(fdsout, "%s %-22s : hu %c0  (%s)\n",
                                             datstrf(), minibuf, toupper((int)lasthc), lookup_label(lasthc, 0));
                                        }
-                                       else if ( lastunit == 6 && predim < 11 ) {
+                                       else if ( lastunit == 6 && predim < sizeof(rcs_status) / sizeof(*rcs_status) + 1 ) {
                                           fprintf(fdsout, "%s %-22s : hu %c0  (%s)\n",
                                             datstrf(), rcs_status[predim - 1], toupper((int)lasthc),
                                                                    lookup_label(lasthc, 0));
