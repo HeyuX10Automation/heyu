@@ -12922,8 +12922,6 @@ int c_sensorfault ( int argc, char *argv[] )
    int           j, count = 0;
    unsigned char hcode, ucode, status = 0;
    unsigned int  bitmap;
-   time_t        timenow, timestamp;
-   long          elapsed;
 
    if ( check_for_engine() != 0 ) {
       fprintf(stderr, "State engine is not running.\n");
@@ -12937,13 +12935,11 @@ int c_sensorfault ( int argc, char *argv[] )
 
    fetch_x10state();
 
-   timenow = time(NULL);
-
    aliasp = config.aliasp;
 
    j = 0;
    while ( aliasp && aliasp[j].line_no > 0 ) {
-      if ( (aliasp[j].optflags & (MOPT_SENSOR | MOPT_RFXSENSOR | MOPT_RFXMETER)) == 0 ) {
+      if ( (aliasp[j].optflags & (MOPT_HEARTBEAT | MOPT_LOBAT)) == 0 ) {
          j++;
          continue;
       }
@@ -12952,9 +12948,7 @@ int c_sensorfault ( int argc, char *argv[] )
       for ( ucode = 0; ucode < 16; ucode++ ) {
          if ( bitmap & (1 << ucode) ) {
             count++;
-            timestamp = x10state[hcode].timestamp[ucode];
-            elapsed = (long)(timenow - timestamp);
-            if ( elapsed > config.inactive_timeout )
+            if ( x10state[hcode].state[InactiveState] & (1 << ucode) )
                status |= 2;
 #if 0
             if ( x10state[hcode].vflags[ucode] & SEC_LOBAT )
