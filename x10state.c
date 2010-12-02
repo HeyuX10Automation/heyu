@@ -12964,12 +12964,12 @@ int c_sensorfault ( int argc, char *argv[] )
 #endif
             if ( x10state[hcode].state[LoBatState] & (1 << ucode) )
                status |= 1;
-            if ( x10state[hcode].state[TamperState] & (1 << ucode) )
-               status |= 8;
          }
       }
       j++;
    }
+   if ( x10global.sflags & GLOBSEC_TAMPER )
+      status |= 8;
    
    printf("%d\n", status);
 
