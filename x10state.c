@@ -349,8 +349,8 @@ struct virtflags_st {
   {"notswmax:",     9, SEC_MAX,        1},
   {"tmin:",         5, ORE_TMIN,       0},
   {"nottmin:",      8, ORE_TMIN,       1},
-  {"tmax:",         6, ORE_TMAX,       0},
-  {"nottmax:",      9, ORE_TMAX,       1},
+  {"tmax:",         5, ORE_TMAX,       0},
+  {"nottmax:",      8, ORE_TMAX,       1},
   {"rhmin:",        6, ORE_RHMIN,      0},
   {"notrhmin:",     9, ORE_RHMIN,      1},
   {"rhmax:",        6, ORE_RHMAX,      0},
@@ -7618,7 +7618,7 @@ static struct {
       *ep++ = add_envptr(minibuf);
    }
    else if ( launcherp->type == L_TIMEOUT ) {
-      sprintf(minibuf, "X10_Timer=%s", countdown_timer[launcherp->timer].timername);
+      sprintf(minibuf, "X10_Timer=%d", launcherp->timer);
       *ep++ = add_envptr(minibuf);
    }
    else if ( launcherp->type == L_SENSORFAIL && config.aliasp != NULL ) {
@@ -9631,6 +9631,7 @@ int launcher_index ( LAUNCHER **launcherpp )
          (*launcherpp)[j].matched = NO;
          (*launcherpp)[j].scanmode = 0;
          (*launcherpp)[j].line_no = -1 ;
+         (*launcherpp)[j].scriptnum = -1;
          (*launcherpp)[j].label[0] = '\0';
          (*launcherpp)[j].bmaptrig = 0;
          (*launcherpp)[j].chgtrig = 0;
@@ -9688,6 +9689,7 @@ int launcher_index ( LAUNCHER **launcherpp )
          (*launcherpp)[j].matched = NO;
          (*launcherpp)[j].scanmode = 0;
          (*launcherpp)[j].line_no = -1 ;
+         (*launcherpp)[j].scriptnum = -1;
          (*launcherpp)[j].label[0] = '\0';
          (*launcherpp)[j].bmaptrig = 0;
          (*launcherpp)[j].chgtrig = 0;
@@ -11200,6 +11202,12 @@ int finalize_launchers ( void )
          continue;
       }
 
+      if ( launcherp[j].scriptnum < 0 ) {
+         fprintf(stderr, "Config Line %02d: No SCRIPT with label '%s' found\n",
+                    launcherp[j].line_no, launcherp[j].label);
+         errors++;
+      }
+         
       if ( noloc &&
            ((launcherp[j].sflags | launcherp[j].notsflags) & (NIGHT_FLAG | DARK_FLAG)) ) {
          fprintf(stderr,
@@ -12085,7 +12093,7 @@ int c_counter ( int argc, char *argv[] )
 
    if ( strcmp(argv[1], "counter") == 0 )  {
       index = (int)strtol(argv[2], &sp, 10);
-      if ( !strchr(" /t/n", *sp) || index < 1 || index > 16 ) {
+      if ( !strchr(" /t/n", *sp) || index < 1 || index > 32 * NUM_COUNTER_BANKS ) {
          fprintf(stderr, "Invalid counter number.\n");
          return 1;
       }
@@ -13671,8 +13679,6 @@ char *translate_counter_action ( unsigned char *buf )
    index = buf[2] | (buf[3] << 8);
    count = buf[4] | (buf[5] << 8);
    mode  = buf[6];
-
-   set_counter(index, count, mode);
 
    sprintf(outbuf, "Counter %d %s to %d", index,
       ((mode == CNT_INC) ? "incremented" :

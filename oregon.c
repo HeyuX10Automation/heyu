@@ -367,7 +367,7 @@ TEMP3:    THWR800
 TH1:      THGN122N,THGR122NX,THGR228N,THGR268
 TH2:      THGR810
 TH3:      RTGR328N
-TH4:      THGR328 (WIP)
+TH4:      THGR328N
 TH5:      WTGR800
 TH6:      THGR918
 THB1:     BTHR918
@@ -423,7 +423,7 @@ static struct oregon_st {
    {72,   9, 0xff, 0xff, 0x1a, 0x2d, 2, CM1, BM1, 0, 0,   1, 0xff, 4, "ORE_TH1",   OreTH1,     cs8   },
    {72,   9, 0xff, 0xff, 0xfa, 0x28, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH2",   OreTH2,     cs8   },
    {72,   9, 0x0f, 0xff, 0x0a, 0xcc, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH3",   OreTH3,     cs8   },
-   {72,   9, 0x0f, 0xff, 0xca, 0x2c, 2, CM1, BM1, 0, 0,   1, 0xff, 4, "ORE_TH4",   OreTH4,     cs8   },
+   {72,   9, 0xff, 0xff, 0xca, 0x2c, 2, CM2, BM1, 0, 0,   1, 0xff, 4, "ORE_TH4",   OreTH4,     cs8   },
    {72,   9, 0xff, 0xff, 0xfa, 0xb8, 2, CM0, BM2, 0, 0,   1, 0xff, 4, "ORE_TH5",   OreTH5,     cs8   },
    {72,   9, 0xff, 0xff, 0x1a, 0x3d, 2, CM1, BM2, 0, 0,   1, 0xff, 4, "ORE_TH6",   OreTH6,     cs8   },
    {64,   8, 0xff, 0xff, 0xda, 0x78, 1, CM0, BM1, 0, 0,   1, 0xff, 4, "ORE_UV2",   OreUV2,     cs7   },
@@ -599,7 +599,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
    int            j, k, found, index = -1;
    unsigned char  hcode, ucode, trig = 0;
    unsigned int   bitmap = 0, changestate;
-   unsigned long  vflags = 0;
+   unsigned long  vflags = 0, vflags_mask = 0;
 
    static unsigned long prevdata[3], lastchdata[3];
    static unsigned int  startupstate;
@@ -730,6 +730,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          if ( seq == 1 ) {
             /* Wind Average Speed */
 
+            vflags_mask = SEC_LOBAT;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
 
             status = ORE_VALID;
@@ -773,6 +774,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( seq == 2 ) {
             /* Wind Instantaneous Speed */
+            vflags_mask = SEC_LOBAT;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
 
             status = ORE_VALID;
@@ -811,6 +813,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( seq == 3 ) {
             /* Process wind direction data as decidegrees (0-3599) */
+            vflags_mask = SEC_LOBAT;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
 
             status = ORE_VALID;
@@ -910,6 +913,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 
          if ( func == OreRainRateFunc ) {
             /* Rainfall Rate */
+            vflags_mask = SEC_LOBAT;
             loc = aliasp[index].storage_index;
             status = 0;
 
@@ -972,6 +976,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( func == OreRainTotFunc ) {
             /* Process Total Rain data */
+            vflags_mask = SEC_LOBAT;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
 
             status = ORE_VALID | batstatus;
@@ -1227,6 +1232,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
       case OreUV1 :
       case OreUV2 :
          /* Process UV sensor data */
+         vflags_mask = SEC_LOBAT;
          loc = aliasp[index].storage_index;
          status = 0;
 
@@ -1298,6 +1304,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          if ( seq == 1 ) {
 
             /* Process temperature and battery data */
+            vflags_mask = SEC_LOBAT | ORE_TMIN | ORE_TMAX;
             for ( j = 0; j < nvar; j++ ) {
                prevdata[j] = x10global.data_storage[loc + j];
                lastchdata[j] = x10global.data_storage[loc + nvar + j];
@@ -1372,6 +1379,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( seq == 2 ) {
             /* Process Humidity data */
+            vflags_mask = SEC_LOBAT | ORE_RHMIN | ORE_RHMAX;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
             /* RH in units of 1% */
             humid = 10 * (vdatap[7] & 0x0fu) + ((vdatap[6] & 0xf0u) >> 4);
@@ -1402,6 +1410,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( seq == 3 ) {
             /* Process Barometric Pressure data */
+            vflags_mask = SEC_LOBAT | ORE_BPMIN | ORE_BPMAX;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
             /* BP in units of 1 hPa */
             baro = (int)vdatap[8] + orechk[subindx].bpoffset;
@@ -1468,6 +1477,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
       case OreWeight1 :         
 
          /* Process weight data */
+         vflags_mask = SEC_LOBAT;
          loc = aliasp[index].storage_index;
          for ( j = 0; j < nvar; j++ ) {
             prevdata[j] = x10global.data_storage[loc + j];
@@ -1539,6 +1549,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          break;
 
       case OreElec1 :  /* Electrisave */
+         vflags_mask = SEC_LOBAT;
          loc = aliasp[index].storage_index; 
 
          /* Process current data */
@@ -1637,6 +1648,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 
          if ( func == OwlPowerFunc ) {
             /* Power in kW */
+            vflags_mask = SEC_LOBAT;
             loc = aliasp[index].storage_index;
             status = 0;
 
@@ -1699,6 +1711,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          }
          else if ( func == OwlEnergyFunc  ) {
             /* Process Total Energy */
+            vflags_mask = SEC_LOBAT;
             loc = aliasp[index].storage_index;
             longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
 
@@ -1954,7 +1967,8 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
    x10state[hcode].lastcmd = func;
    x10state[hcode].lastunit = unit;
    x10state[hcode].vident[ucode] = vident;
-   x10state[hcode].vflags[ucode] = vflags;
+   x10state[hcode].vflags[ucode] &= ~vflags_mask;
+   x10state[hcode].vflags[ucode] |= vflags;
    x10state[hcode].timestamp[ucode] = time(NULL);
 //   x10state[hcode].state[ValidState] |= (1 << ucode);
    x10global.lasthc = hcode;
@@ -2094,7 +2108,7 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
    int            j, /*k,*/ found, index = -1;
    unsigned char  hcode, ucode, trig = 0;
    unsigned int   bitmap, changestate, startupstate;
-   unsigned long  vflags = 0;
+   unsigned long  vflags = 0, vflags_mask = 0;
 
    unsigned long prevdata, lastchdata;
 
@@ -2179,6 +2193,7 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
 
    switch ( seq ) {
       case 1 :  /* Temperature */
+         vflags_mask = SEC_LOBAT | ORE_TMIN | ORE_TMAX;
          dtempc = (longvdata & ORE_DATAMSK) >> ORE_DATASHFT;
          if ( longvdata & ORE_NEGTEMP )
             dtempc = -dtempc;
@@ -2207,6 +2222,7 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
          break;
 
       case 2 : /* Relative Humidity */
+         vflags_mask = SEC_LOBAT | ORE_RHMIN | ORE_RHMAX;
          humid = (longvdata & ORE_DATAMSK) >> ORE_DATASHFT;
          lasthumid = (lastchdata & ORE_DATAMSK) >> ORE_DATASHFT;
          delta = abs(humid - lasthumid);
@@ -2228,6 +2244,7 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
          break;
 
       case 3 : /* Barometric Pressure */
+         vflags_mask = SEC_LOBAT | ORE_BPMIN | ORE_BPMAX;
          baro = (int)((longvdata & ORE_DATAMSK) >> ORE_DATASHFT);
          longvdata = (longvdata & ~ORE_DATAMSK) | ((unsigned long)baro << ORE_DATASHFT);
          lastbaro = (lastchdata & ORE_DATAMSK) >> ORE_DATASHFT;
@@ -2273,7 +2290,8 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
    x10state[hcode].lastcmd = func;
    x10state[hcode].lastunit = unit;
    x10state[hcode].vident[ucode] = vident;
-   x10state[hcode].vflags[ucode] = vflags;
+   x10state[hcode].vflags[ucode] &= ~vflags_mask;
+   x10state[hcode].vflags[ucode] |= vflags;
    x10state[hcode].timestamp[ucode] = time(NULL);
 //   x10state[hcode].state[ValidState] |= (1 << ucode);
    x10global.lasthc = hcode;
