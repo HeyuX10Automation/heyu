@@ -133,9 +133,9 @@ int c_monitor( int argc, char *argv[] )
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	        return(0); 
 #ifndef HASSELECT
-	    /* this imposes a 1 second delay between the start of new output*/
+	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
-	    sleep(1);
+	    microsleep(configp->engine_poll);
 #else
             if ( tty != TTY_DUMMY ) {
 	       FD_CLR(newfd, &rfds);
@@ -228,9 +228,9 @@ int c_engine( int argc, char *argv[] )
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	       engine_quit(SIGTERM) /* return(0) */; 
 #ifndef HASSELECT
-	    /* this imposes a 1 second delay between the start of new output*/
+	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
-	    sleep(1);
+	    microsleep(configp->engine_poll);
 #else
             if ( tty != TTY_DUMMY ) {
 	       FD_CLR(newfd, &rfds);
