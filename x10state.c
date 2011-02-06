@@ -6795,7 +6795,7 @@ unsigned long get_heyu_state ( unsigned char hcode, unsigned char ucode, int mod
       else if ( vmodmask[VkakuMask][hcode] & bitmap )
          value = 100 * level / 15;
       else 
-         value = 100 * level / 255;
+         value = 100 * level / ondimlevel[hcode][ucode];
    }
    else {
       /* Start with the raw dim level */
@@ -9355,7 +9355,7 @@ int c_x10state ( int argc, char *argv[] )
          else if ( vmodmask[VkakuMask][hcode] & bitmap )
             printf("%d\n", (int)(100 * level) / 15);
          else {
-            printf("%d\n", (int)(100 * level) / 255);
+            printf("%d\n", (int)(100 * level) / ondimlevel[hcode][ucode]);
          }
       }
       else if ( strcmp(argv[0], "memlevel") == 0 ) {
@@ -9372,7 +9372,7 @@ int c_x10state ( int argc, char *argv[] )
          else if ( vmodmask[VkakuMask][hcode] & bitmap )
             printf("%d\n", (int)(100 * level) / 15);
          else {
-            printf("%d\n", (int)(100 * level) / 255);
+            printf("%d\n", (int)(100 * level) / ondimlevel[hcode][ucode]);
          }
       }
       else if ( strcmp(argv[0], "rawlevel") == 0 ) {
