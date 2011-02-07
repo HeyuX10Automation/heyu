@@ -199,7 +199,7 @@ static struct conf {
    {"XREF_APPEND",          2, 2, 0, 1, COVR|CIGN, Ignored }, 
    {"MACTERM",              2, 2, 0, 1, COVR,    MacTerm }, /* WIP */
    {"RESOLVE_OVERLAP",      2, 2, 0, 1, COVR,    ResOverlap },
-   {"DAWNDUSK_DEF",         2, 2, 0, 1, COVR,    SunMode },
+   {"DAWNDUSK_DEF",         2, 3, 0, 1, COVR,    SunMode },
    {"SCRIPT_MODE",          2, 2, 0, 0, 0,       ScriptMode },
    {"SCRIPT_SHELL",         2, 2, 0, 0, 0,       ScriptShell },
    {"LAUNCH_SOURCE",        2, 6, 0, 0, 0,       LaunchSrc },
@@ -1872,18 +1872,35 @@ int parse_config_tail ( char *buffer, unsigned char source )
 
 	 case SunMode :
 	    strupper(tokv[0]);
-	    if ( strncmp(tokv[0], "RISESET", 1) == 0 )
-	       configp->sunmode = RiseSet;
-	    else if ( strncmp(tokv[0], "CIVILTWI", 1) == 0 )
-	       configp->sunmode = CivilTwi;
-	    else if ( strncmp(tokv[0], "NAUTTWI", 1) == 0 )
-	       configp->sunmode = NautTwi;
-	    else if ( strncmp(tokv[0], "ASTROTWI", 1) == 0 )
-	       configp->sunmode = AstroTwi;
-	    else {
-	       store_error_message("DAWNDUSK_DEF must be R, C, N, or A");
-	       errors++;
+            if ( tokc == 1 ) {
+	       if ( strncmp(tokv[0], "RISESET", 1) == 0 ) {
+	          configp->sunmode = RiseSet;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "CIVILTWI", 1) == 0 ) {
+	          configp->sunmode = CivilTwi;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "NAUTTWI", 1) == 0 ) {
+	          configp->sunmode = NautTwi;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "ASTROTWI", 1) == 0 ) {
+	          configp->sunmode = AstroTwi;
+		  break;
+               }
 	    }
+            else {
+	       sp = NULL;
+	       if ( strncmp(tokv[0], "OFFSET", 1) == 0 ) {
+	          configp->sunmode = AngleOffset;
+                  configp->sunmode_offset = (int)strtol(tokv[1], &sp, 10);
+               }
+               if ( sp && strchr(" \t\n", *sp) )
+	          break;
+            }
+	    store_error_message("DAWNDUSK_DEF must be R, C, N, A or O <int>");
+	    errors++;
 	    break;
 
          case Fix5A :

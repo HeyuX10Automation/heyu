@@ -459,16 +459,18 @@ configuration is what you think it ought to be.
 \'heyu utility dawndusk\' displays the times of Dawn and Dusk for today.
 .br
 
-\'heyu utility suntable [-r|-c|-n|-a -s -w] [yyyy]\' writes a file to the 
-hard drive containing a daily table of Dawn and Dusk as computed by Heyu for
-your Longitude, Latitude, and Timezone, for the current year or for year yyyy.
-By default, Dawn and Dusk are as defined by the DAWNDUSK_DEF directive in your
-configuration file, times displayed are Civil (i.e., wall-clock) times, and
-the table is 80 columns wide.
+\'heyu utility suntable [-r|-c|-n|-a|-o [-]\fInn\fP] [-s] [-w] [\fIyyyy\fP]\'
+writes a file to the hard drive containing a daily table of Dawn and Dusk as
+computed by Heyu for your Longitude, Latitude, and Timezone, for the current
+year or for year \fIyyyy\fP. By default, Dawn and Dusk are as defined by the
+DAWNDUSK_DEF directive in your configuration file, times displayed are Civil
+(i.e., wall-clock) times, and the table is 80 columns wide.
 .br
-Switches -r, -c, -n, -a direct Heyu to use the definition of Dawn and Dusk as
-Rise/set, or as Civil, Nautical, or Astronomical Twilight, respectively, and
-overriding the definition of Dawn and Dusk in your configuration file.
+Switches -r, -c, -n, -a or -o [-]\fInn\fP direct Heyu to use the definition of
+Dawn and Dusk as either Sunrise/Sunset, or Civil, Nautical or Astronomical
+Twilight, or a specified position of the Sun centre in angle minutes below the
+horizon (actually above the horizon if \fb-\fInn\fP), respectively, overriding
+the definition of Dawn and Dusk from your configuration file.
 .br
 Switch -s displays times as Standard Time throughout the year instead of
 Civil Time.

@@ -12,11 +12,11 @@
 #define TIMEMODE_STANDARD   0
 #define TIMEMODE_CIVIL      1
 
-int suntimes ( double, double, long int, long int, int,
+int suntimes ( double, double, long int, long int, int, int,
               int *, int *, double *, double * );
 long int greg2jd ( int, int, int );
-int display_sun_table (FILE *, int, long, int, int, int, int, int, int);
-int display_sun_table_wide (FILE *, int, long, int, int, int, int, int, int);
+int display_sun_table (FILE *, int, long, int, int, int, int, int, int, int);
+int display_sun_table_wide (FILE *, int, long, int, int, int, int, int, int, int);
 int local_dawndusk ( time_t, time_t *, time_t * );
 
 

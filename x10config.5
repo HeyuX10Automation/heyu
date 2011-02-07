@@ -1468,7 +1468,9 @@ on and off.  (Heyu maintains the ordering in macros to the extent possible.)
 .SH DAWNDUSK_DEF directive
 By default Heyu defines Dawn and Dusk to be Sunrise and Sunset.  This
 directive allows globally defining them instead as the morning and
-evening times of several standard twilights, as follows:
+evening times of several standard twilights, or as times calculated for
+a custom position of the Sun centre below the horizon, specified in angle
+minutes, as follows:
 .br
 RISESET (or simply \'R\') - Sunrise and Sunset (default)
 .br
@@ -1478,12 +1480,17 @@ NAUTICAL (or simply \'N\') - Nautical Twilight
 .br
 ASTRONOMICAL (or simply \'A\') - Astronomical Twilight
 .br
+OFFSET [-]\fINN\fP (or simply \'O\ [-]\fINN\fP') - Sun position in angle
+minutes below the horizon (actually above the horizon if \fb-\fINN\fP)
+.br
 
 Example:
 .br
   DAWNDUSK_DEF  CIVIL
 .br
   DAWNDUSK_DEF  N
+.br
+  DAWNDUSK_DEF  OFFSET 0
 
 .SH DAWN_OPTION directive
 .SH DUSK_OPTION directive

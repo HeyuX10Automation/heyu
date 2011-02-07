@@ -13261,7 +13261,7 @@ int show_state_dawndusk ( void )
    time_t      midnight;
 
    static char   *sunmodelabel[] = {"Sunrise/Sunset", "Civil Twilight",
-        "Nautical Twilight", "Astronomical Twilight"};
+        "Nautical Twilight", "Astronomical Twilight", "Sun angle offset = %d'", };
 
    if ( configp->loc_flag != (LONGITUDE | LATITUDE) ||
         x10global.dawndusk_enable == 0 ) {
@@ -13284,8 +13284,9 @@ int show_state_dawndusk ( void )
    printf("Dawn = %02d:%02d %s", tmp->tm_hour, tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
 
    tmp = localtime(&x10global.utc0_dusk);
-   printf("  Dusk = %02d:%02d %s", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
-   printf("  (%s)\n", sunmodelabel[configp->sunmode]);
+   printf("  Dusk = %02d:%02d %s  ", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
+   printf(sunmodelabel[configp->sunmode], configp->sunmode_offset);
+   printf("\n");
 
    return 0;
 }

@@ -339,7 +339,7 @@ enum {SndC, SndM, SndP, SndS, SndT, RcvI, RcvT, SndA, RcvA, Xmtf};
 #define CRON_REPORT_FILE  "cronreport.txt"
 #define SUN_TABLE_FILE    "sun_%d.txt"
 
-enum {RiseSet, CivilTwi, NautTwi, AstroTwi};
+enum {RiseSet, CivilTwi, NautTwi, AstroTwi, AngleOffset, };
 enum {ArmLogicStrict, ArmLogicMedium, ArmLogicLoose};
 
 #define RFXCOM_ARCTECH   0x00000001
@@ -1169,6 +1169,7 @@ typedef struct {
   unsigned char dawn_option;      /* Use First, Average, Median, etc.*/
   unsigned char dusk_option;      /* Use First, Average, Median, etc.*/
   int           sunmode;          /* Definition of Dawn/Dusk */
+  int           sunmode_offset;   /* Custom Dawn/Dusk angle offset */
   int           dawn_substitute;  /* For days when there's no dawn */
   int           dusk_substitute;  /* For days when there's no dusk */
   int           min_dawn;         /* Lower bound on dawn */
@@ -1616,7 +1617,7 @@ int compmac ( struct macindx *, struct macindx * );
 int write_macroxref ( char *, MACRO *, unsigned char *, int );
 int process_data ( int );
 int crontest ( void );
-int write_sun_table ( int, int, int, int );
+int write_sun_table ( int, int, int, int, int );
 int comp_events ( struct ev_s *, struct ev_s * );
 int display_events ( FILE *, TIMER *, TEVENT *, MACRO *, CALEND * );
 int display_timers ( FILE *, TIMER *, TEVENT *, MACRO * );
