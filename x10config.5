@@ -1745,14 +1745,16 @@ man page x10aux(5).
        ===============================================
 
 .SH TTY_AUX directive
-Specify the auxiliary serial port and RF receiver device.
+Specify the auxiliary serial port or network address and RF receiver device.
 .br
 
-  TTY_AUX  <serial port>  <receiver device>
+  TTY_AUX  <serial_port or network_address:port>  <receiver device>
 .br
-where <receiver device> is W800RF32A, MR26A, or RFXCOM.  Example:
+where <receiver device> is W800RF32A, MR26A, or RFXCOM.  Examples:
 .br
   TTY_AUX  /dev/ttyS1  W800RF32A
+.br
+  TTY_AUX  10.10.10.10:10000  RFXCOM
 .br
 
 There is no default for this directive.

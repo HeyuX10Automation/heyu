@@ -57,6 +57,9 @@
 #include <pty.h>
 #endif
 
+#include <sys/socket.h>
+#include <netdb.h>
+
 #include "x10.h"
 #include "process.h"
 
@@ -155,6 +158,51 @@ int setup_tty_aux( int auxbaud, int lockflag )
 #ifdef DEBUG
     syslog(LOG_ERR, "Opening tty_aux line.");
 #endif
+
+    if ( configp->auxhost[0] && configp->auxport[0] ) {
+       struct addrinfo hints;
+       struct addrinfo *result, *rp;
+       int sfd, s;
+
+       memset(&hints, 0, sizeof(struct addrinfo));
+       hints.ai_family = AF_UNSPEC;	/* Allow IPv4 or IPv6 */
+       hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+       hints.ai_flags = 0;
+       hints.ai_protocol = 0;		/* Any protocol */
+
+       /* Obtain address(es) matching host/port */
+
+       s = getaddrinfo(configp->auxhost, configp->auxport, &hints, &result);
+       if (s != 0) {
+          syslog(LOG_ERR, "getaddrinfo: %s\n", gai_strerror(s));
+       } else {
+          /*
+	   * getaddrinfo() returns a list of address structures.
+	   * Try each address until we successfully connect(2).
+	   * If socket(2) (or connect(2)) fails, we (close the socket
+	   * and) try the next address.
+	   */
+          for (rp = result; rp != NULL; rp = rp->ai_next) {
+	     sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	     if (sfd == -1)
+	        continue;
+
+             if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+	        break;			/* Success */
+
+	     close(sfd);
+          }
+
+          freeaddrinfo(result);		/* No longer needed */
+
+          if (rp == NULL) {		/* No address succeeded */
+	     syslog(LOG_ERR, "Could not connect\n");
+          } else {
+             tty_aux = sfd;
+             return 0;
+	  }
+       }
+    }
 
 #ifdef O_NONBLOCK
     /* Open with non-blocking I/O, we'll fix after we set CLOCAL */

@@ -1183,6 +1183,8 @@ typedef struct {
   char          tty[PATH_LEN + 1];   /* Serial port to use */
   char          suffix[PATH_LEN + 1]; /* Suffix for file locks */
   char          ttyaux[PATH_LEN + 1]; /* Auxiliary input serial port */
+  char          auxhost[NAME_LEN + 1]; /* Auxiliary input network host address or name */
+  char          auxport[NAME_LEN + 1]; /* Auxiliary input network port number or name */
   char          suffixaux[PATH_LEN + 1]; /* Suffix for aux file lock */
   char          ttyrfxmit[PATH_LEN + 1]; /* RFXmitter serial port */
   unsigned char rfxmit_freq;      /* RFXmitter frequency */

@@ -32,7 +32,8 @@ man page x10config(5).
 .PP
 Heyu supports an auxiliary input device on a second serial port for X10
 RF signals.  Supported devices are the WGL W800RF32A, the X-10 MR26A,
-and the RFXCOM X10 RF Receivers.
+and the RFXCOM X10 RF Receivers. A network version of the RFXCOM receiver,
+RFXLAN, is also supported.
 .PP
 The W800RF32A is manufactured by WGL & Associates (http://www.wgldesigns.com).
 It is available in both a 310 MHz version for operation in the USA and Canada
@@ -395,8 +396,9 @@ be relied on for critical applications.
 .IP \fBaux\fP
 Starts the auxiliary daemon heyu_aux, a background process which
 allows X10 commands to be input to Heyu via RF signals from a W800RF32A,
-MR26A, or RFXCOM serial receiver.  The serial port to which the receiver is
-connected and the receiver device type must be specified in the
+MR26A, or RFXCOM serial receiver, or from an RFXLAN network receiver. 
+The serial port to which the receiver is connected, or the network address
+in case of RFXLAN, and the receiver device type must be specified in the
 configuration file with the TTY_AUX directive.
 .br
 
