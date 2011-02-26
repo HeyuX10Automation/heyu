@@ -2911,8 +2911,6 @@ int c_ore_emu ( int argc, char *argv[] )
       {"",          0xff          },
    };
 
-   int read_x10state_file ( void );
-
    if ( argc < 5 ) {
       fprintf(stderr, "Usage: %s %s Hu <oretemp|orerh|orebp> <value>\n", argv[0], argv[1]);
       return 1;
@@ -2920,10 +2918,6 @@ int c_ore_emu ( int argc, char *argv[] )
 
    if ( check_for_engine() != 0 ) {
       fprintf(stderr, "State engine is not running.\n");
-      return 1;
-   }
-   if ( read_x10state_file() != 0 ) {
-      fprintf(stderr, "Unable to read state file.\n");
       return 1;
    }
 

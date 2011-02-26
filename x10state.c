@@ -6793,7 +6793,7 @@ unsigned long get_heyu_state ( unsigned char hcode, unsigned char ucode, int mod
       else if ( vmodmask[VkakuMask][hcode] & bitmap )
          value = 100 * level / 15;
       else 
-         value = 100 * level / 255;
+         value = 100 * level / ondimlevel[hcode][ucode];
    }
    else {
       /* Start with the raw dim level */
@@ -9353,7 +9353,7 @@ int c_x10state ( int argc, char *argv[] )
          else if ( vmodmask[VkakuMask][hcode] & bitmap )
             printf("%d\n", (int)(100 * level) / 15);
          else {
-            printf("%d\n", (int)(100 * level) / 255);
+            printf("%d\n", (int)(100 * level) / ondimlevel[hcode][ucode]);
          }
       }
       else if ( strcmp(argv[0], "memlevel") == 0 ) {
@@ -9370,7 +9370,7 @@ int c_x10state ( int argc, char *argv[] )
          else if ( vmodmask[VkakuMask][hcode] & bitmap )
             printf("%d\n", (int)(100 * level) / 15);
          else {
-            printf("%d\n", (int)(100 * level) / 255);
+            printf("%d\n", (int)(100 * level) / ondimlevel[hcode][ucode]);
          }
       }
       else if ( strcmp(argv[0], "rawlevel") == 0 ) {
@@ -12920,8 +12920,6 @@ int c_sensorfault ( int argc, char *argv[] )
    int           j, count = 0;
    unsigned char hcode, ucode, status = 0;
    unsigned int  bitmap;
-   time_t        timenow, timestamp;
-   long          elapsed;
 
    if ( check_for_engine() != 0 ) {
       fprintf(stderr, "State engine is not running.\n");
@@ -12935,13 +12933,11 @@ int c_sensorfault ( int argc, char *argv[] )
 
    fetch_x10state();
 
-   timenow = time(NULL);
-
    aliasp = config.aliasp;
 
    j = 0;
    while ( aliasp && aliasp[j].line_no > 0 ) {
-      if ( (aliasp[j].optflags & (MOPT_SENSOR | MOPT_RFXSENSOR | MOPT_RFXMETER)) == 0 ) {
+      if ( (aliasp[j].optflags & (MOPT_HEARTBEAT | MOPT_LOBAT)) == 0 ) {
          j++;
          continue;
       }
@@ -12950,9 +12946,7 @@ int c_sensorfault ( int argc, char *argv[] )
       for ( ucode = 0; ucode < 16; ucode++ ) {
          if ( bitmap & (1 << ucode) ) {
             count++;
-            timestamp = x10state[hcode].timestamp[ucode];
-            elapsed = (long)(timenow - timestamp);
-            if ( elapsed > config.inactive_timeout )
+            if ( x10state[hcode].state[InactiveState] & (1 << ucode) )
                status |= 2;
 #if 0
             if ( x10state[hcode].vflags[ucode] & SEC_LOBAT )
@@ -12962,12 +12956,12 @@ int c_sensorfault ( int argc, char *argv[] )
 #endif
             if ( x10state[hcode].state[LoBatState] & (1 << ucode) )
                status |= 1;
-            if ( x10state[hcode].state[TamperState] & (1 << ucode) )
-               status |= 8;
          }
       }
       j++;
    }
+   if ( x10global.sflags & GLOBSEC_TAMPER )
+      status |= 8;
    
    printf("%d\n", status);
 
