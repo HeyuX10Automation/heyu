@@ -4320,7 +4320,7 @@ int opt_kaku ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 
       if ( isdigit((int)((unsigned char)(*tokens[j+1]))) ) {
          key = strtol(tokens[j+1], &sp, 10);
-         if ( key > 0 && key < 16 ) {
+         if ( key > 0 && key <= 16 ) {
             aliasp[aliasindex].kaku_keymap[nident] = 1 << (key - 1);
          }
          else {
