@@ -5870,7 +5870,7 @@ void create_flagslist ( unsigned char vtype, unsigned long vflags, char *flagsli
  +---------------------------------------------------------------------*/
 char *translate_virtual ( unsigned char *buf, int len, unsigned char *sunchanged, int *launchp )
 {
-   static char outbuf[80];
+   static char outbuf[120];
    static char intvstr[32];
    long intv;
    char flagslist[80];
@@ -6326,7 +6326,7 @@ char *translate_gen_longdata ( unsigned char *buff, unsigned char *sunchanged, i
  +---------------------------------------------------------------------*/
 char *translate_sent ( unsigned char *buf, int len, int *launchp )
 { 
-   static char outbuf[80];
+   static char outbuf[120];
    char hc;
    unsigned char hcode, func, level, unit, subunit, chksum;
    unsigned char xgroup, xfunc, xsubfunc, xtype, xdata;
