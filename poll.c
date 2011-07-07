@@ -201,7 +201,7 @@ int check4poll( int showdata, int timeout )
     unsigned int squelch;
     unsigned char hcode;
 
-    static int chksum_alert;
+    static int chksum_alert = -1;
     extern char *funclabel[18];
     static unsigned char newbuf[8], hexaddr = 0; 
     static char *send_prefix = "sndc";
@@ -600,9 +600,9 @@ int check4poll( int showdata, int timeout )
                 /* We have a byte count */
 	        to_read = buf[0];	/* number of bytes to read */
 		if ( to_read == 0x5a ) {
-                    if ( chksum_alert ) {
+                    if ( chksum_alert >= 0 ) {
                        /* It's the checksum for a sent block of data with checksum = 0x5a */
-                       chksum_alert = 0;
+                       chksum_alert = -1;
                        /* fclose(fdsout); */
                        return 0;
                     }
@@ -1132,8 +1132,8 @@ int check4poll( int showdata, int timeout )
 	else if ( buf[0] == ((configp->ring_ctrl == DISABLE) ? 0xdb : 0xeb) && waitflag ) {
 	   waitflag = 0;
 	}
-        else if ( buf[0] == chksum_alert && chksum_alert ) {
-            chksum_alert = 0;
+        else if ( buf[0] == chksum_alert ) {
+            chksum_alert = -1;
         }
 	else if ( !(buf[0] == 0x55 && n == 1) )  {
             /* There's some sort of timing problem with the 0x55 ("ready to  */
