@@ -216,15 +216,6 @@ static void stdtimer ( void )
 {
    long microsec = configp->cm17a_bit_delay;
 
-#ifdef HASSELECT
-   struct timeval tval;
-
-   tval.tv_sec = microsec / 1000000L;
-   tval.tv_usec = microsec % 1000000L;
-
-   while ( select(0, NULL, NULL, NULL, &tval) == -1 );
-   return;
-#else
 #ifdef NSLEEP
    struct timestruc_t tspec;
 
@@ -250,8 +241,6 @@ static void stdtimer ( void )
 #endif /* ATTSVR4 */
    return;
 #endif
-#endif
-			
 }  
 
 
