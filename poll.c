@@ -588,6 +588,11 @@ int check4poll( int showdata, int timeout )
 
 	/* print out the saved 0xff from the buffer */
 	if ( buf[0] != 0xff && wasflag > 0 )  {
+	    if (chksum_alert == 0xff) {
+	    	/* a single 0xff was apparently a checksum */
+		chksum_alert = -1;
+		wasflag--;
+	    }
 	    n = buf[0];
 	    for(i = 0; i < wasflag;i++)
 		buf[i] = 0xff;
