@@ -2407,8 +2407,8 @@ int parse_config_tail ( char *buffer, unsigned char source )
             configp->engine_poll = strtol(tokv[0], &sp, 10);
             if ( !strchr(" \t\n\r", *sp) ||
                  configp->engine_poll < 100L ||
-                 configp->engine_poll > 100000L ) {
-               store_error_message("ENGINE_POLL must be 100 though 100000");
+                 configp->engine_poll > 1000000L ) {
+               store_error_message("ENGINE_POLL must be 100 though 1000000");
                errors++;
             }
             break;
