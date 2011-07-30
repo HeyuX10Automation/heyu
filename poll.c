@@ -272,6 +272,16 @@ int check4poll( int showdata, int timeout )
 		if( n != 1 ) {
 		     return(0);
                 }
+                if ( buf[0] == 0xff && chksum_alert == 0xff ) {
+		   /*
+		    * We have received four 0xff bytes in a row,
+		    * looks like the first one was the checksum expected,
+		    * so drop one of them and loop one more time.
+		    */
+		   chksum_alert = -1;
+		   wasflag = 2;
+		   continue;
+		}
 		n = buf[0];
 
                 if ( n < 127 ) {
