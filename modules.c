@@ -1995,7 +1995,7 @@ int opt_oreRain1 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
    aliasp[aliasindex].funclist[1] = OreRainTotFunc;
    /* Override the default storage offsets */
    aliasp[aliasindex].statusoffset[0] = 0;
-   aliasp[aliasindex].statusoffset[1] = 2;
+   aliasp[aliasindex].statusoffset[1] = 4;
 
    return 0;
 }
@@ -2016,7 +2016,7 @@ int opt_oreRain2 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
    aliasp[aliasindex].funclist[1] = OreRainTotFunc;
    /* Override the default storage offsets */
    aliasp[aliasindex].statusoffset[0] = 0;
-   aliasp[aliasindex].statusoffset[1] = 2;
+   aliasp[aliasindex].statusoffset[1] = 4;
 
    return 0;
 }
@@ -2037,7 +2037,7 @@ int opt_oreRain3 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
    aliasp[aliasindex].funclist[1] = OreRainTotFunc;
    /* Override the default storage offsets */
    aliasp[aliasindex].statusoffset[0] = 0;
-   aliasp[aliasindex].statusoffset[1] = 2;
+   aliasp[aliasindex].statusoffset[1] = 4;
 
    return 0;
 }
@@ -4320,7 +4320,7 @@ int opt_kaku ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 
       if ( isdigit((int)((unsigned char)(*tokens[j+1]))) ) {
          key = strtol(tokens[j+1], &sp, 10);
-         if ( key > 0 && key < 16 ) {
+         if ( key > 0 && key <= 16 ) {
             aliasp[aliasindex].kaku_keymap[nident] = 1 << (key - 1);
          }
          else {

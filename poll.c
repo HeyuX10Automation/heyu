@@ -582,6 +582,7 @@ int check4poll( int showdata, int timeout )
 	    for(i = 0; i < wasflag;i++)
 		buf[i] = 0xff;
 	    buf[i] = n;
+	    n = wasflag + 1;
 	    wasflag = 0;
 	}
 	    
