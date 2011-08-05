@@ -2,5 +2,5 @@
  * It should be manually changed when the version number is ready to be
  * bumped up.
  */
-#define VERSION "2.9.3"
-#define RELEASE_DATE "20110226"
+#define VERSION "2.9.4"
+#define RELEASE_DATE "20110805"
