@@ -441,7 +441,7 @@ char *translate_digimax ( unsigned char *buf, unsigned char *sunchanged, int *la
 int show_digimax ( void )
 {
 
-#if HAVE_FEATURE_DMX
+#ifdef HAVE_FEATURE_DMX
    ALIAS         *aliasp;
    char          hc;
    int           unit, index, temp, count = 0, maxlabel = 0;
