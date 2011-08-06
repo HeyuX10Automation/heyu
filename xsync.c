@@ -122,13 +122,11 @@
 #endif
 #endif
 
-#ifdef HASSELECT
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 #endif
 
 #include "x10.h"
