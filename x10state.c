@@ -88,7 +88,7 @@
 # endif
 #endif
 
-#ifdef POSIX
+#ifdef _POSIX_VERSION
 #define EXEC_POSIX
 #endif
 
