@@ -85,7 +85,7 @@ int c_date( int argc, char *argv[] )
     expire = expire;  /* Keep compiler from complaining */
     
     today = dowX2U(Idays);
-#ifndef POSIX
+#ifndef _POSIX_VERSION
     while (tp->tm_wday % 7 != today)
 	tp->tm_wday++, tp->tm_mday++;
 #endif

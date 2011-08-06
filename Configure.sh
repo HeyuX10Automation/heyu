@@ -159,7 +159,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	LIBS = -lm -lc
 EoF
 	;;
@@ -176,7 +176,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -199,7 +199,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DPOSIX -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
+	DFLAGS = -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -217,7 +217,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -229,7 +229,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     openbsd)
@@ -239,14 +239,14 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
        ;;
     netbsd)
 	cat >> Makefile <<-EoF
 	OWNER= root
 	GROUP = wheel
-	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/lock\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/lock\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -256,7 +256,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = wheel
-	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -282,7 +282,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     attsvr4)
@@ -293,7 +293,7 @@ EoF
 	CC = cc
 	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     nextstep)
@@ -301,7 +301,7 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	DFLAGS =  -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =  $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g \$(DFLAGS) -posix
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
