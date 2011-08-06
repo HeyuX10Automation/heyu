@@ -1990,7 +1990,7 @@ void command_help ( char *command )
       display_gen_help(helpstate);
    }
 
-#if HAVE_FEATURE_RFXS
+#ifdef HAVE_FEATURE_RFXS
    if ( (list & HELP_STATE) || (list & HELP_RFXS) ) {
       /* RFXSensor state commands */
       printf("\n [RFXSensor state commands  (H = Housecode, u = Single unit) - require heyu engine]\n");
