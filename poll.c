@@ -601,6 +601,22 @@ int check4poll( int showdata, int timeout )
 	    wasflag = 0;
 	}
 	    
+        if ( buf[0] == chksum_alert ) {
+	    /* this is the checksum expected, just drop it */
+            chksum_alert = -1;
+	    return 0;
+        }
+
+	if (chksum_alert >= 0) {
+	    /* 
+	     * Instead of the checksum expected, we've received something else.
+	     * Don't expect that checksum to appear any longer. Either the
+	     * interface didn't respond with a checksum, busy with an incomming
+	     * transmission or a macro, or we are completely out of sync.
+	     */
+	    chksum_alert = -1;
+	}
+
 	macro_report = 0;
         if ( buf[0] == 0x5a )  {
             /* CM11A has polling info for me */
@@ -615,17 +631,9 @@ int check4poll( int showdata, int timeout )
                 /* We have a byte count */
 	        to_read = buf[0];	/* number of bytes to read */
 		if ( to_read == 0x5a ) {
-                    if ( chksum_alert >= 0 ) {
-                       /* It's the checksum for a sent block of data with checksum = 0x5a */
-                       chksum_alert = -1;
-                       /* fclose(fdsout); */
-                       return 0;
-                    }
-                    else {	
-                       /* Darn.  Another polling indicator */
-		       timeout = 2;
-		       return ( check4poll(showdata, timeout) );
-                    }
+                    /* Darn.  Another polling indicator */
+		    timeout = 2;
+		    return ( check4poll(showdata, timeout) );
 		}
 		else if ( to_read == 0x5b )  { /* Macro report coming in */
 		    to_read = 2;
@@ -1147,9 +1155,6 @@ int check4poll( int showdata, int timeout )
 	else if ( buf[0] == ((configp->ring_ctrl == DISABLE) ? 0xdb : 0xeb) && waitflag ) {
 	   waitflag = 0;
 	}
-        else if ( buf[0] == chksum_alert ) {
-            chksum_alert = -1;
-        }
 	else if ( !(buf[0] == 0x55 && n == 1) )  {
             /* There's some sort of timing problem with the 0x55 ("ready to  */
             /* receive") signal from the interface after a long bright/dim   */
