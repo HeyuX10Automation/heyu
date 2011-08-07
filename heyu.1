@@ -1527,11 +1527,18 @@ the following commands (for a thermostat configured for housecode A):
    heyu rcs_req preset A5 5  (setback mode)
 .br
    heyu rcs_req preset A5 6  (setback delta temperature)
+.br
+   heyu rcs_req preset A5 7  (outdoor temperature)
+.br
+   heyu rcs_req preset A5 8  (heat setpoint temperature)
+.br
+   heyu rcs_req preset A5 9  (cooling setpoint temperature)
 
 .PP
 Note: the temperature value stored at the unit 0
 address location will be the one most recently decoded, whether
-(room) temperature, setpoint temperature, or setback delta.
+(room) temperature, setpoint temperature, setback delta, outdoor,
+heat setpoint or cooling setpoint.
 
 .PP
 See the TX15-B or TXB16 protocol manual for complete details.
