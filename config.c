@@ -3478,7 +3478,7 @@ int lookup_launcher ( LAUNCHER *launcherp, char *label )
  +---------------------------------------------------------------------*/
 int create_oregon_ignore_list ( void )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    ALIAS *aliasp;
    int   j, k;
 
@@ -3497,7 +3497,7 @@ int create_oregon_ignore_list ( void )
       }
       j++;
    }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
    return 0;
 }
 
@@ -3741,7 +3741,7 @@ int finalize_config ( unsigned char mode )
    set_elec1_nvar(configp->els_number);
 
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    create_rfxpower_panels();
 #endif
 
@@ -5153,22 +5153,22 @@ void get_help_topics ( char **topic, int *ntopic )
    topic[(*ntopic)++] = "direct";
    topic[(*ntopic)++] = "state";
    topic[(*ntopic)++] = "internal";
-#ifdef HASCM17A
+#ifdef HAVE_FEATURE_CM17A
    topic[(*ntopic)++] = "cm17a";
 #endif
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
    topic[(*ntopic)++] = "shutter";
 #endif
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    topic[(*ntopic)++] = "rfxsensor";
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    topic[(*ntopic)++] = "rfxmeter";
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    topic[(*ntopic)++] = "digimax";
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    topic[(*ntopic)++] = "oregon";
 #endif
 

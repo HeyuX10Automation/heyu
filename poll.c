@@ -804,7 +804,7 @@ int check4poll( int showdata, int timeout )
                                     if ( xtype == 3 ) {
                                        x10state_update_ext3func(buf + i, &launchp);
                                     }
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
                                     else if ( xtype == 0 ) {
                                        x10state_update_ext0func(buf + i, &launchp);
                                     }
