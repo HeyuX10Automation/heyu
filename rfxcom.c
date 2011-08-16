@@ -128,7 +128,7 @@ char *translate_rfxtype_message( unsigned char *buf )
 {
    static char outbuf[80];
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    sprintf(outbuf, "RFXSensorXmitter : Type %c, version %d, sample_mode %s",
      (char)buf[2], buf[3] & 0x7fu, (buf[3] & 0x80u ? "slow" : "fast"));
 #else
@@ -167,7 +167,7 @@ int send_rfxsensor_ident ( unsigned short sensor, unsigned char *serial )
 char *translate_rfxsensor_ident ( unsigned char *buf )
 {
    static char outbuf[80];
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    unsigned char addr;
    unsigned char chip;
    unsigned long serial = 0;
@@ -184,13 +184,13 @@ char *translate_rfxsensor_ident ( unsigned char *buf )
       addr, ((chip == 0x26) ? "DS2438" : (chip == 0x28) ? "DS18B20" : "???"), serial );
 #else
    sprintf(outbuf, "RFXSensorInit    : Heyu support not configured.");
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
    return outbuf;
 }
 
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
 /*---------------------------------------------------------------------+
  | Convert RFXSensor temperature short word to scaled double           |
  | temperature.                                                        |
@@ -296,7 +296,7 @@ void rfxdata2pot ( unsigned short hdata, unsigned short vdata, double *vad, doub
    return;
 }
 
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
 /*---------------------------------------------------------------------+
  | Retrieve raw RFXSensor data                                         |
@@ -304,7 +304,7 @@ void rfxdata2pot ( unsigned short hdata, unsigned short vdata, double *vad, doub
 int raw_rfxsensor_data ( ALIAS *aliasp, int index, unsigned short *tdata,
                            unsigned short *vdata, unsigned short *hdata )
 {
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    unsigned char ident, /* delta, */base, offset /*, offbase */;
 
    if ( aliasp[index].vtype != RF_XSENSOR ) {
@@ -320,7 +320,7 @@ int raw_rfxsensor_data ( ALIAS *aliasp, int index, unsigned short *tdata,
    *vdata = x10global.rfxdata[base][offset + RFX_S];
 #else
    *tdata = *hdata = *vdata = 0;  /* Keep some compilers happy */
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
    return 0;
 }
@@ -332,7 +332,7 @@ int raw_rfxsensor_data ( ALIAS *aliasp, int index, unsigned short *tdata,
 int decode_rfxsensor_data ( ALIAS *aliasp, int index, unsigned int *inmap,
       unsigned int *outmap, double *tempp, double *vsupp, double *vadp, double *var2p )
 {
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    unsigned short tdata, hdata, vdata;
    unsigned char ident, /* delta, */ base, offset, /* offbase, */flags, tflag, vflag, hflag;
    unsigned char hcode, ucode;
@@ -422,11 +422,11 @@ int decode_rfxsensor_data ( ALIAS *aliasp, int index, unsigned int *inmap,
 #else
    *inmap = *outmap = 0;
    *tempp = *vsupp = *vadp = *var2p = 0.0;
-#endif /* HASRFXS */      
+#endif /* HAVE_FEATURE_RFXS */      
    return 0;
 }
 
-#if (defined(HASRFXS) || defined(HASRFXM))
+#if (defined(HAVE_FEATURE_RFXS) || defined(HAVE_FEATURE_RFXM))
 /*---------------------------------------------------------------------+
  | Display a RFXSensor or RFXMeter data value stored in the x10state   |
  | structure.                                                          |
@@ -446,7 +446,7 @@ int c_rfxcmds ( int argc, char *argv[] )
    char           *display, *sp;
    unsigned short data, tdata = 0, vdata = 0, hdata = 0;
    char           obuf[60];
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    int            retcode;
 #endif
 
@@ -521,7 +521,7 @@ int c_rfxcmds ( int argc, char *argv[] )
          panelid = 0;
          sp = " ";
       }
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
       if ( strchr(" \t\r\n", *sp) == NULL || panelid < 0 || panelid >= 0xff ) {
          fprintf(stderr, "Invalid power panel number '%s'\n", argv[2]);
          return 1;
@@ -537,7 +537,7 @@ int c_rfxcmds ( int argc, char *argv[] )
          fprintf(stderr, "Power panel %d data not ready.\n", panelid);
          return 1;      
       }
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
       return 0;
    }
        
@@ -655,9 +655,9 @@ int c_rfxcmds ( int argc, char *argv[] )
             
    return 0;
 }
-#endif /* HASRFXS || HASRFXM */
+#endif /* HAVE_FEATURE_RFXS || HAVE_FEATURE_RFXM */
   
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
 /*---------------------------------------------------------------------+
  | Display stored data for all RFXMeters                               |
  +---------------------------------------------------------------------*/
@@ -769,9 +769,9 @@ int show_rfxmeters ( void )
    return 0;
 }
 
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
  
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
 /*---------------------------------------------------------------------+
  | Display stored data for all RFXSensors                              |
  +---------------------------------------------------------------------*/
@@ -1074,9 +1074,9 @@ int x10state_update_rfxsensor ( unsigned char *buf, int len, int *launchp )
 
    return 0;
 }
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
 /*----------------------------------------------------------------------------+
  | Form the unsigned long RFXMeter word for storage and further processing    |
  | from the last 4 bytes of the data received by the RFXCOMVL receiver        |
@@ -1624,7 +1624,7 @@ int powerpanel_query ( unsigned char panelid, unsigned long *rfxpower )
    return 1;
 } 
 
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
 /*------------------------------------------------------------------------+
  | Interpret Virtual data string, update the state, and test whether      |
@@ -1635,7 +1635,7 @@ int powerpanel_query ( unsigned char panelid, unsigned long *rfxpower )
 char *translate_rfxmeter ( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
    static char outbuf[160];
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    char flagslist[80];
    ALIAS *aliasp;
    unsigned char func, *vdatap, vtype, seq;
@@ -1779,7 +1779,7 @@ char *translate_rfxmeter ( unsigned char *buf, unsigned char *sunchanged, int *l
       sprintf(outbuf, "func %12s : Type 0x%02x Data (hex) %02x %02x %02x %02x",
          "RFdata", vtype, vdatap[0], vdatap[1], vdatap[2], vdatap[3]);
    }
-#endif /* HASRFXM */ 
+#endif /* HAVE_FEATURE_RFXM */ 
 
    return outbuf;
 }
@@ -1796,7 +1796,7 @@ struct x10list_st {
  +----------------------------------------------------------------------------*/
 int compress_x10list ( struct x10list_st *x10list, int *listsize )
 {
-#ifdef HASKAKU
+#ifdef HAVE_FEATURE_KAKU
    struct x10list_st duplist[256];
    int j, k, newsize;
    unsigned char hcode;
@@ -1818,7 +1818,7 @@ int compress_x10list ( struct x10list_st *x10list, int *listsize )
       newsize++;
    }
    *listsize = newsize;
-#endif /* HASKAKU */
+#endif /* HAVE_FEATURE_KAKU */
 
    return 0;
 }
@@ -1833,7 +1833,7 @@ int compress_x10list ( struct x10list_st *x10list, int *listsize )
 char *translate_kaku ( unsigned char *xbuf, unsigned char *sunchanged, int *launchp )
 {
 
-#ifdef HASKAKU
+#ifdef HAVE_FEATURE_KAKU
    static char   outbuf[2048];
    extern unsigned int signal_source;
    extern unsigned int kmodmask[NumKmodMasks][16];
@@ -2179,7 +2179,7 @@ char *translate_kaku ( unsigned char *xbuf, unsigned char *sunchanged, int *laun
 #else
    return "";
 
-#endif  /* HASKAKU */
+#endif  /* HAVE_FEATURE_KAKU */
 
   
 }

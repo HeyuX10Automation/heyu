@@ -270,13 +270,13 @@ static char *helpstate[][3] = {
     {"heyu_rawstate","Hu","Heyu script raw environment state bitmap (as integer)"},
     {"heyu_vflagstate","Hu","Heyu script vFlag environment state bitmap (as integer)"},
 #if 0
-#if defined(HASRFXS) || defined(HASRFXM)
+#if defined(HAVE_FEATURE_RFXS) || defined(HAVE_FEATURE_RFXM)
     {"rfxflag_state","Hu","RFXsensor/RFXmeter flag state bitmap (as integer)"},
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
     {"oreflag_state","Hu","Oregon (Electrisave, Owl) flag state bitmap (as integer)"},
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
     {"dmxflag_state","Hu","Digimax flag state bitmap (as integer)"},
 #endif
 #endif
@@ -286,7 +286,7 @@ static char *helpstate[][3] = {
     {NULL, NULL, NULL}
 };
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
 static char *helprfxsensor[][3] = {
     {"rfxtemp","Hu","Temperature"},
     {"rfxrh","Hu","Relative Humidity"},
@@ -299,9 +299,9 @@ static char *helprfxsensor[][3] = {
     {"rfxtemp2","Hu","Second Temperature"},
     {NULL, NULL, NULL}
 };
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
 static char *helprfxmeter[][3] = {
     {"rfxpower","Hu","Watt-Hour meter reading"},
     {"rfxpanel","[n]","Total Watt-Hours for Power Panel [n]"},
@@ -311,9 +311,9 @@ static char *helprfxmeter[][3] = {
     {"rfxcount","Hu","Raw counter of any meter"},
     {NULL, NULL, NULL}
 };
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
 static char *helpdigimax[][3] = {
     {"dmxtemp","Hu","DigiMax current temperature (C)"},
     {"dmxsetpoint","Hu","DigiMax setpoint temperature (C)"},
@@ -321,9 +321,9 @@ static char *helpdigimax[][3] = {
     {"dmxmode","Hu","DigiMax Heat/Cool mode (1 = Heat)"},
     {NULL, NULL, NULL}
 };
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 static char *helporegon[][3] = {
     {"oretemp","Hu","Oregon sensor Temperature"},
     {"orerh","Hu","Oregon sensor Relative Humidity"},
@@ -339,7 +339,7 @@ static char *helporegon[][3] = {
     {"owlenergy","Hu","Owl CM119 Energy"},
     {NULL, NULL, NULL}
 };
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
 /* Descriptions of direct and uploaded macro commands */
 static char *helpdirect[] = {
@@ -453,7 +453,7 @@ void display_helpnotes ( void )
 {
    printf("\n  (*)  Not available for use in uploaded macros.\n");
    printf("  (**) Many lamp modules do NOT support this command.\n");
-#ifdef HASCM17A   
+#ifdef HAVE_FEATURE_CM17A   
    printf("  (#)  Fast CM17A command - see man x10cm17a(5) for configuration.\n");
 #endif
    printf("  (@)  Ignored unless state engine is running.\n");
@@ -464,22 +464,22 @@ void display_helpnotes ( void )
 void display_manpage_list ( void )
 {
    printf("\n Man pages:\n heyu(1), x10config(5), x10sched(5), x10scripts(5), x10aux(5)");
-#ifdef HASCM17A   
+#ifdef HAVE_FEATURE_CM17A   
    printf(", x10cm17a(5)");
 #endif
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    printf(", x10rfxsensors(5)");
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    printf(", x10rfxmeters(5)");
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    printf(", x10digimax(5)");
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    printf(", x10oregon(5)");
 #endif
-#ifdef HASKAKU
+#ifdef HAVE_FEATURE_KAKU
    printf(", x10kaku(5)");
 #endif
    printf(".\n\n");
@@ -723,7 +723,7 @@ static struct cmd_list {
 
 
 
-#ifdef HASEXT0   /* Extended Type 0 (SW10 shutter controller) commands */
+#ifdef HAVE_FEATURE_EXT0   /* Extended Type 0 (SW10 shutter controller) commands */
    {"shopen",           7, 6, 2, 2, F_DED | F_SHU, 0x03, 0, 7,63 },   /* Shutter open, ignore limit */
    {"shopenlim",        7, 6, 2, 2, F_DED | F_SHU, 0x01, 0, 7,61 },   /* Shutter open, enforce limit */
    {"shsetlim",         7, 6, 2, 2, F_DED | F_SHU, 0x02, 0, 7,62 },   /* Shutter set limit */
@@ -731,7 +731,7 @@ static struct cmd_list {
    {"shcloseall",       7, 6, 1, 1, F_ALL | F_SHU, 0x0B, 0, 1,65 },   /* Shutter all full close */
 #endif
 
-#ifdef HASCM17A  /* CM17A ("Firecracker") commands */   
+#ifdef HAVE_FEATURE_CM17A  /* CM17A ("Firecracker") commands */   
    {"freset",          34,-1, 0, 0, F_RFS,            8, 0,12,55 },   /* CM17A Reset */
    {"fon",             34,-1, 1, 1, F_RFS,            2, 0, 3,47 },   /* CM17A On RF command */
    {"foff",            34,-1, 1, 1, F_RFS,            3, 0, 3,48 },   /* CM17A Off RF command */
@@ -1909,7 +1909,7 @@ void command_help ( char *command )
           (!strncmp(command, "rfx", 3))      ?  (HELP_RFXS | HELP_RFXM)    : 0 ;
 #endif
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
       j = 0;
       while ( helprfxsensor[j][0] != NULL ) {
          if ( strcmp(command, helprfxsensor[j][0]) == 0 ) {
@@ -1919,9 +1919,9 @@ void command_help ( char *command )
          }
          j++;
       }
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
       j = 0;
       while ( helprfxmeter[j][0] != NULL ) {
          if ( strcmp(command, helprfxmeter[j][0]) == 0 ) {
@@ -1931,9 +1931,9 @@ void command_help ( char *command )
          }
          j++;
       }
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
       j = 0;
       while ( helpdigimax[j][0] != NULL ) {
          if ( strcmp(command, helpdigimax[j][0]) == 0 ) {
@@ -1943,9 +1943,9 @@ void command_help ( char *command )
          }
          j++;
       }
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
       j = 0;
       while ( helporegon[j][0] != NULL ) {
          if ( strcmp(command, helporegon[j][0]) == 0 ) {
@@ -1955,7 +1955,7 @@ void command_help ( char *command )
          }
          j++;
       }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
    if ( list & HELP_OPTIONS ) {
       /* Display options */
@@ -1968,24 +1968,24 @@ void command_help ( char *command )
    if ( list & HELP_HELP ) {
       printf("\nUsage: heyu help [category|command]  All help [or specific Category or Command]\n");
       printf(" Categories: options admin direct");
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
       printf(" shutter");
 #endif
-#ifdef HASCM17A
+#ifdef HAVE_FEATURE_CM17A
       printf(" cm17a");
 #endif
       printf(" internal");
       printf(" state");
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
       printf(" rfxsensor");
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
       printf(" rfxmeter");
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
       printf(" digimax");
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
       printf(" oregon");
 #endif
       printf(" webhook");
@@ -2004,37 +2004,37 @@ void command_help ( char *command )
       display_gen_help(helpstate);
    }
 
-#if HASRFXS
+#if HAVE_FEATURE_RFXS
    if ( (list & HELP_STATE) || (list & HELP_RFXS) ) {
       /* RFXSensor state commands */
       printf("\n [RFXSensor state commands  (H = Housecode, u = Single unit) - require heyu engine]\n");
       display_gen_help(helprfxsensor);
    }
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    if ( (list & HELP_STATE) || (list & HELP_RFXM) ) {
       /* RFXMeter state commands */
       printf("\n [RFXMeter state commands  (H = Housecode, u = Single unit) - require heyu engine]\n");
       display_gen_help(helprfxmeter);
    }
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    if ( (list & HELP_STATE) || (list & HELP_DMX) ) {
       /* Digimax state commands */
       printf("\n [DigiMax state commands  (H = Housecode, u = Single unit) - require heyu engine]\n");
       display_gen_help(helpdigimax);
    }
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    if ( (list & HELP_STATE) || (list & HELP_ORE) ) {
       /* Oregon state commands */
       printf("\n [Oregon group state commands  (H = Housecode, u = Single unit) - require heyu engine]\n");
       display_gen_help(helporegon);
    }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
    if ( list & HELP_DIRECT ) {
       /* Direct commands */
@@ -2062,7 +2062,7 @@ void command_help ( char *command )
 	 }
       }
     
-      #ifdef HASEXT0 
+      #ifdef HAVE_FEATURE_EXT0 
       printf("\n [Shutter (Extended Type 0) direct commands  (H = Housecode, U = Units list)]\n");        
       for ( j = 0; j < nx10cmds; j++ ) {
          two = &x10command[j];
@@ -2081,7 +2081,7 @@ void command_help ( char *command )
       ext0done = 1;
    }
 
-   #ifdef HASEXT0 
+   #ifdef HAVE_FEATURE_EXT0 
    if ( list & HELP_SHUTTER && !ext0done) { 
       printf("\n [Shutter (Extended Type 0) direct commands  (H = Housecode, U = Units list)]\n");        
       /* Get max string lengths for formatting output */
@@ -2109,7 +2109,7 @@ void command_help ( char *command )
    }
    #endif /* End ifdef */
 
-   #ifdef HASCM17A
+   #ifdef HAVE_FEATURE_CM17A
    if ( list & HELP_CM17A ) { 
       /* Get max string lengths for formatting output */
       szlbl = szarg = sztot = 0;
@@ -2294,7 +2294,7 @@ void cmd_usage ( FILE *fd, int index )
 int direct_command( int argc, char *argv[], int mode )
 {
 	
-#ifdef HASCM17A  /* Used only for CM17A commands */
+#ifdef HAVE_FEATURE_CM17A  /* Used only for CM17A commands */
     extern unsigned int rf_unit_code[16];
     extern unsigned int rf_func_code[7];
     extern unsigned int rf_nosw_code[8];
@@ -2313,7 +2313,7 @@ int direct_command( int argc, char *argv[], int mode )
     unsigned char rfhcode, rfmode = RF_SLOW;
     long          lxdata;
     int           flux_delay;
-#endif  /* End of HASCM17A block */
+#endif  /* End of HAVE_FEATURE_CM17A block */
 
     extern int line_sync_mode( void );
     extern int send_flag_update ( unsigned int, unsigned char );
@@ -2442,7 +2442,7 @@ unsigned long flagbank[NUM_FLAG_BANKS];
        return 1;
     }
            
-#ifndef HASCM17A 
+#ifndef HAVE_FEATURE_CM17A 
     /* CM17A support not included */
     if ( flags & F_FIR ) {
        sprintf(errmsg,
@@ -3955,7 +3955,7 @@ unsigned long flagbank[NUM_FLAG_BANKS];
              
           break;
 
-#ifdef HASCM17A	  
+#ifdef HAVE_FEATURE_CM17A	  
        case 34 : /* CM17A "Firecracker" RF commands */
           noswitch = 0;
 
@@ -4350,7 +4350,7 @@ unsigned long flagbank[NUM_FLAG_BANKS];
 		break;
 	  }
           break;
-#endif /* End of HASCM17A */	  
+#endif /* End of HAVE_FEATURE_CM17A */	  
              
        default :
           sprintf(errmsg, "Command '%s': Not implemented", label);
