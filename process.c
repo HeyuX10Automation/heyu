@@ -84,7 +84,6 @@
 #include "sun.h"
 #include "process.h"
 #include "version.h"
-#include "local.h"
 
 #define NDSTINTV 6
 struct dststruct {
@@ -597,7 +596,7 @@ char *strncpy2 ( char *target, char *source, int n )
  +----------------------------------------------------------------------------*/
 double hilo2dbl ( unsigned long high, unsigned long low )
 {
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
    unsigned long long ull;
 
    ull = (unsigned long long)high << 32 | (unsigned long long)low;
