@@ -56,7 +56,16 @@
 #endif
 #endif
 
-#include <time.h>
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
 
 #include "process.h"
  
@@ -67,9 +76,6 @@ extern int tty;
 unsigned alarm();
 void sigtimer( int );
 #ifdef HAVE_SETITIMER
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

@@ -54,6 +54,7 @@ AC_CHECK_HEADERS([syslog.h termio.h termios.h unistd.h])
 AC_CHECK_HEADERS([asm/ioctls.h errno.h linux/serial.h linux/serial_reg.h pty.h])
 AC_CHECK_HEADERS([sys/errno.h sys/resource.h sys/termio.h sys/termios.h])
 AC_HEADER_SYS_WAIT
+AC_HEADER_TIME
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
