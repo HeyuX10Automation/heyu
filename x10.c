@@ -707,7 +707,7 @@ int check_dir_rw ( char *pathspec, char *label )
       return 1;
    }
 
-#ifdef POSIX
+#ifdef S_ISDIR
    if ( S_ISDIR(statb.st_mode) == 0 ) {
 #else
    if ( (statb.st_mode & S_IFDIR) != S_IFDIR ) {
