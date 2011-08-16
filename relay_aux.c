@@ -68,10 +68,8 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
-#ifdef LINUX
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
-#endif
 #endif
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
