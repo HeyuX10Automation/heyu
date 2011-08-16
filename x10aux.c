@@ -866,7 +866,7 @@ int rfxmeter_checksum ( unsigned char *buf )
 //   chksum &= 0x0fu;
    chksum = (chksum - 0x0fu) & 0x0fu;
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -887,7 +887,7 @@ int rfxsensor_checksum ( unsigned char *buf )
    chksum = ~chksum & 0x0fu;
 //   chksum &= 0x0fu;
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -934,7 +934,7 @@ unsigned char digimax_checksum ( unsigned char *buf )
             (buf[4] >> 4) + (buf[4] & 0x0fu) +
             (buf[5] >> 4) + (buf[5] & 0x0fu)) & 0x0fu;
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    return  (sum1 << 4) | sum2;
 #else
    return 0xffu;

@@ -239,7 +239,7 @@ struct cmdentry {
     {"nightstate", c_sunstate, 1, 1},
     {"darkstate", c_sunstate, 1, 1},
     {"restore_groups", c_restore_groups, 1, 0},
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
     {"rfxflag_state", c_x10state, 1, 1},
     {"rfxtemp", c_rfxcmds, 1, 1},
     {"rfxrh", c_rfxcmds, 1, 1},
@@ -251,7 +251,7 @@ struct cmdentry {
     {"rfxtemp2", c_rfxcmds, 1, 1},
     {"rfxlobat", c_rfxcmds, 1, 1},
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
     {"rfxflag_state", c_x10state, 1, 1},
     {"rfxpower", c_rfxcmds, 1, 1},
     {"rfxwater", c_rfxcmds, 1, 1},
@@ -260,14 +260,14 @@ struct cmdentry {
     {"rfxcount", c_rfxcmds, 1, 1},
     {"rfxpanel", c_rfxcmds, 1, 1},
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
     {"dmxflag_state", c_x10state, 1, 1},
     {"dmxtemp", c_dmxcmds, 1, 1},
     {"dmxsetpoint", c_dmxcmds, 1, 1},
     {"dmxstatus", c_dmxcmds, 1, 1},
     {"dmxmode", c_dmxcmds, 1, 1},
-#endif /* HASDMX */
-#ifdef HASORE
+#endif /* HAVE_FEATURE_DMX */
+#ifdef HAVE_FEATURE_ORE
     {"oreflag_state", c_x10state, 1, 1},
     {"oretemp", c_orecmds, 1, 1},
     {"orerh", c_orecmds, 1, 1},
@@ -283,7 +283,7 @@ struct cmdentry {
     {"owlpower", c_orecmds, 1, 1},
     {"owlenergy", c_orecmds, 1, 1},
     {"ore_emu", c_ore_emu, 1, 1},
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
     {"timer_times", c_timer_times, 1, 1},
     {"webhook", c_webhook, 1, 1},
     {"counter", c_counter, 1, 1},

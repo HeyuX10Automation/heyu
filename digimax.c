@@ -88,7 +88,7 @@ extern int lock_for_write(), munlock();
 char *translate_digimax ( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    static char    outbuf[160];
    char           flagslist[80], unknown[32];
    ALIAS          *aliasp;
@@ -417,7 +417,7 @@ char *translate_digimax ( unsigned char *buf, unsigned char *sunchanged, int *la
    return outbuf;
 #else
    return "";
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 }
 
 
@@ -427,7 +427,7 @@ char *translate_digimax ( unsigned char *buf, unsigned char *sunchanged, int *la
 int show_digimax ( void )
 {
 
-#if HASDMX
+#if HAVE_FEATURE_DMX
    ALIAS         *aliasp;
    char          hc;
    int           unit, index, temp, count = 0, maxlabel = 0;
@@ -495,12 +495,12 @@ int show_digimax ( void )
 
       index++;
    }
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
    return 0;
 }
 
-#ifdef HASDMX 
+#ifdef HAVE_FEATURE_DMX 
 /*---------------------------------------------------------------------+
  | Display a Digimax data value stored in the x10state structure.      |
  +---------------------------------------------------------------------*/
@@ -591,4 +591,4 @@ int c_dmxcmds ( int argc, char *argv[] )
 
    return 0;
 }
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */

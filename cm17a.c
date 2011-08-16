@@ -36,7 +36,7 @@
 #include <config.h>
 #endif
 
-#ifdef HASCM17A  /* Compile only if configured for CM17A */
+#ifdef HAVE_FEATURE_CM17A  /* Compile only if configured for CM17A */
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -463,7 +463,7 @@ int display_rf_xmit ( unsigned char type, unsigned int rfword, int bursts )
 #else  /* Stubs */
 void xlate_rf( unsigned char type, char **fname, unsigned int rfword,
 		     char *hcp, int *unitp, unsigned char *nosw ) {}
-#endif  /* End of HASCM17A code */
+#endif  /* End of HAVE_FEATURE_CM17A code */
 
 
 

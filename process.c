@@ -10550,7 +10550,7 @@ int c_show1 ( int argc, char *argv[] )
       printf("  l[aunchers] [H] Launchers, all or only housecode H or -e|p|r|s|t\n");
       printf("  h[ousemap] [H]  Overall system state, or details housecode H (*)\n");
       printf("  da[wndusk]      Display Dawn and Dusk times for today (*)\n");
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
       printf("  dim[levels]     Dim levels of modules as percent (*)\n");
 #else
       printf("  di[mlevels]     Dim levels of modules as percent (*)\n");
@@ -10563,25 +10563,25 @@ int c_show1 ( int argc, char *argv[] )
       printf("  c[onfig]        Display stripped Heyu configuration file\n");
       printf("  x[10security]   Tabular display of all X10 Security sensors (*)\n");
 
-#ifdef HASRFXS
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXS
+#ifdef HAVE_FEATURE_RFXM
       printf("  rfxs[ensors]    Tabular display of all RFXSensors (*)\n");
 #else
       printf("  rf[xsensors]    Tabular display of all RFXSensors (*)\n");
 #endif
 #endif
 
-#ifdef HASRFXM
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXM
+#ifdef HAVE_FEATURE_RFXS
       printf("  rfxm[eters]     Tabular display of all RFXMeters (*)\n");
 #else
       printf("  rf[xmeters]     Tabular display of all RFXMeters (*)\n");
 #endif      
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
       printf("  dig[imax]       Tabular display of all DigiMax (*)\n");
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
       printf("  or[egon]        Tabular display of all Oregon sensors (*)\n");
       printf("  ot[hers]        Cumulative received address map (*) - clear with\n");
 #else
@@ -10809,11 +10809,11 @@ int c_show2 ( int argc, char *argv[] )
       return show_x10_security();
    }
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    else if ( strncmp("rfxmeters", argv[2], 4) == 0 ) {
       return show_rfxmeters();
    }
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    else if ( (strlen(argv[2]) == 2 && strcmp("rf",  argv[2]) == 0) || 
              (strlen(argv[2]) == 3 && strcmp("rfx", argv[2]) == 0)    ) {
      fprintf(stderr, "%s is ambiguous - supply more characters.\n", argv[2]);
@@ -10827,11 +10827,11 @@ int c_show2 ( int argc, char *argv[] )
 #endif
 
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    else if ( strncmp("rfxsensors", argv[2], 4) == 0 ) {
       return show_rfxsensors();
    }
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    else if ( (strlen(argv[2]) == 2 && strcmp("rf",  argv[2]) == 0) || 
              (strlen(argv[2]) == 3 && strcmp("rfx", argv[2]) == 0)    ) {
       fprintf(stderr, "%s is ambiguous - supply more characters.\n", argv[2]);
@@ -10847,7 +10847,7 @@ int c_show2 ( int argc, char *argv[] )
    else if ( strncmp(argv[2], "digimax", 3) == 0 ) {
       return show_digimax();
    }
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    else if ( strncmp(argv[2], "oregon", 2) == 0 ) {
       return show_oregon();
    }
