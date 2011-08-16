@@ -65,8 +65,16 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
+
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
 #endif
 
 #ifdef POSIX
@@ -86,7 +94,6 @@
 #endif
 
 #include <signal.h>
-#include <time.h>
 #include "x10.h"
 #include "process.h"
 #include "sun.h"
