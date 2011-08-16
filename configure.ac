@@ -72,7 +72,7 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
 AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
-AC_CHECK_FUNCS([setitimer sigaction siginterrupt])
+AC_CHECK_FUNCS([nsleep setitimer sigaction siginterrupt])
 
 dnl AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
