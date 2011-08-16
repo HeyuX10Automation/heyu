@@ -1380,7 +1380,7 @@ char *linmap2list ( unsigned long linmap )
  | which provides the offset of local Legal Time and has the        |
  | opposite sign.                                                   |
  +------------------------------------------------------------------*/
-#ifdef HASTZ
+#if (HAVE_DECL_TIMEZONE == 1)
 void get_std_timezone ( void )
 {
    struct tm  *tmp;
@@ -1434,7 +1434,7 @@ void get_std_timezone ( void )
    std_tzone = -min(jan_off, jul_off);
    return;
 }
-#endif   /* End of #ifdef */
+#endif   /* End of #if (HAVE_DECL_TIMEZONE == 1) */
 
 /*------------------------------------------------------------------+ 
  | For some places in the world, e.g., Australia, there's no        |  

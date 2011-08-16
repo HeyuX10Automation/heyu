@@ -63,6 +63,20 @@ AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_UNSIGNED_LONG_LONG_INT
 
+# Checks for declarations.
+AC_CHECK_DECLS(timezone, [], [], [
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+])
+
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
