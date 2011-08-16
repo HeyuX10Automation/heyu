@@ -51,8 +51,12 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
@@ -78,7 +82,9 @@
 #endif
 #ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_PTY_H
 #include <pty.h>
+#endif
 #endif
 
 #include <sys/socket.h>

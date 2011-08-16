@@ -51,6 +51,9 @@ AC_SEARCH_LIBS([tcgetattr], [posix])
 AC_CHECK_HEADERS([fcntl.h limits.h netdb.h sgtty.h stdlib.h string.h strings.h])
 AC_CHECK_HEADERS([sys/filsys.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h])
 AC_CHECK_HEADERS([syslog.h termio.h termios.h unistd.h])
+AC_CHECK_HEADERS([asm/ioctls.h errno.h linux/serial.h linux/serial_reg.h pty.h])
+AC_CHECK_HEADERS([sys/errno.h sys/resource.h sys/termio.h sys/termios.h])
+AC_HEADER_SYS_WAIT
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
