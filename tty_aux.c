@@ -32,25 +32,49 @@
  * by doing the System V port and adding some nice features.  Thanks!
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef        SCO
 #define       _IBCS2
 #endif
 
 
 #include <stdio.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
 #include <sys/resource.h>
 #include <errno.h>
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
+#endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #ifdef SOLARIS
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
 #endif
 #ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
@@ -93,20 +117,28 @@ int tty_aux = -1;		/* Real tty */
 
 
 #ifndef SYSV
+#ifdef HAVE_SGTTY_H
 #include <sgtty.h>
+#endif
 struct sgttyb oldsb, newsb;
 void hangup();
 #else
 #ifndef POSIX
+#ifdef HAVE_TERMIO_H
 #include <termio.h>
+#endif
 #ifndef NCC
 #define NCC NCCS
 #endif
 struct termio oldsb, newsb;
 #else
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
+#endif
 #if defined(DARWIN) || defined(NETBSD)
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 #endif
 #ifndef NCC
 #define NCC NCCS

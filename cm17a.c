@@ -46,12 +46,20 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef HASCM17A  /* Compile only if configured for CM17A */
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <ctype.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include "x10.h"
 #include "process.h"
 
@@ -61,11 +69,15 @@
 #endif
 
 #ifdef ATTSVR4
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 #endif
 
 #include <time.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <signal.h>
 
 #ifdef LINUX
@@ -74,9 +86,15 @@
 #include <linux/serial_reg.h>
 #   endif
 #include <linux/serial.h>
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #else
 #    if (defined(POSIX) || defined(FREEBSD) || defined(OPENBSD))
 #include <sys/termios.h>
@@ -85,21 +103,31 @@
 #include <sys/termio.h>
 #         else
 #              ifdef DARWIN
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
+#endif
 #              else
+#ifdef HAVE_TERMIO_H
 #include <termio.h>
+#endif
 #              endif
 #         endif
 #    endif
 #endif
 
 #if (defined(OSF) || defined(DARWIN) || defined(NETBSD))
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
 #endif
 
 #ifdef HASSELECT
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 #endif
 
 
