@@ -143,6 +143,7 @@ AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_UNSIGNED_LONG_LONG_INT
+AC_CHECK_TYPES([void], [], [], [])
 AC_CHECK_TYPES([struct termios], [], [], [
 #ifdef HAVE_SYS_TERMIOS_H
 # include <sys/termios.h>

@@ -32,8 +32,12 @@
 #ifndef _x10_header
 #define _x10_header
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* Some lints don't know about the void type */
-#ifdef VOID
+#ifndef HAVE_VOID
 #define void int
 #endif
 
