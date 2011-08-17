@@ -15,6 +15,9 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdio.h>
 #include <ctype.h>
@@ -25,7 +28,9 @@
 #endif
 
 #include <time.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef LINUX
 #include <asm/ioctls.h>
@@ -33,9 +38,15 @@
 #include <linux/serial_reg.h>
 #   endif
 #include <linux/serial.h>
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #else
 #    if (defined(POSIX) || defined(FREEBSD) || defined(OPENBSD))
 #include <sys/termios.h>
@@ -44,19 +55,27 @@
 #include <sys/termio.h>
 #         else
 #              ifdef DARWIN
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
+#endif
 #              else
+#ifdef HAVE_TERMIO_H
 #include <termio.h>
+#endif
 #              endif
 #         endif
 #    endif
 #endif
 
 #if (defined(OSF) || defined(DARWIN))
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
+#endif
 
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 
 #include "x10.h"
 #include "process.h"
