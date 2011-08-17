@@ -30,6 +30,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef        SCO
 #define       _IBCS2
 #endif
@@ -388,7 +392,11 @@ char *make_lock_name ( char *ttydev )
 {
     char        *devstr;
     int         x, ngrps;
+#ifdef GETGROUPS_T
+    GETGROUPS_T grps[30];
+#else
     gid_t       grps[30];
+#endif
     char        *ptr;
     struct stat stat_buf;
 
