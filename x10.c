@@ -33,25 +33,39 @@
 #endif
 
 #include <stdio.h>
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <ctype.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
 #endif
 #include <time.h>
 #include <signal.h>
 #include "x10.h"
 #include "version.h"
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include "process.h" 
 
 #ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 #endif
 
 extern int tty;

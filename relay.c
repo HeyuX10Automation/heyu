@@ -39,6 +39,10 @@
  *    unlink the x10_tty file
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef SCO
 #define _IBCS2
 #endif
@@ -48,18 +52,34 @@
 #include <signal.h>
 #include <errno.h>
 
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #ifdef LINUX
 #include <sys/resource.h>
 #endif
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <time.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include "x10.h"
 #include "process.h"
 

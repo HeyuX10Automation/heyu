@@ -29,8 +29,14 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <signal.h>
 #include <setjmp.h>
 #if    (defined(SCO) || defined (SOLARIS) || defined (ATTSVR4) || defined(OPENBSD) || defined(NETBSD))
@@ -38,12 +44,20 @@
 #else
 #include <sys/errno.h>
 #endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include "x10.h"
 #if (defined(LINUX) || defined(SOLARIS) || defined(FREEBSD) || defined(DARWIN) || defined(SYSV) || defined(OPENBSD) || defined(NETBSD))
+#ifdef HAVE_STRING_H
 #include <string.h>    /* char *strerror(); */
+#endif
 #endif
 
 #include <time.h>
@@ -58,8 +72,12 @@ extern int tty;
 unsigned alarm();
 void sigtimer( int );
 #ifdef HAS_ITIMER
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 struct itimerval iold, icurrent;
 #endif
 int xread ( int, unsigned char *, int, int );
