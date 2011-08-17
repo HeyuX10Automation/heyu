@@ -20,6 +20,10 @@
  * 
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -669,7 +673,11 @@ int reread_config ( void )
 int check_dir_rw ( char *pathspec, char *label )
 {
    struct stat statb;
+#ifdef GETGROUPS_T
+   GETGROUPS_T grps[100];
+#else
    gid_t       grps[100];
+#endif
    int         ngrps, j;
    char        errmsg[256];
    int         msgl = sizeof(errmsg) - 1;
@@ -701,7 +709,7 @@ int check_dir_rw ( char *pathspec, char *label )
    }
 
    if ( (statb.st_mode & S_IRWXG) == S_IRWXG ) {
-      if ( (ngrps = getgroups((sizeof(grps)/sizeof(gid_t)) - 1, grps)) < 0 ) {
+      if ( (ngrps = getgroups((sizeof(grps)/sizeof(typeof(*grps))) - 1, grps)) < 0 ) {
          snprintf(errmsg, msgl, "Internal error - getgroups()");
          store_error_message(errmsg);
          return 1;
