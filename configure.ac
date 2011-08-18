@@ -42,6 +42,10 @@ AC_PROG_CC
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
+AC_SEARCH_LIBS([sqrt], [m])
+AC_SEARCH_LIBS([nanosleep], [rt])
+AC_SEARCH_LIBS([syslog], [socket])
+AC_SEARCH_LIBS([tcgetattr], [posix])
 
 # Checks for header files.
 AC_CHECK_HEADERS([fcntl.h limits.h netdb.h sgtty.h stdlib.h string.h strings.h])
