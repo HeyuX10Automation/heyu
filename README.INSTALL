@@ -40,7 +40,7 @@ These are further explained in the man page heyu(1).
 CUSTOMIZING
 -----------
 The Configure.sh script creates a Makefile by running 'uname -s' and then
-adding known good configuration options to the config.mk.  The contents
+passing known good options to Autoconf configure script.  The contents
 of Makefile.in is then expanded to the Makefile.  Changes to the makefile
 should be made in Configure.sh or Makefile.in.
 
