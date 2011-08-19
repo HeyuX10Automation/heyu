@@ -1,6 +1,6 @@
 ## Makefile template for Heyu, a program to control an X10 CM11A computer
 ## interface.  The Makefile is expanded from Makefile.in by the Autoconf
-## generated configure script, while config.mk included below is created
+## generated configure script, called in turn, with locally selected options,
 ## by the Configure.sh program
 
 man1dir = $(mandir)/man1
@@ -22,8 +22,6 @@ mandir = @mandir@
 pkgsysconfdir = @pkgsysconfdir@
 prefix = @prefix@
 sysconfdir = @sysconfdir@
-
-include config.mk
 
 CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
 
@@ -63,7 +61,7 @@ heyu:	$(OBJS) version.h
 	@echo "** Now become root and run 'make install' **"
 	@echo ""
 
-$(OBJS): config.h x10.h process.h sun.h Makefile config.mk
+$(OBJS): config.h x10.h process.h sun.h Makefile
 
 eeprom.o:	eeprom.h
 info.o:		version.h
@@ -103,9 +101,7 @@ uninstall:
 $(BIN)/heyu:	heyu
 	mkdir -p -m 755 $(BIN)
 	cp heyu $(BIN)
-	chgrp $(GROUP) $(BIN)/heyu
 	chmod 755 $(BIN)/heyu
-	chown $(OWNER) $(BIN)/heyu
 	./install.sh
 
 $(MAN)/heyu.1: heyu.1
