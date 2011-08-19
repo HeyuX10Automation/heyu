@@ -245,12 +245,12 @@ EoF
 	CC = cc
 	MAN = /usr/local/man/man.1
 	MAN5 = /usr/local/man/man.5
-	CFLAGS = -O \$(DFLAGS)
+	CFLAGS = -O
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSCO
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"'
+	CPPFLAGS="$CPPFLAGS -DSCO"
 	;;
     aix|sysv)
 	cat >> config.mk <<-EoF
@@ -268,21 +268,23 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = cc
-	CFLAGS = -I/usr/local/include -g -O
+	CFLAGS = -g -O
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\"'
+	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 	;;
     nextstep)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	CFLAGS = -g -posix
+	CFLAGS = -g
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS="-posix"
 	;;
     osf)
 	cat >> config.mk <<-EoF
