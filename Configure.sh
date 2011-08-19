@@ -141,7 +141,6 @@ case "$SYS" in
         cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = root 
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
@@ -149,7 +148,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
@@ -163,7 +161,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --prefix=/opt/heyu"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
@@ -172,7 +169,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
@@ -181,7 +177,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	LIBS = -lm -lc
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
 	;;
@@ -189,7 +184,6 @@ EoF
         cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
@@ -198,7 +192,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER= root
 	GROUP = wheel
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
@@ -207,7 +200,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
@@ -217,7 +209,6 @@ EoF
 	GROUP = sys
 	MAN = /usr/local/man/man.1
 	MAN5 = /usr/local/man/man.5
-	LIBS = -lm -lc -lsocket
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"'
@@ -227,7 +218,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
@@ -235,17 +225,16 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lc -lucb -lm -lgen -lcmd
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\"'
 	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 	LDFLAGS="-L/usr/ucblib"
+	LIBS="-lucb -lgen -lcmd"
 	;;
     nextstep)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lposix
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS="-posix"
@@ -255,7 +244,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = uucp
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
@@ -264,7 +252,6 @@ EoF
     	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
@@ -278,7 +265,8 @@ esac
 
 
 (	set -x
-	./configure $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS"
+	./configure $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS" \
+			LIBS="$LIBS"
 ) || {
 	rm -f Makefile
 	exit
