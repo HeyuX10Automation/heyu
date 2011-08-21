@@ -40,6 +40,7 @@ while [ $# -ge 1 ] ; do
             echo " Switch -nodmx omits support for the Digimax thermostat."
             echo " Switch -noore omits support for Oregon sensors."
             echo " Switch -nokaku omits support for KaKu/HomeEasy signals"
+            echo " Switch -norfxlan omits support for RFXLAN receiver"
             echo " Switch -flags=n sets the number of user flags (32 min, 1024 max)"
             echo " Switch -counters=n sets the number of counters (32 min, 1024 max)"
             echo " Switch -timers=n sets the number of timers (32 min, 1024 max)"
@@ -67,6 +68,9 @@ while [ $# -ge 1 ] ; do
             ;;
         nokaku|-nokaku|NOKAKU|-NOKAKU|--disable-kaku)
             OPTIONS="$OPTIONS --disable-kaku"
+            ;;
+        norfxlan|-norfxlan|NORFXLAN|-NORFXLAN|--disable-rfxlan)
+            OPTIONS="$OPTIONS --disable-rfxlan"
             ;;
 	flags=*|-flags=*|FLAGS=*|-FLAGS=*)
 	    IFS="${IFS}=" read keyword FLAGS <<EoF
