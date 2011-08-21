@@ -94,6 +94,7 @@ EoF
     shift
 done
 
+test -x config.guess && test -x config.sub && \
 test -x install-sh && test -x missing && test -x depcomp && \
 test -s aclocal.m4 && test aclocal.m4 -nt configure.ac && \
 test -s Makefile.in && test Makefile.in -nt configure.ac && \
@@ -112,6 +113,7 @@ test -s config.h.in && test config.h.in -nt configure.ac || {
 		exit
 	}
 	if
+		test -x config.guess && test -x config.sub && \
 		test -x install-sh && test -x missing && test -x depcomp
 	then
 		autoreconf --verbose
@@ -167,7 +169,6 @@ case "$SYS" in
     sco*)
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"'
-	CPPFLAGS="$CPPFLAGS -DSCO"
 	OPTIONS="$OPTIONS man1dir=/usr/local/man/man.1"
 	OPTIONS="$OPTIONS man5dir=/usr/local/man/man.5"
 	;;

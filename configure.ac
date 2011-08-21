@@ -154,6 +154,12 @@ AC_MSG_CHECKING([for a custom post-install script])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+AC_CANONICAL_HOST
+AS_CASE([$host_os],
+    [sco*],
+	AC_DEFINE(SCO, 1, [required for correct termio handling]),
+    [])
+
 # Checks for programs.
 AS_IF([test "x$CFLAGS" = "x"], [no_CFLAGS="yes"], [])
 AC_PROG_CC
