@@ -47,26 +47,47 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <ctype.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 
-#if (defined(NSLEEP) || defined(ATTSVR4))
-#include <sys/time.h>
-#endif /* NSLEEP | ATTSVR4 */
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
 
 #include <syslog.h>
-#include <time.h>
-#include <sys/time.h>
+
+#ifdef HAVE_LIMITS_H
 #include <limits.h>
+#endif
 #include "x10.h"
 #include "process.h"
 #include "x10state.h"
@@ -883,7 +904,7 @@ double random_float ( void )
  +---------------------------------------------------------------------*/
 void millisleep( long millisec )
 {
-   #ifdef NSLEEP
+   #ifdef HAVE_NSLEEP
    struct timestruc_t tspec;
 
    if ( millisec == 0 )
@@ -894,16 +915,16 @@ void millisleep( long millisec )
 
    while ( nsleep( &tspec, &tspec ) == -1 );
    #else
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    struct timeval tspec;
 #else
    struct timespec tspec;
-#endif /* ATTSVR4 */
+#endif /* HAVE_NANOSLEEP */
 
    if ( millisec == 0 )
       return;
 
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    tspec.tv_sec = millisec / 1000;
    tspec.tv_usec = 1000 * (millisec % 1000);   
    while ( usleep(tspec.tv_usec) == -1 );
@@ -911,8 +932,8 @@ void millisleep( long millisec )
    tspec.tv_sec = millisec / 1000;
    tspec.tv_nsec = 1000000L * (millisec % 1000);
    while ( nanosleep( &tspec, &tspec ) == -1 );
-#endif /* ATTSVR4 */
-   #endif  /* NSLEEP */
+#endif /* HAVE_NANOSLEEP */
+   #endif  /* HAVE_NSLEEP */
 
    return;
 }   
@@ -922,7 +943,7 @@ void millisleep( long millisec )
  +---------------------------------------------------------------------*/
 void microsleep( long microsec )
 {
-   #ifdef NSLEEP
+   #ifdef HAVE_NSLEEP
    struct timestruc_t tspec;
 
    if ( microsec == 0 )
@@ -933,7 +954,7 @@ void microsleep( long microsec )
 
    while ( nsleep( &tspec, &tspec ) == -1 );
    #else
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    struct timeval tspec;
 #else
    struct timespec tspec;
@@ -942,7 +963,7 @@ void microsleep( long microsec )
    if ( microsec == 0 )
       return;
 
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    tspec.tv_sec = microsec / 1000000;
    tspec.tv_usec = microsec % 1000000;
    while ( usleep(tspec.tv_usec) == -1 );
@@ -950,8 +971,8 @@ void microsleep( long microsec )
    tspec.tv_sec = microsec / 1000000L;
    tspec.tv_nsec = 1000L * (microsec % 1000000L);
    while ( nanosleep( &tspec, &tspec ) == -1 );
-#endif /* ATTSVR4 */
-   #endif /* NSLEEP */
+#endif /* HAVE_NANOSLEEP */
+   #endif /* HAVE_NSLEEP */
 
    return;
 }   

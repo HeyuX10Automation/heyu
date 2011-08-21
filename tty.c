@@ -32,28 +32,54 @@
  * by doing the System V port and adding some nice features.  Thanks!
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef        SCO
 #define       _IBCS2
 #endif
 
 
 #include <stdio.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#include <strings.h>
-#include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <limits.h>
-#include <stdlib.h>
-#ifdef SOLARIS
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifdef __GLIBC__
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_PTY_H
 #include <pty.h>
 #endif
 
@@ -92,24 +118,30 @@ int sptty = -1;	/* Spool */
 #endif
 #endif
 
-#ifdef NETBSD
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 
 #ifndef SYSV
+#ifdef HAVE_SGTTY_H
 #include <sgtty.h>
+#endif
 struct sgttyb oldsb, newsb;
 void hangup();
 #else
 #ifndef POSIX
+#ifdef HAVE_TERMIO_H
 #include <termio.h>
+#endif
 #ifndef NCC
 #define NCC NCCS
 #endif
 struct termio oldsb, newsb;
 #else
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#ifdef DARWIN
+#endif
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 #ifndef NCC
@@ -390,7 +422,11 @@ char *make_lock_name ( char *ttydev )
 {
     char        *devstr;
     int         x, ngrps;
+#ifdef GETGROUPS_T
+    GETGROUPS_T grps[30];
+#else
     gid_t       grps[30];
+#endif
     char        *ptr;
     struct stat stat_buf;
 

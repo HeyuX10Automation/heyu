@@ -47,26 +47,42 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <ctype.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdio.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #include <time.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #include "x10.h"
 #include "sun.h"
 #include "process.h"
 #include "version.h"
-#include "local.h"
 
 #define NDSTINTV 6
 struct dststruct {
@@ -579,7 +595,7 @@ char *strncpy2 ( char *target, char *source, int n )
  +----------------------------------------------------------------------------*/
 double hilo2dbl ( unsigned long high, unsigned long low )
 {
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
    unsigned long long ull;
 
    ull = (unsigned long long)high << 32 | (unsigned long long)low;

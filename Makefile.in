@@ -2,6 +2,8 @@
 ## interface.  From this point on the Makefile is copied from Makefile.in
 ## by the Configure program
 
+CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
+
 SRCS =	date.c erase.c info.c  message.c relay.c \
 	monitor.c reset.c setclock.c stop.c \
 	tty.c x10.c xread.c xwrite.c status.c cm11a.c \
@@ -34,11 +36,11 @@ heyu:	$(OBJS) version.h
 	@echo "** Now become root and run 'make install' **"
 	@echo ""
 
-$(OBJS): x10.h process.h sun.h Makefile
+$(OBJS): config.h x10.h process.h sun.h Makefile
 
 eeprom.o:	eeprom.h
 info.o:		version.h
-x10state.o:	x10state.c x10state.h rfxcom.h digimax.h oregon.h local.h version.h
+x10state.o:	x10state.c x10state.h rfxcom.h digimax.h oregon.h version.h
 rfxcom.o:	rfxcom.c x10state.h rfxcom.h
 digimax.o:	digimax.c x10state.h digimax.h
 oregon.o:	oregon.c x10state.h oregon.h
@@ -140,8 +142,8 @@ lint:
 shar:	x10_heyu.shar.1 x10_heyu.shar.2
 
 x10.o:	x10.c version.h
-process.o:	process.c version.h local.h
-xread.o:	xread.c local.h
+process.o:	process.c version.h
+xread.o:	xread.c
 
 ci:	$(SRCS) index.html Makefile
 	@ for FL in $+ ; do \

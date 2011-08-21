@@ -7,9 +7,17 @@
  | Page 84.                                                                   |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <stdio.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include <math.h>
 #include <time.h>
 
