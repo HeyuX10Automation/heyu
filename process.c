@@ -68,7 +68,6 @@
 #include "x10.h"
 #include "sun.h"
 #include "process.h"
-#include "version.h"
 
 #define NDSTINTV 6
 struct dststruct {

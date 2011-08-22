@@ -26,6 +26,7 @@
 AC_PREREQ([2.68])
 AC_INIT([Heyu], [2.10+autotools],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
+AC_DEFINE([RELEASE_DATE], ["20111227"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
 Copyright (C) 2011 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
 AC_CONFIG_SRCDIR([relay.c])

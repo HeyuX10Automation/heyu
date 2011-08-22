@@ -24,7 +24,7 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 	eeprom.c process.c sun.c cmd.c config.c x10state.c \
 	poll.c modules.c cm17a.c xsync.c timing.c cm10a.c \
 	tty_aux.c relay_aux.c x10aux.c rfxcom.c digimax.c oregon.c \
-	x10.h eeprom.h version.h process.h sun.h x10state.h \
+	x10.h eeprom.h process.h sun.h x10state.h \
 	rfxcom.h digimax.h oregon.h
 dist_man_MANS = heyu.1 x10config.5 x10sched.5 x10scripts.5 x10cm17a.5 x10aux.5 \
 	x10rfxsensors.5 x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5

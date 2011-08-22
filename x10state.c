@@ -96,7 +96,6 @@
 #include "rfxcom.h"
 #include "digimax.h"
 #include "oregon.h"
-#include "version.h"
 
 #ifdef pid_t
 #define PID_T pid_t
