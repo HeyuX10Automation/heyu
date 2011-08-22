@@ -158,7 +158,7 @@ AC_MSG_CHECKING([for a custom post-install script])
 	AM_CONDITIONAL([POSTINST], [test "x$enable_postinst" != "x"])
 	AC_MSG_RESULT([$enable_postinst])
 
-dnl AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.
 AS_IF([test "x$CFLAGS" = "x"], [no_CFLAGS="yes"], [])

@@ -78,15 +78,30 @@ EoF
     shift
 done
 
+test -x install-sh && test -x missing && test -x depcomp && \
+test -s aclocal.m4 && test aclocal.m4 -nt configure.ac && \
+test -s Makefile.in && test Makefile.in -nt configure.ac && \
+			test Makefile.in -nt Makefile.am && \
 test -x configure && test configure -nt configure.ac && \
 test -s config.h.in && test config.h.in -nt configure.ac || {
+	type autoreconf >/dev/null && \
 	type autoconf >/dev/null && type autoheader >/dev/null || {
 		echo "Please install autoconf package and re-run ./Configure.sh"
 		rm -f Makefile
 		exit
 	}
-	autoconf
-	autoheader
+	type aclocal >/dev/null && type automake >/dev/null || {
+		echo "Please install automake package and re-run ./Configure.sh"
+		rm -f Makefile
+		exit
+	}
+	if
+		test -x install-sh && test -x missing && test -x depcomp
+	then
+		autoreconf --verbose
+	else
+		autoreconf --verbose --install --symlink
+	fi
 }
 
 cat <<EoF
