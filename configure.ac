@@ -86,6 +86,38 @@ AC_MSG_CHECKING([whether to enable support for KaKu/HomeEasy signals])
 	AS_IF([test "x$enable_kaku" != "xno"], [AC_DEFINE([HAVE_FEATURE_KAKU],
 		[1], [Define if you have KaKu/HomeEasy devices])], [])
 
+AC_MSG_CHECKING([for number of user flags])
+	AC_ARG_VAR([FLAGS], [set number of user flags (1 < n < 1024) [32]])
+	AS_IF([test "x$FLAGS" = "x"], [FLAGS=32],
+	AS_IF([test $FLAGS -ge 1 && test $FLAGS -le 1024],
+		[FLAGS=`expr \( $FLAGS + 31 \) / 32 \* 32`
+		AC_DEFINE_UNQUOTED([NUM_FLAG_BANKS], [`expr $FLAGS / 32`],
+		[Define if you need more than 1 bank of 32 user flags each])],
+		AC_MSG_FAILURE(
+			[wrong FLAGS value "$FLAGS" (shoud be 1 < n < 1024)])))
+	AC_MSG_RESULT([$FLAGS])
+AC_MSG_CHECKING([for number of user counters])
+	AC_ARG_VAR([COUNTERS],
+		[set number of user counters (1 < n < 1024) [32]])
+	AS_IF([test "x$COUNTERS" = "x"], [COUNTERS=32],
+	AS_IF([test $COUNTERS -ge 1 && test $COUNTERS -le 1024],
+		[COUNTERS=`expr \( $COUNTERS + 31 \) / 32 \* 32`
+		AC_DEFINE_UNQUOTED([NUM_COUNTER_BANKS], [`expr $COUNTERS / 32`],
+		[Define if you need more than 1 bank of 32 user counters each]
+		)], AC_MSG_FAILURE(
+		[wrong COUNTERS value "$COUNTERS" (shoud be 1 < n < 1024)])))
+	AC_MSG_RESULT([$COUNTERS])
+AC_MSG_CHECKING([for number of user timers])
+	AC_ARG_VAR([TIMERS], [set number of user timers (1 < n < 1024) [32]])
+	AS_IF([test "x$TIMERS" = "x"], [TIMERS=32],
+	AS_IF([test $TIMERS -ge 1 && test $TIMERS -le 1024],
+		[TIMERS=`expr \( $TIMERS + 31 \) / 32 \* 32`
+		AC_DEFINE_UNQUOTED([NUM_TIMER_BANKS], [`expr $TIMERS / 32`],
+		[Define if you need more than 1 bank of 32 user timers each])],
+		AC_MSG_FAILURE(
+		[wrong TIMERS value "$TIMERS" (shoud be 1 < n < 1024)])))
+	AC_MSG_RESULT([$TIMERS])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
