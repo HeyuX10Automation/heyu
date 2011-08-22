@@ -118,6 +118,18 @@ AC_MSG_CHECKING([for number of user timers])
 		[wrong TIMERS value "$TIMERS" (shoud be 1 < n < 1024)])))
 	AC_MSG_RESULT([$TIMERS])
 
+AC_SUBST([PACKAGE], [$PACKAGE_TARNAME])
+AS_CASE([$sysconfdir],
+	[*$PACKAGE*], [pkgsysconfdir='$(sysconfdir)'],
+	[\$\(prefix\)*|\$\{prefix\}*],
+		AS_CASE([$prefix],
+			[*$PACKAGE*], [pkgsysconfdir='$(sysconfdir)'],
+			[pkgsysconfdir='$(sysconfdir)/$(PACKAGE)']),
+	[pkgsysconfdir='$(sysconfdir)/$(PACKAGE)'])
+	AC_SUBST([pkgsysconfdir], [])
+
+dnl AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
