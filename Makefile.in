@@ -1,5 +1,6 @@
 ## Makefile template for Heyu, a program to control an X10 CM11A computer
-## interface.  From this point on the Makefile is copied from Makefile.in
+## interface.  The Makefile is expanded from Makefile.in by the Autoconf
+## generated configure script, while config.mk included below is created
 ## by the Configure.sh program
 
 ##
@@ -17,6 +18,8 @@
 ##   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 ##
+
+include config.mk
 
 CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
 
@@ -52,7 +55,7 @@ heyu:	$(OBJS) version.h
 	@echo "** Now become root and run 'make install' **"
 	@echo ""
 
-$(OBJS): config.h x10.h process.h sun.h Makefile
+$(OBJS): config.h x10.h process.h sun.h Makefile config.mk
 
 eeprom.o:	eeprom.h
 info.o:		version.h
