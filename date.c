@@ -27,19 +27,15 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef SYSV
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
 #endif
 
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
-#ifdef BEFORE
 #ifdef HAVE_SYS_FILSYS_H
 #include <sys/filsys.h>
-#endif
 #endif
 #include "x10.h"
 

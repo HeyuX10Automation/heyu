@@ -65,14 +65,11 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#else
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif
 #endif
 
 #ifdef TIME_WITH_SYS_TIME
