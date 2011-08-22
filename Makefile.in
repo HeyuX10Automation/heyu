@@ -19,6 +19,15 @@
 ##
 ##
 
+CPPFLAGS = @CPPFLAGS@
+
+PACKAGE = @PACKAGE@
+
+localstatedir = @localstatedir@
+pkgsysconfdir = @pkgsysconfdir@
+prefix = @prefix@
+sysconfdir = @sysconfdir@
+
 include config.mk
 
 CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.

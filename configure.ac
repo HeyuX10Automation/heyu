@@ -121,6 +121,15 @@ AS_CASE([$sysconfdir],
 			[pkgsysconfdir='$(sysconfdir)/$(PACKAGE)']),
 	[pkgsysconfdir='$(sysconfdir)/$(PACKAGE)'])
 	AC_SUBST([pkgsysconfdir], [])
+AS_CASE([$CPPFLAGS],
+	[*-DSYSBASEDIR=*], [],
+	[CPPFLAGS=$CPPFLAGS' -DSYSBASEDIR=\"$(pkgsysconfdir)\"'])
+AS_CASE([$CPPFLAGS],
+	[*-DLOCKDIR=*], [],
+	[CPPFLAGS=$CPPFLAGS' -DLOCKDIR=\"$(localstatedir)/lock\"'])
+AS_CASE([$CPPFLAGS],
+	[*-DSPOOLDIR=*], [],
+	[CPPFLAGS=$CPPFLAGS' -DSPOOLDIR=\"$(localstatedir)/tmp/$(PACKAGE)\"'])
 
 dnl AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
