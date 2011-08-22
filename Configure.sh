@@ -13,15 +13,7 @@ cat > config.mk <<EoF
 #
 EoF
 
-# paths:
-cat >> config.mk <<EoF
-BIN = /usr/local/bin
-MAN = /usr/local/man/man1
-MAN5 = /usr/local/man/man5
-
-EoF
-
-OPTIONS="--localstatedir=/var"
+OPTIONS='--localstatedir=/var --mandir=$(prefix)/man'
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -137,11 +129,6 @@ EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
 	;;
     opensolaris)
-cat >> config.mk <<EoF
-	BIN = /opt/heyu/bin
-	MAN = /opt/heyu/man/man1
-	MAN5 = /opt/heyu/man/man5
-EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
@@ -191,12 +178,12 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	MAN = /usr/local/man/man.1
-	MAN5 = /usr/local/man/man.5
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"'
 	CPPFLAGS="$CPPFLAGS -DSCO"
+	OPTIONS="$OPTIONS man1dir=/usr/local/man/man.1"
+	OPTIONS="$OPTIONS man5dir=/usr/local/man/man.5"
 	;;
     aix|sysv)
 	cat >> config.mk <<-EoF

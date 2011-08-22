@@ -137,6 +137,15 @@ AS_CASE([$CPPFLAGS],
 	[*-DSPOOLDIR=*], [],
 	[CPPFLAGS=$CPPFLAGS' -DSPOOLDIR=\"$(localstatedir)/tmp/$(PACKAGE)\"'])
 
+AC_MSG_CHECKING([for a custom man1dir])
+	AS_IF([test "x$man1dir" != "x"], [AM_SUBST_NOTMAKE([MAN1DIR])
+		AC_SUBST([MAN1DIR], [man1dir=$man1dir])], [])
+	AC_MSG_RESULT([$man1dir])
+AC_MSG_CHECKING([for a custom man5dir])
+	AS_IF([test "x$man5dir" != "x"], [AM_SUBST_NOTMAKE([MAN5DIR])
+		AC_SUBST([MAN5DIR], [man5dir=$man5dir])], [])
+	AC_MSG_RESULT([$man5dir])
+
 dnl AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.

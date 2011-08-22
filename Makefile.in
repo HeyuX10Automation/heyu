@@ -3,6 +3,9 @@
 ## generated configure script, while config.mk included below is created
 ## by the Configure.sh program
 
+man1dir = $(mandir)/man1
+man5dir = $(mandir)/man5
+
 CC = @CC@
 CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
@@ -11,7 +14,11 @@ LIBS = @LIBS@
 
 PACKAGE = @PACKAGE@
 
+bindir = @bindir@
+datarootdir = @datarootdir@
+exec_prefix = @exec_prefix@
 localstatedir = @localstatedir@
+mandir = @mandir@
 pkgsysconfdir = @pkgsysconfdir@
 prefix = @prefix@
 sysconfdir = @sysconfdir@
@@ -19,6 +26,10 @@ sysconfdir = @sysconfdir@
 include config.mk
 
 CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
+
+BIN = $(bindir)
+MAN = $(man1dir)
+MAN5 = $(man5dir)
 
 SRCS =	date.c erase.c info.c  message.c relay.c \
 	monitor.c reset.c setclock.c stop.c \
@@ -259,3 +270,5 @@ populate: $(EVERYTHING)
 $(EVERYTHING):
 ##	co -r$(revision) $@
 
+@MAN1DIR@
+@MAN5DIR@
