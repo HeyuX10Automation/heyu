@@ -78,12 +78,10 @@
 #include "process.h"
 #include "x10state.h"
 
-#if defined(LINUX)
+#if defined(RAND_MAX)
 #define RandMax  RAND_MAX
-#elif defined(NETBSD)
+#elif defined(RANDOM_MAX)
 #define RandMax RANDOM_MAX
-#elif defined DARWIN
-#define RandMax LONG_MAX
 #else
 #define RandMax LONG_MAX
 #endif
