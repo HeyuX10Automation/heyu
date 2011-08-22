@@ -200,5 +200,5 @@ AC_MSG_CHECKING(whether to enable RFXLAN receiver support)
 		[AC_DEFINE([HAVE_FEATURE_RFXLAN], [1],
 		[Define if you have RFXLAN receiver])], [])
 
-dnl AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
