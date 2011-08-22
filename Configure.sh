@@ -92,34 +92,19 @@ while [ $# -ge 1 ] ; do
 	    IFS="${IFS}=" read keyword FLAGS <<EoF
 $1
 EoF
-	    [ $FLAGS -ge 1 ] && [ $FLAGS -le 1024 ] || {
-            	echo " Invalid flags argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    FLAGS_FLAG="-DNUM_FLAG_BANKS=`expr \( $FLAGS + 31 \) / 32`"
+            OPTIONS="$OPTIONS FLAGS=$FLAGS"
 	    ;;
 	counters=*|-counters=*|COUNTERS=*|-COUNTERS=*)
 	    IFS="${IFS}=" read keyword COUNTERS <<EoF
 $1
 EoF
-	    [ $COUNTERS -ge 1 ] && [ $COUNTERS -le 1024 ] || {
-            	echo " Invalid counters argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    COUNTERS_FLAG="-DNUM_COUNTER_BANKS=`expr \( $COUNTERS + 31 \) / 32`"
+            OPTIONS="$OPTIONS COUNTERS=$COUNTERS"
 	    ;;
 	timers=*|-timers=*|TIMERS=*|-TIMERS=*)
 	    IFS="${IFS}=" read keyword TIMERS <<EoF
 $1
 EoF
-	    [ $TIMERS -ge 1 ] && [ $TIMERS -le 1024 ] || {
-            	echo " Invalid timers argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    TIMERS_FLAG="-DNUM_TIMER_BANKS=`expr \( $TIMERS + 31 \) / 32`"
+            OPTIONS="$OPTIONS TIMERS=$TIMERS"
 	    ;;
 	*)
 	    SYS="$1"
@@ -163,7 +148,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	LIBS = -lm -lc
 EoF
 	;;
@@ -180,7 +165,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -221,7 +206,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -233,7 +218,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
 	;;
     openbsd)
@@ -243,14 +228,14 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
        ;;
     netbsd)
 	cat >> Makefile <<-EoF
 	OWNER= root
 	GROUP = wheel
-	DFLAGS = -DLOCKDIR=\"/var/spool/lock\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/lock\"
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -260,7 +245,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = wheel
-	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -276,7 +261,7 @@ EoF
 	MAN5 = /usr/local/man/man.5
 	CFLAGS = -O \$(DFLAGS)
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"
 EoF
 	;;
     aix|sysv)
@@ -286,7 +271,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS = $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 EoF
 	;;
     attsvr4)
@@ -297,7 +282,7 @@ EoF
 	CC = cc
 	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\"
 EoF
 	;;
     nextstep)
@@ -305,7 +290,7 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	DFLAGS =  $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	CFLAGS = -g \$(DFLAGS) -posix
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
@@ -318,7 +303,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g \$(DFLAGS)
 	LIBS = -lm -lc
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 EoF
       ;;
     generic)
@@ -328,7 +313,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS=  $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= 
 EoF
 	;;
     *)
@@ -349,7 +334,10 @@ cat Makefile.in >> Makefile
 
 (	set -x
 	./configure $OPTIONS
-)
+) || {
+	rm Makefile
+	exit
+}
 
 if [ "$SYS" = "sysv" ] ; then
 echo "The Makefile has been created for sysv, however if"
