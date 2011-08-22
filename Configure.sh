@@ -202,7 +202,7 @@ else
 echo "The Makefile has been created for $SYS."
 fi
 if [ "$SYS" = "opensolaris" ] ; then
-echo "Please see \"Notes for OpenSolaris\" in file INSTALL before proceeding."
+echo "Please see \"Notes for OpenSolaris\" in file README before proceeding."
 echo
 fi
 
