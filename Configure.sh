@@ -35,9 +35,6 @@ BIN = /usr/local/bin
 MAN = /usr/local/man/man1
 MAN5 = /usr/local/man/man5
 
-#       set DFLAGS equal to:
-#          -DVOID       if compiler doesn't understand 'void'
-
 EoF
 
 OPTIONS=
