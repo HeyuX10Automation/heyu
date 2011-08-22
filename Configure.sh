@@ -21,7 +21,7 @@ MAN5 = /usr/local/man/man5
 
 EoF
 
-OPTIONS=
+OPTIONS="--localstatedir=/var"
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -128,10 +128,10 @@ case "$SYS" in
 	OWNER = root
 	GROUP = root 
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS =
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     sunos*|solaris)
     	type gcc > /dev/null
@@ -146,10 +146,11 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
-	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
+	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
 	;;
     opensolaris)
 cat >> config.mk <<EoF
@@ -169,10 +170,11 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
-	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
+	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
+	OPTIONS="$OPTIONS --prefix=/opt/heyu"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
 	;;
     opensolaris_bsd)
     	type gcc > /dev/null
@@ -187,50 +189,53 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
-	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
+	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
 	;;
     freebsd)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
 	;;
     openbsd)
         cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
        ;;
     netbsd)
 	cat >> config.mk <<-EoF
 	OWNER= root
 	GROUP = wheel
-	DFLAGS = -DLOCKDIR=\"/var/spool/lock\"
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
 	;;
     darwin)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	DFLAGS =
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     sco*)
         CC=cc
@@ -242,18 +247,20 @@ EoF
 	MAN5 = /usr/local/man/man.5
 	CFLAGS = -O \$(DFLAGS)
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"
+	DFLAGS= -DSCO
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"'
 	;;
     aix|sysv)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
-	DFLAGS =
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     attsvr4)
         CC=cc
@@ -261,41 +268,42 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = cc
-	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
+	CFLAGS = -I/usr/local/include -g -O
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\"
 EoF
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\"'
 	;;
     nextstep)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	DFLAGS =
-	CFLAGS = -g \$(DFLAGS) -posix
+	CFLAGS = -g -posix
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     osf)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = uucp
 	CC = gcc
-	CFLAGS = -g \$(DFLAGS)
+	CFLAGS = -g
 	LIBS = -lm -lc
-	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
+	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
       ;;
     generic)
     	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	CFLAGS = -g -O \$(DFLAGS) -Wall
+	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
-	DFLAGS= 
 EoF
+	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     *)
     	echo "Your system type was not understood.  Please try one of "
@@ -307,7 +315,7 @@ esac
 
 
 (	set -x
-	./configure $OPTIONS
+	./configure $OPTIONS CPPFLAGS="$CPPFLAGS"
 ) || {
 	rm -f Makefile
 	exit

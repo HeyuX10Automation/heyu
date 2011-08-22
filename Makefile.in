@@ -3,6 +3,15 @@
 ## generated configure script, while config.mk included below is created
 ## by the Configure.sh program
 
+CPPFLAGS = @CPPFLAGS@
+
+PACKAGE = @PACKAGE@
+
+localstatedir = @localstatedir@
+pkgsysconfdir = @pkgsysconfdir@
+prefix = @prefix@
+sysconfdir = @sysconfdir@
+
 include config.mk
 
 CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
