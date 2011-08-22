@@ -238,7 +238,7 @@ static void stdtimer ( void )
 {
    long microsec = configp->cm17a_bit_delay;
 
-#ifdef NSLEEP
+#ifdef HAVE_NSLEEP
    struct timestruc_t tspec;
 
    tspec.tv_sec = microsec / 1000000L;
