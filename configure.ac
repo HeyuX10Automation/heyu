@@ -140,6 +140,18 @@ AC_MSG_CHECKING([for a custom man5dir])
 		AC_SUBST([MAN5DIR], [man5dir=$man5dir])], [])
 	AC_MSG_RESULT([$man5dir])
 
+AC_MSG_CHECKING([for a custom post-install script])
+	AC_ARG_ENABLE([postinst], AS_HELP_STRING([--enable-postinst],
+	[enable custom make rules, used for calling Heyu custom post-install script]
+		), AS_CASE([$enable_postinst],
+			[no], [enable_postinst=],
+			[yes], [enable_postinst='$(srcdir)/post-install.sh'],
+			[]), [])
+	AS_IF([test "x$enable_postinst" != "x"], [AM_SUBST_NOTMAKE([POSTINST])
+		AC_SUBST([POSTINST], [$enable_postinst])], [])
+	AM_CONDITIONAL([POSTINST], [test "x$enable_postinst" != "x"])
+	AC_MSG_RESULT([$enable_postinst])
+
 dnl AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 # Checks for programs.

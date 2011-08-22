@@ -21,6 +21,7 @@
 #
 SYS=
 OPTIONS='--localstatedir=/var --mandir=$(prefix)/man'
+OPTIONS="$OPTIONS --enable-postinst=./post-install.sh"
 
 while [ $# -ge 1 ] ; do
     case "$1" in
