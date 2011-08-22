@@ -111,6 +111,22 @@ AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_UNSIGNED_LONG_LONG_INT
+AC_CHECK_TYPES([struct termios], [], [], [
+#ifdef HAVE_SYS_TERMIOS_H
+# include <sys/termios.h>
+#endif
+#ifdef HAVE_TERMIOS_H
+# include <termios.h>
+#endif
+])
+AC_CHECK_TYPES([struct termio], [], [], [
+#ifdef HAVE_SYS_TERMIO_H
+# include <sys/termio.h>
+#endif
+#ifdef HAVE_TERMIO_H
+# include <termio.h>
+#endif
+])
 
 # Checks for declarations.
 AC_CHECK_DECLS(timezone, [], [], [
