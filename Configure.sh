@@ -166,7 +166,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = -DSYSV -DPOSIX -DHAS_ITIMER -DLINUX -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX -DLINUX -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	LIBS = -lm -lc
 EoF
 	;;
@@ -321,7 +321,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g \$(DFLAGS)
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DHAS_ITIMER -DOSF1 -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DOSF1 -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
       ;;
     generic)
@@ -341,76 +341,6 @@ EoF
     	exit
     	;;
 esac
-
-# echo "checking for unsigned long long variable type"
-
-rm -f local.h
-
-rm -f testull.c testull
-cat > testull.c <<EoF
-int main()
-{
-   unsigned long long x;
-   x=1;
-   return 0;
-}
-EoF
-$CC -o testull testull.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASULL" >> local.h
-#    echo "Has unsigned long long"
-# else
-#   echo "Does not have unsigned long long"
-fi
-rm -f testull.c testull
-
-# echo "checking for siginterrupt()"
-
-rm -f testsigi.c testsigi
-cat > testsigi.c <<EoF
-#include <signal.h>
-int main()
-{
-   int x;
-   x=siginterrupt(SIGALRM,1);
-   return 0;
-}
-EoF
-$CC -o testsigi testsigi.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASSIGINT" >> local.h
-#    echo "Using siginterrupt()"
-# else
-#   echo "Not using siginterrupt()"
-fi
-rm -f testsigi.c testsigi
-
-
-# echo "checking for sigaction()"
-
-rm -f testsiga.c testsiga
-cat > testsiga.c <<EoF
-#include <signal.h>
-int main()
-{
-   int x;
-   struct sigaction act, old;
-   x=sigaction(SIGALRM, &act, &old);
-   return 0;
-}
-EoF
-$CC -o testsiga testsiga.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASSIGACT" >>local.h
-#    echo "Using sigaction()"
-# else
-#    echo "Not using sigaction()"
-fi
-rm -f testsiga.c testsiga
-
-if [ ! -f local.h ] ; then
-    touch local.h
-fi
 
 
 cat >> Makefile <<EoF

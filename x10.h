@@ -41,8 +41,6 @@
 #define _x10_header
 
 /* Some lints don't know about the void type */
-#include "local.h"
-
 #ifdef VOID
 #define void int
 #endif

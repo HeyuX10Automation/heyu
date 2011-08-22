@@ -56,7 +56,7 @@ $(OBJS): config.h x10.h process.h sun.h Makefile
 
 eeprom.o:	eeprom.h
 info.o:		version.h
-x10state.o:	x10state.c x10state.h rfxcom.h digimax.h oregon.h local.h version.h
+x10state.o:	x10state.c x10state.h rfxcom.h digimax.h oregon.h version.h
 rfxcom.o:	rfxcom.c x10state.h rfxcom.h
 digimax.o:	digimax.c x10state.h digimax.h
 oregon.o:	oregon.c x10state.h oregon.h
@@ -158,8 +158,8 @@ lint:
 shar:	x10_heyu.shar.1 x10_heyu.shar.2
 
 x10.o:	x10.c version.h
-process.o:	process.c version.h local.h
-xread.o:	xread.c local.h
+process.o:	process.c version.h
+xread.o:	xread.c
 
 ci:	$(SRCS) index.html Makefile
 	@ for FL in $+ ; do \

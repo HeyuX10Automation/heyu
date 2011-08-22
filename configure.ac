@@ -51,6 +51,7 @@ AC_TYPE_UID_T
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
+AC_TYPE_UNSIGNED_LONG_LONG_INT
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
@@ -62,6 +63,7 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
 AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
+AC_CHECK_FUNCS([setitimer sigaction siginterrupt])
 
 dnl AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

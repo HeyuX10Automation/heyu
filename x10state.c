@@ -84,7 +84,6 @@
 #include "rfxcom.h"
 #include "digimax.h"
 #include "oregon.h"
-#include "local.h"
 #include "version.h"
 
 #ifdef pid_t
@@ -7541,7 +7540,7 @@ static struct {
          dblenergy = dblenergy / 10000.0 * OWLESC * configp->owl_calib_energy * (configp->owl_voltage / OWLVREF);
          sprintf(minibuf, "X10_owlEnergy=%.4f", dblenergy);
          *ep++ = add_envptr(minibuf);
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
          sprintf(minibuf, "X10_owlEnergyCount=%lld",
             (unsigned long long)x10global.longvdata3 << 32 | (unsigned long long)x10global.longvdata2);
 #else
@@ -8290,7 +8289,7 @@ static struct {
                *ep++ = add_envptr(minibuf);
                sprintf(minibuf, "%s_%s_owlEnergy=%.4f", configp->env_alias_prefix, aliaslabel, dblenergy);
                *ep++ = add_envptr(minibuf);
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
                sprintf(minibuf, "X10_%c%d_owlEnergyCount=%llu", hc, unit,
                   (unsigned long long)x10global.data_storage[loc + 2] << 32 | (unsigned long long)x10global.data_storage[loc + 1]);
 #else
