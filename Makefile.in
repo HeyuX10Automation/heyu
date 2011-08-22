@@ -19,6 +19,8 @@
 ##
 ##
 
+CC = @CC@
+CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 
 PACKAGE = @PACKAGE@
