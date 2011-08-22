@@ -44,7 +44,6 @@
 #include <time.h>
 #include <signal.h>
 #include "x10.h"
-#include "version.h"
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
