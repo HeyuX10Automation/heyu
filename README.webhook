@@ -49,7 +49,7 @@ Categories for flaginfo and flagbankinfo:
   tzflags  Timer-zero flags
 
 The "helpinfo" option displays the individual help menus available,
-which will vary according to the Configure options selected when
+which will vary according to the Configure.sh options selected when
 Heyu is compiled.  The help menues will only be of interest for an
 interface which provides a Heyu command line.
 
