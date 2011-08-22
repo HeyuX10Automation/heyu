@@ -25,6 +25,9 @@ Quickstart:
 Ubuntu Linux users should execute 'sudo make install' rather than
 the three commands 'su', 'make install', and 'exit'.
 
+Advanced users and package maintainers may also wish to refer to a
+dedicated section at the bottom of this file.
+
 *** Kindly report any compile errors or warnings to the author.***
 
 It can take 5-8 seconds to set up the heyu_relay daemon and initialize
@@ -200,4 +203,53 @@ Express Community Edition), may encounter an error when running
 change the first line of file install.sh to read "#!/bin/ksh".
 
 
-  
+Notes for advanced users and (binary) package maintainers:
+----------------------------------------------------------
+
+From now on, you can use standard Autotools methods to build your
+package instead of dealing with the old Configure.sh, Makefile.in and
+install.sh. See INSTALL for generic instructions.
+
+Default runtime directories passed through ./configure to make:
+
+SYSBASEDIR	SYSCONFDIR/heyu, or just SYSCONFDIR if already
+		containing 'heyu' in its path; for example, if you
+		specify --prefix=/opt/heyu, then SYSCONFDIR will be set
+		to /opt/heyu/etc, and SYSBASEDIR will end up as
+		SYSCONFDIR; override with CPPFLAGS='...
+		-DSYSBASEDIR=\"path\" ...'
+
+LOCKDIR		LOCALSTATEDIR/lock; override with CPPFLAGS='...
+		-DLOCKDIR=\"path\" ...'
+
+SPOOLDIR	LOCALSTATEDIR/tmp/heyu; override with CPPFLAGS='...
+		-DSPOOLDIR=\"path\" ...'
+
+
+Default installation directories passed through ./configure to 'make
+install':
+
+heyu binary	BINDIR
+
+heyu.1 man page	MANDIR/man1; override with 'man1dir=<path>' (for
+		example, SCO used to install in /usr/local/man/man.1)
+
+*.5 man pages	MANDIR/man5; override with 'man1dir=<path>' (SCO case)
+
+README, etc.	DOCDIR
+
+x10*.sample	SYSBASEDIR
+
+To install individual components selectively instead of all at once,
+use 'make install-exe', 'make install-man1', 'make install-man5' (or
+'make install-man' for both man sets), 'make install-dist_docDATA' and
+'make install-dist_pkgsysconfDATA' (or just 'make install-data' for
+non-exe parts all together) respectively.
+
+Heyu custom post-install.sh (formerly install.sh) script is no longer
+run by 'make install' unless instructed with --enable-postinst[=<path>].
+
+Other than that, you are free to select your own preferred or system
+dependent values for CC, CPP, CFLAGS, CPPFLAGS, LDFLAGS and LIBS, as
+well as your preferred --enable/--disable options and FLAGS / COUNTERS /
+TIMERS values (see ./configure --help for details).
