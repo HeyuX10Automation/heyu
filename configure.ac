@@ -148,5 +148,18 @@ AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
 AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
 AC_CHECK_FUNCS([nanosleep nsleep setitimer sigaction siginterrupt])
 
+AC_MSG_CHECKING(whether to enable RFXLAN receiver support)
+	AC_ARG_ENABLE([rfxlan], [AS_HELP_STRING([--disable-rfxlan],
+		[omit support for RFXLAN receiver])], [], [enable_rfxlan=yes])
+	AS_IF([test "x$enable_rfxlan" != "xno" &&
+		test "x$ac_cv_header_netdb_h" != "xyes" \
+			-o "x$ac_cv_func_memset" != "xyes" \
+			-o "x$ac_cv_func_socket" != "xyes"],
+		[enable_rfxlan=no], [])
+	AC_MSG_RESULT($enable_rfxlan)
+	AS_IF([test "x$enable_rfxlan" != "xno"],
+		[AC_DEFINE([HAVE_FEATURE_RFXLAN], [1],
+		[Define if you have RFXLAN receiver])], [])
+
 dnl AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

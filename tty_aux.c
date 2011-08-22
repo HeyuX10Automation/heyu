@@ -81,8 +81,14 @@
 #include <pty.h>
 #endif
 
+#ifdef HAVE_FEATURE_RFXLAN
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#endif
 
 #include "x10.h"
 #include "process.h"
@@ -183,6 +189,8 @@ int setup_tty_aux( int auxbaud, int lockflag )
     syslog(LOG_ERR, "Opening tty_aux line.");
 #endif
 
+#ifdef HAVE_FEATURE_RFXLAN
+#if defined(HAVE_NETDB_H) && defined(HAVE_MEMSET) && defined(HAVE_SOCKET)
     if ( configp->auxhost[0] && configp->auxport[0] ) {
        struct addrinfo hints;
        struct addrinfo *result, *rp;
@@ -227,6 +235,10 @@ int setup_tty_aux( int auxbaud, int lockflag )
 	  }
        }
     }
+#else
+#error "No system support required for RFXLAN feature, please disable."
+#endif
+#endif
 
 #ifdef O_NONBLOCK
     /* Open with non-blocking I/O, we'll fix after we set CLOCAL */

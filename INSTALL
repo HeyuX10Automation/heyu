@@ -148,6 +148,12 @@ by including the '-nokaku' switch with Configure.sh, i.e.,
 
    sh ./Configure.sh -nokaku
 
+By default, support for RFXLAN RF receiver (network version of RFXCOM)
+is compiled into Heyu.  This support may be omitted by including the
+'-norfxlan' switch with Configure.sh, i.e.,
+
+   sh ./Configure.sh -norfxlan
+
 
 Notes for Mac OS X:
 -------------------

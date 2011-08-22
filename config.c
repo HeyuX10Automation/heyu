@@ -455,8 +455,10 @@ void initialize_config ( void )
    configp->max_dusk = DEF_MAX_DUSK;
    strncpy2(configp->tty, DEF_TTY, sizeof(config.tty) - 1);
    configp->ttyaux[0] = '\0';
+#ifdef HAVE_FEATURE_RFXLAN
    configp->auxhost[0] = '\0';
    configp->auxport[0] = '\0';
+#endif
    configp->suffixaux[0] = '\0';
    configp->auxdev = 0;
    configp->newformat = 0;
@@ -1309,6 +1311,7 @@ int parse_config_tail ( char *buffer, unsigned char source )
                break;
 	    }
 
+#ifdef HAVE_FEATURE_RFXLAN
 	    if ( ( configp->auxdev == DEV_RFXCOM32 || configp->auxdev == DEV_RFXCOMVL ) && *configp->ttyaux != '/' ) {
 	       sp = strchr(tokv[0], ':');
 
@@ -1321,6 +1324,7 @@ int parse_config_tail ( char *buffer, unsigned char source )
                   (void) strncpy2(configp->auxport, sp, sizeof(config.auxport) - 1);
 	       }
 	    }
+#endif
 
             if ( configp->auxdev == DEV_RFXCOMVL && tokc > 2 ) {
                strupper(tokv[2]);
