@@ -3,6 +3,8 @@
 ## generated configure script, called in turn, with locally selected options,
 ## by the Configure.sh program
 
+bin_PROGRAMS = heyu$(EXEEXT)
+
 man1dir = $(mandir)/man1
 man5dir = $(mandir)/man5
 
@@ -45,21 +47,17 @@ OBJS =	date.o erase.o info.o message.o relay.o \
 OTHERSRC = README README2 Makefile x10config.sample protocol.txt eeprom.h \
 	x10.sched.sample  heyu.1 x10.h x10config.5 x10cm17a.5 \
 	history.txt version.h heyufaq.txt x10sched.5 process.h sun.h \
-	x10scripts.5 Configure.sh Makefile.in install.sh INSTALL LICENSE \
+	x10scripts.5 Configure.sh Makefile.in post-install.sh INSTALL LICENSE \
         README.cm10a x10aux.5 x10state.h rfxcom.h digimax.h oregon.h x10rfxsensors.5\
 	x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5 README.webhook 
 
 EVERYTHING = $(OTHERSRC) $(SRCS)
 
-all:	heyu 
+@POSTINST_FALSE@all-local:
+all:	heyu all-local
 
 heyu:	$(OBJS) version.h
 	$(CC) $(LDFLAGS) -o heyu $(OBJS) $(LIBS)
-	@echo `id` >usergroup.tmp
-	@echo ${HOME}  >userhome.tmp
-	@echo ""
-	@echo "** Now become root and run 'make install' **"
-	@echo ""
 
 $(OBJS): config.h x10.h process.h sun.h Makefile
 
@@ -78,6 +76,7 @@ install: $(BIN)/heyu  $(MAN)/heyu.1 $(MAN5)/x10config.5 $(MAN5)/x10sched.5 \
 	$(MAN5)/x10scripts.5 $(MAN5)/x10cm17a.5 $(MAN5)/x10aux.5 \
 	$(MAN5)/x10rfxsensors.5 $(MAN5)/x10rfxmeters.5 $(MAN5)/x10digimax.5 \
 	$(MAN5)/x10oregon.5 $(MAN5)/x10kaku.5
+@POSTINST_FALSE@install-exec-hook:
 
 maninstall: $(MAN)/heyu.1 $(MAN5)/x10config.5 $(MAN5)/x10sched.5 \
 	$(MAN5)/x10scripts.5 $(MAN5)/x10cm17a.5 $(MAN5)/x10aux.5 \
@@ -102,7 +101,7 @@ $(BIN)/heyu:	heyu
 	mkdir -p -m 755 $(BIN)
 	cp heyu $(BIN)
 	chmod 755 $(BIN)/heyu
-	./install.sh
+	$(MAKE) install-exec-hook
 
 $(MAN)/heyu.1: heyu.1
 	mkdir -p -m 755 $(MAN)
@@ -268,3 +267,16 @@ $(EVERYTHING):
 
 @MAN1DIR@
 @MAN5DIR@
+
+@POSTINST_TRUE@all-local: usergroup.tmp userhome.tmp
+
+@POSTINST_TRUE@usergroup.tmp userhome.tmp: $(bin_PROGRAMS)
+@POSTINST_TRUE@	@echo `id` >usergroup.tmp
+@POSTINST_TRUE@	@echo ${HOME}  >userhome.tmp
+@POSTINST_TRUE@	@echo ""
+@POSTINST_TRUE@	@echo "**Now become root and run 'make install' **"
+@POSTINST_TRUE@	@echo ""
+
+@POSTINST_TRUE@install-exec-hook:
+@POSTINST_TRUE@	@$(POST_INSTALL)
+@POSTINST_TRUE@	@POSTINST@

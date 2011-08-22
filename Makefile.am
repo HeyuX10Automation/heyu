@@ -37,9 +37,24 @@ dist_man_MANS = heyu.1 x10config.5 x10sched.5 x10scripts.5 x10cm17a.5 x10aux.5 \
 dist_doc_DATA = README README2 protocol.txt history.txt heyufaq.txt \
 	INSTALL LICENSE GPL-3 README.cm10a README.webhook release_notes.txt
 dist_pkgsysconf_DATA = x10config.sample x10.sched.sample
-EXTRA_DIST = Configure.sh install.sh README.INSTALL
+EXTRA_DIST = Configure.sh post-install.sh README.INSTALL
 
 @MAN1DIR@
 @MAN5DIR@
 
 *.o: Makefile
+
+if POSTINST
+all-local: usergroup.tmp userhome.tmp
+
+usergroup.tmp userhome.tmp: $(bin_PROGRAMS)
+	@echo `id` >usergroup.tmp
+	@echo ${HOME}  >userhome.tmp
+	@echo ""
+	@echo "**Now become root and run 'make install' **"
+	@echo ""
+
+install-exec-hook:
+	@$(POST_INSTALL)
+	@POSTINST@
+endif
