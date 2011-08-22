@@ -28,10 +28,10 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 	rfxcom.h digimax.h oregon.h
 dist_man_MANS = heyu.1 x10config.5 x10sched.5 x10scripts.5 x10cm17a.5 x10aux.5 \
 	x10rfxsensors.5 x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5
-dist_doc_DATA = README README2 protocol.txt history.txt heyufaq.txt \
+dist_doc_DATA = README README1 README2 protocol.txt history.txt heyufaq.txt \
 	AUTHORS COPYING INSTALL README.cm10a README.webhook release_notes.txt
 dist_pkgsysconf_DATA = x10config.sample x10.sched.sample
-EXTRA_DIST = Configure.sh post-install.sh README.INSTALL
+EXTRA_DIST = Configure.sh post-install.sh
 
 @MAN1DIR@
 @MAN5DIR@

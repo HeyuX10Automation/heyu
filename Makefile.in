@@ -61,7 +61,7 @@ OBJS =	date.o erase.o info.o message.o relay.o \
 	tty_aux.o relay_aux.o x10aux.o rfxcom.o digimax.o oregon.o
 
 OTHERSRC = README README2 Makefile x10config.sample protocol.txt eeprom.h \
-	x10.sched.sample  heyu.1 x10.h x10config.5 x10cm17a.5 \
+	README1 x10.sched.sample  heyu.1 x10.h x10config.5 x10cm17a.5 \
 	history.txt version.h heyufaq.txt x10sched.5 process.h sun.h \
 	x10scripts.5 Configure.sh Makefile.in post-install.sh AUTHORS COPYING INSTALL \
         README.cm10a x10aux.5 x10state.h rfxcom.h digimax.h oregon.h x10rfxsensors.5\
