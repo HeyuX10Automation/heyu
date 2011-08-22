@@ -49,7 +49,9 @@
 #endif
 #include <signal.h>
 #include <setjmp.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif

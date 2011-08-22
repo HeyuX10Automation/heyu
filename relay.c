@@ -50,7 +50,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <signal.h>
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -59,7 +61,9 @@
 #include <syslog.h>
 #endif
 #ifdef LINUX
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
 #endif
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
