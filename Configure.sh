@@ -119,34 +119,20 @@ if [ "$SYS" = "" ] ; then
     SYS=`uname -s | tr '[A-Z]' '[a-z]'`
 fi
 
-CC=gcc  #Set default for later
-
 echo "#This makefile is built for $SYS" >> config.mk
 case "$SYS" in
     linux)
         cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = root 
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     sunos*|solaris)
-    	type gcc > /dev/null
-    	if [ $? = 0 ] ; then
-    	    echo "CC = gcc" >> config.mk
-            WALLFLAG=-Wall
-	else
-            CC=cc
-	    echo "CC = cc" >> config.mk
-            WALLFLAG=
-	fi
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -158,38 +144,18 @@ cat >> config.mk <<EoF
 	MAN = /opt/heyu/man/man1
 	MAN5 = /opt/heyu/man/man5
 EoF
-    	type gcc > /dev/null
-    	if [ $? = 0 ] ; then
-    	    echo "CC = gcc" >> config.mk
-            WALLFLAG=-Wall
-	else
-            CC=cc
-	    echo "CC = cc" >> config.mk
-            WALLFLAG=
-	fi
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --prefix=/opt/heyu"
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\"'
 	;;
     opensolaris_bsd)
-    	type gcc > /dev/null
-    	if [ $? = 0 ] ; then
-    	    echo "CC = gcc" >> config.mk
-            WALLFLAG=-Wall
-	else
-            CC=cc
-	    echo "CC = cc" >> config.mk
-            WALLFLAG=
-	fi
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CFLAGS = -g -O \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -199,8 +165,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/lock\"'
@@ -209,8 +173,6 @@ EoF
         cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -220,8 +182,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER= root
 	GROUP = wheel
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -231,21 +191,16 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = wheel
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     sco*)
-        CC=cc
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CC = cc
 	MAN = /usr/local/man/man.1
 	MAN5 = /usr/local/man/man.5
-	CFLAGS = -O
 	LIBS = -lm -lc -lsocket
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -256,19 +211,14 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	;;
     attsvr4)
-        CC=cc
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CC = cc
-	CFLAGS = -g -O
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\"'
@@ -278,8 +228,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CC = gcc
-	CFLAGS = -g
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
 EoF
@@ -290,8 +238,6 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = uucp
-	CC = gcc
-	CFLAGS = -g
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
@@ -301,8 +247,6 @@ EoF
     	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	CC = gcc
-	CFLAGS = -g -O -Wall
 	LIBS = -lm -lc
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"

@@ -3,6 +3,8 @@
 ## generated configure script, while config.mk included below is created
 ## by the Configure.sh program
 
+CC = @CC@
+CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 
 PACKAGE = @PACKAGE@
