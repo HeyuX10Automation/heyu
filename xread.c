@@ -55,7 +55,6 @@
 #include <time.h>
 
 #include "process.h"
-#include "local.h"
  
 extern int verbose;
 extern int i_am_relay, i_am_aux;
@@ -63,7 +62,7 @@ extern int tty;
 
 unsigned alarm();
 void sigtimer( int );
-#ifdef HAS_ITIMER
+#ifdef HAVE_SETITIMER
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -130,7 +129,7 @@ unsigned char *buf;
 
     (void)alarm(0);
     (void) signal(SIGALRM, sigtimer);
-#ifdef HAS_ITIMER
+#ifdef HAVE_SETITIMER
     icurrent.it_interval.tv_sec = 0;
     icurrent.it_interval.tv_usec = 0;
     icurrent.it_value.tv_sec = timeout;
@@ -280,7 +279,7 @@ void sxread_isr_1( int signo )
 }
 
 
-#if defined(HASSIGACT)
+#if defined(HAVE_SIGACTION)
 /*--------------------------------------------------------+
  |  An interruptable read() like xread(), but from a      |
  |  serial port file descriptor.  Needs sigaction()       |
@@ -336,7 +335,7 @@ int sxread ( int fd, unsigned char *buffer, int size, int timeout )
 }
 
 
-#elif defined(HASSIGINT)
+#elif defined(HAVE_SIGINTERRUPT)
 /*--------------------------------------------------------+
  |  An interruptable read() like xread(), but from a      |
  |  serial port file descriptor.  Needs siginterrupt()    |
@@ -523,7 +522,7 @@ int xread ( int fd, unsigned char *buffer, int count, int timeout )
 
    (void)alarm(0);
    (void) signal(SIGALRM, xread_sigtimer);
-#ifdef HAS_ITIMER
+#ifdef HAVE_SETITIMER
    icurrent.it_interval.tv_sec = 0;
    icurrent.it_interval.tv_usec = 0;
    icurrent.it_value.tv_sec = timeout;
