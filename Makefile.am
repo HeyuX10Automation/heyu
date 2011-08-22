@@ -33,4 +33,7 @@ dist_doc_DATA = README README2 protocol.txt history.txt heyufaq.txt \
 dist_pkgsysconf_DATA = x10config.sample x10.sched.sample
 EXTRA_DIST = Configure.sh install.sh README.INSTALL
 
+@MAN1DIR@
+@MAN5DIR@
+
 *.o: Makefile
