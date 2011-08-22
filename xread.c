@@ -32,9 +32,13 @@
 #include <signal.h>
 #include <setjmp.h>
 #if    (defined(SCO) || defined (SOLARIS) || defined (ATTSVR4) || defined(OPENBSD) || defined(NETBSD))
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #else
+#ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
+#endif
 #endif
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>

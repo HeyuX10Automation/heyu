@@ -67,7 +67,9 @@
 #include <strings.h>
 #endif
 #endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -86,7 +88,15 @@
 #endif
 
 #ifdef EXEC_POSIX
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+#endif
+#ifndef WEXITSTATUS
+# define WEXITSTATUS(stat_val) ((unsigned int) (stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+# define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
 
 #include <signal.h>
