@@ -110,44 +110,35 @@ int lock_device();
 int tty = TTY_CLOSED;		/* Real tty */
 int sptty = -1;	/* Spool */
 
-#ifdef POSIX
-#ifndef SYSV
-#define SYSV   /* POSIX implies SYSV */
-#endif
-#endif
-
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 
-#ifndef SYSV
-#ifdef HAVE_SGTTY_H
-#include <sgtty.h>
-#endif
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
+#  include <sgtty.h>
 struct sgttyb oldsb, newsb;
 void hangup();
 #else
-#ifndef POSIX
-#ifdef HAVE_TERMIO_H
-#include <termio.h>
-#endif
-#ifndef NCC
-#define NCC NCCS
-#endif
+# ifndef HAVE_STRUCT_TERMIOS
+#  ifdef HAVE_TERMIO_H
+#   include <termio.h>
+#  endif
+#  ifdef HAVE_SYS_TERMIO_H
+#   include <sys/termio.h>
+#  endif
 struct termio oldsb, newsb;
-#else
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#endif
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-#ifndef NCC
-#define NCC NCCS
-#endif
+# else
+#  ifdef HAVE_TERMIOS_H
+#   include <termios.h>
+#  endif
+#  ifdef HAVE_SYS_TERMIOS_H
+#   include <sys/termios.h>
+#  endif
 struct termios oldsb, newsb;
-#endif
-
+# endif
+# ifndef NCC
+#  define NCC NCCS
+# endif
 #endif
 
 int setup_tty ( int lockflag )
@@ -191,7 +182,7 @@ int setup_tty ( int lockflag )
 #endif
 
 
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
     /* Old-style BSD/v7 sgtty calls */
     (void) ioctl(tty, TIOCFLUSH, (struct sgttyb *) NULL);
     (void) ioctl(tty, TIOCGETP, &oldsb);
@@ -201,8 +192,7 @@ int setup_tty ( int lockflag )
     hangup();
     newsb.sg_ispeed = newsb.sg_ospeed = B4800;	/* raise DTR & set speed */
     (void) ioctl(tty, TIOCSETN, &newsb);
-#else
-#ifndef POSIX
+#elif !defined(HAVE_STRUCT_TERMIOS)
     /* SVr2-style termio */
     if ( ioctl(tty, TCGETA, &oldsb) < 0 ) {
     	syslog(LOG_ERR,"ioctl get");
@@ -261,7 +251,6 @@ int setup_tty ( int lockflag )
 	tcsetattr(tty, TCSADRAIN, &newsb);
     }
 #endif
-#endif
 
 #ifdef O_NONBLOCK
     /* Now that we have set CLOCAL on the port, we can use blocking I/O */
@@ -277,19 +266,17 @@ void restore_tty()
    if ( tty == TTY_DUMMY )
       return;
 
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
     hangup();
     (void) ioctl(tty, TIOCSETN, &oldsb);
-#else
-#ifndef POSIX
+#elif !defined(HAVE_STRUCT_TERMIOS)
     (void) ioctl(tty, TCSETAF, &oldsb);
 #else
     tcsetattr(tty, TCSADRAIN, &oldsb);
 #endif
-#endif
 }
 
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
 void hangup()
 {
     newsb.sg_ispeed = newsb.sg_ospeed = B0;	/* drop DTR */

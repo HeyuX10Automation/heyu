@@ -36,7 +36,6 @@ MAN = /usr/local/man/man1
 MAN5 = /usr/local/man/man5
 
 #       set DFLAGS equal to:
-#          -DSYSV       if using SYSTEM V
 #          -DVOID       if compiler doesn't understand 'void'
 
 EoF
@@ -160,7 +159,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = -DSYSV -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	LIBS = -lm -lc
 EoF
 	;;
@@ -177,7 +176,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -200,7 +199,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
+	DFLAGS = -DPOSIX -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -218,7 +217,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -273,7 +272,7 @@ EoF
 	MAN5 = /usr/local/man/man.5
 	CFLAGS = -O \$(DFLAGS)
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSYSV -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     aix|sysv)
@@ -283,7 +282,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     attsvr4)
@@ -294,7 +293,7 @@ EoF
 	CC = cc
 	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     nextstep)
@@ -315,7 +314,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g \$(DFLAGS)
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
       ;;
     generic)
