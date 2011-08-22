@@ -54,10 +54,8 @@
 #undef  _IBCS2 /* conflicts with SVID3  */
 #endif
 
-#ifdef ATTSVR4
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
-#endif
 #endif
 
 #include <time.h>
@@ -247,7 +245,7 @@ static void stdtimer ( void )
    while ( nsleep( &tspec, &tspec ) == -1 );
    return;
 #else
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    struct timeval tspec;
 
    tspec.tv_sec = microsec / 1000000;
@@ -260,7 +258,7 @@ static void stdtimer ( void )
    tspec.tv_nsec = 1000L * (microsec % 1000000L);
 
    while ( nanosleep( &tspec, &tspec ) == -1 );
-#endif /* ATTSVR4 */
+#endif /* HAVE_NANOSLEEP */
    return;
 #endif
 }  
