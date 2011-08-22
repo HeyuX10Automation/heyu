@@ -57,14 +57,11 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
-#if    (defined(SCO) || defined (SOLARIS) || defined (ATTSVR4) || defined(OPENBSD))
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-#else
 #ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
-#endif
 #endif
 #include <ctype.h>
 

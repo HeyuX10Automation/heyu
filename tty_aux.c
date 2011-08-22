@@ -73,16 +73,12 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#ifdef SOLARIS
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#endif
-#ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
 #ifdef HAVE_PTY_H
 #include <pty.h>
-#endif
 #endif
 
 #include <sys/socket.h>
@@ -139,10 +135,8 @@ struct termio oldsb, newsb;
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
-#if defined(DARWIN) || defined(NETBSD)
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
-#endif
 #endif
 #ifndef NCC
 #define NCC NCCS

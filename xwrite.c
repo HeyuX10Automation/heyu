@@ -38,15 +38,12 @@
 #include <unistd.h>
 #endif
 
-#ifdef LINUX
 #ifdef HAVE_ASM_IOCTLS_H
 #include <asm/ioctls.h>
 #endif
-#   ifdef OLDLINUX
 #ifdef HAVE_LINUX_SERIAL_REG_H
 #include <linux/serial_reg.h>
 #endif
-#   endif
 #ifdef HAVE_LINUX_SERIAL_H
 #include <linux/serial.h>
 #endif
@@ -59,34 +56,21 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
-#else
-#    if (defined(POSIX) || defined(FREEBSD) || defined(OPENBSD))
 #ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
 #endif
-#    else
-#         ifdef SCO
 #ifdef HAVE_SYS_TERMIO_H
 #include <sys/termio.h>
 #endif
-#         else
-#              ifdef DARWIN
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
-#              else
 #ifdef HAVE_TERMIO_H
 #include <termio.h>
 #endif
-#              endif
-#         endif
-#    endif
-#endif
 
-#if (defined(OSF) || defined(DARWIN))
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
-#endif
 #endif
 
 #ifdef HAVE_STRING_H

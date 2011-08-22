@@ -39,14 +39,11 @@
 #endif
 
 #include <stdio.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#else
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif
 #endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>

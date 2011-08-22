@@ -49,14 +49,11 @@
 #endif
 #include <ctype.h>
 #include <time.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#else
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
-#endif
 #endif
 
 #include "x10.h"
