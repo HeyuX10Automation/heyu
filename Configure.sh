@@ -219,20 +219,21 @@ EoF
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
+	LIBS = -lc -lucb -lm -lgen -lcmd
 EoF
 	CPPFLAGS='-DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\"'
 	CPPFLAGS="$CPPFLAGS -I/usr/local/include"
+	LDFLAGS="-L/usr/ucblib"
 	;;
     nextstep)
 	cat >> config.mk <<-EoF
 	OWNER = root
 	GROUP = sys
-	LDFLAGS = -posix
 	LIBS = -lm -lposix
 EoF
 	OPTIONS="$OPTIONS --sysconfdir=/etc"
 	CPPFLAGS="-posix"
+	LDFLAGS="-posix"
 	;;
     osf)
 	cat >> config.mk <<-EoF
@@ -261,7 +262,7 @@ esac
 
 
 (	set -x
-	./configure $OPTIONS CPPFLAGS="$CPPFLAGS"
+	./configure $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS"
 ) || {
 	rm -f Makefile
 	exit
