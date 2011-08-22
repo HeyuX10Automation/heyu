@@ -25,13 +25,7 @@ MAN5 = /usr/local/man/man5
 
 EoF
 
-CM17AFLAG="-DHAVE_FEATURE_CM17A"
-EXT0FLAG="-DHAVE_FEATURE_EXT0"
-RFXSENFLAG="-DHAVE_FEATURE_RFXS"
-RFXMETFLAG="-DHAVE_FEATURE_RFXM"
-DMXFLAG="-DHAVE_FEATURE_DMX"
-OREFLAG="-DHAVE_FEATURE_ORE"
-KAKUFLAG="-DHAVE_FEATURE_KAKU"
+OPTIONS=
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -54,26 +48,26 @@ while [ $# -ge 1 ] ; do
 	    rm Makefile 
 	    exit
 	    ;;
-        nocm17a|-nocm17a|NOCM17A|-NOCM17A)
-            CM17AFLAG=
+        nocm17a|-nocm17a|NOCM17A|-NOCM17A|--disable-cm17a)
+            OPTIONS="$OPTIONS --disable-cm17a"
             ;;
-        noext0|-noext0|NOEXT0|-NOEXT0)
-            EXT0FLAG=
+        noext0|-noext0|NOEXT0|-NOEXT0|--disable-ext0)
+            OPTIONS="$OPTIONS --disable-ext0"
             ;;
-        norfxs|-norfxs|NORFXS|-NORFXS)
-            RFXSENFLAG=
+        norfxs|-norfxs|NORFXS|-NORFXS|--disable-rfxs)
+            OPTIONS="$OPTIONS --disable-rfxs"
             ;;
-        norfxm|-norfxm|NORFXM|-NORFXM)
-            RFXMETFLAG=
+        norfxm|-norfxm|NORFXM|-NORFXM|--disable-rfxm)
+            OPTIONS="$OPTIONS --disable-rfxm"
             ;;
-        nodmx|-nodmx|NODMX|-NODMX)
-            DMXFLAG=
+        nodmx|-nodmx|NODMX|-NODMX|--disable-dmx)
+            OPTIONS="$OPTIONS --disable-dmx"
             ;;
-        noore|-noore|NOORE|-NOORE)
-            OREFLAG=
+        noore|-noore|NOORE|-NOORE|--disable-ore)
+            OPTIONS="$OPTIONS --disable-ore"
             ;;
-        nokaku|-nokaku|NOKAKU|-NOKAKU)
-            KAKUFLAG=
+        nokaku|-nokaku|NOKAKU|-NOKAKU|--disable-kaku)
+            OPTIONS="$OPTIONS --disable-kaku"
             ;;
 	flags=*|-flags=*|FLAGS=*|-FLAGS=*)
 	    IFS="${IFS}=" read keyword FLAGS <<EoF
@@ -150,7 +144,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = -DSYSV -DPOSIX $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	LIBS = -lm -lc
 EoF
 	;;
@@ -167,7 +161,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -190,7 +184,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG
+	DFLAGS = -DSYSV -DPOSIX -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -208,7 +202,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -220,7 +214,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     openbsd)
@@ -230,14 +224,14 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DPOSIX -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
        ;;
     netbsd)
 	cat >> Makefile <<-EoF
 	OWNER= root
 	GROUP = wheel
-	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/lock\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX -DLOCKDIR=\"/var/spool/lock\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -247,7 +241,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = wheel
-	DFLAGS = -DPOSIX $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -263,7 +257,7 @@ EoF
 	MAN5 = /usr/local/man/man.5
 	CFLAGS = -O \$(DFLAGS)
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSYSV -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DSYSV -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     aix|sysv)
@@ -273,7 +267,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DPOSIX $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     attsvr4)
@@ -284,7 +278,7 @@ EoF
 	CC = cc
 	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     nextstep)
@@ -292,7 +286,7 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	DFLAGS =  -DPOSIX $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =  -DPOSIX $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 	CFLAGS = -g \$(DFLAGS) -posix
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
@@ -305,7 +299,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g \$(DFLAGS)
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DSYSV -DLOCKDIR=\"/var/spool/locks\" $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
       ;;
     generic)
@@ -315,7 +309,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS=  $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS=  $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
 EoF
 	;;
     *)
@@ -335,7 +329,7 @@ EoF
 cat Makefile.in >> Makefile
 
 (	set -x
-	./configure
+	./configure $OPTIONS
 )
 
 if [ "$SYS" = "sysv" ] ; then

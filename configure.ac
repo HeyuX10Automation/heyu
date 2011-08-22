@@ -37,6 +37,55 @@ Copyright (C) 2011 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
+# Optional Features
+AC_MSG_CHECKING([whether to enable CM17A Firecracker support])
+	AC_ARG_ENABLE([cm17a], [AS_HELP_STRING([--disable-cm17a],
+		[omit support for optional CM17A Firecracker device])], [],
+		[enable_cm17a=yes])
+	AC_MSG_RESULT([$enable_cm17a])
+	AS_IF([test "x$enable_cm17a" != "xno"], [AC_DEFINE([HAVE_FEATURE_CM17A],
+		[1], [Define if you have the CM17A Firecracker device])], [])
+AC_MSG_CHECKING([whether to enable extended type 0 shutter controllers support])
+	AC_ARG_ENABLE([ext0], [AS_HELP_STRING([--disable-ext0],
+		[omit support for extended type 0 shutter controllers])], [],
+		[enable_ext0=yes])
+	AC_MSG_RESULT([$enable_ext0])
+	AS_IF([test "x$enable_ext0" != "xno"], [AC_DEFINE([HAVE_FEATURE_EXT0],
+		[1], [Define if you have extended type 0 shutter controllers])],
+		[])
+AC_MSG_CHECKING([whether to enable RFXSensors support])
+	AC_ARG_ENABLE([rfxs], [AS_HELP_STRING([--disable-rfxs],
+		[omit support for RFXSensors])], [], [enable_rfxs=yes])
+	AC_MSG_RESULT([$enable_rfxs])
+	AS_IF([test "x$enable_rfxs" != "xno"], [AC_DEFINE([HAVE_FEATURE_RFXS],
+		[1], [Define if you have RFXSensors])], [])
+AC_MSG_CHECKING([whether to enable RFXMeters support])
+	AC_ARG_ENABLE([rfxm], [AS_HELP_STRING([--disable-rfxm],
+		[omit support for RFXMeters])], [], [enable_rfxm=yes])
+	AC_MSG_RESULT([$enable_rfxm])
+	AS_IF([test "x$enable_rfxm" != "xno"], [AC_DEFINE([HAVE_FEATURE_RFXM],
+		[1], [Define if you have RFXMeters])], [])
+AC_MSG_CHECKING([whether to enable Digimax thermostat support])
+	AC_ARG_ENABLE([dmx], [AS_HELP_STRING([--disable-dmx],
+		[omit support for the Digimax thermostat])], [],
+		[enable_dmx=yes])
+	AC_MSG_RESULT([$enable_dmx])
+	AS_IF([test "x$enable_dmx" != "xno"], [AC_DEFINE([HAVE_FEATURE_DMX],
+		[1], [Define if you have Digimax thermostats])], [])
+AC_MSG_CHECKING([whether to enable Oregon sensors support])
+	AC_ARG_ENABLE([ore], [AS_HELP_STRING([--disable-ore],
+		[omit support for Oregon sensors])], [], [enable_ore=yes])
+	AC_MSG_RESULT([$enable_ore])
+	AS_IF([test "x$enable_ore" != "xno"], [AC_DEFINE([HAVE_FEATURE_ORE],
+		[1], [Define if you have Oregon sensors])], [])
+AC_MSG_CHECKING([whether to enable support for KaKu/HomeEasy signals])
+	AC_ARG_ENABLE([kaku], [AS_HELP_STRING([--disable-kaku],
+		[omit support for KaKu/HomeEasy signals])], [],
+		[enable_kaku=yes])
+	AC_MSG_RESULT([$enable_kaku])
+	AS_IF([test "x$enable_kaku" != "xno"], [AC_DEFINE([HAVE_FEATURE_KAKU],
+		[1], [Define if you have KaKu/HomeEasy devices])], [])
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
