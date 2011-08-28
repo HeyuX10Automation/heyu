@@ -430,13 +430,13 @@ static struct oregon_st {
    {108, 11, 0xff, 0x00, 0x1a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x2a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x3a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
+   {96,  12, 0xff, 0xff, 0x8a, 0xec, 2, CM2, BM2, 0, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
 
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 1, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_TEMU",   OreTemu,   csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 2, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THEMU",  OreTHemu,  csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 3, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THBEMU", OreTHBemu, csFail}, /* Dummy */
 
    /* Unsupported Oregon sensors */
-   {96,  12, 0xff, 0xff, 0x8a, 0xec, 2, CM2, BM2, 0, 0,   0, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
    {64,   8, 0x0f, 0x00, 0x03, 0x00, 2, CM0, BM0, 0, 0,   0, 0xf0, 2, "ORE_WGT2",  OreWeight2, csNull},    /* OreGR101 */
 
 };
