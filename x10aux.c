@@ -1249,8 +1249,8 @@ int aux_rfxcomvl ( void )
    unsigned char  subindx, subtype;
    unsigned char  hcode, ucode, fcode, rfflood, addr, xmtr, rcvr;
 
-   unsigned char  typeq[2], lasttypeq[2], nbitsq[2], trulenq[2];
-   unsigned char  *type, *lasttype, *nbits, *trulen;
+   unsigned char  typeq[2], nbitsq[2], trulenq[2];
+   unsigned char  *type, *nbits, *trulen;
 
    unsigned char  xbuffq[2][64];
    unsigned char  *xbuff, *buff;
@@ -1309,7 +1309,6 @@ int aux_rfxcomvl ( void )
    countq[0] = countq[1] = 0;
    lastlenq[0] = lastlenq[1] = -1;
    typeq[0] = typeq[1] = 0;
-   lasttypeq[0] = lasttypeq[1] = 0;
    subindx = 0;
    trulenq[0] = trulenq[1] = 0;
    nseqq[0] = nseqq[1] = 0;
@@ -1374,7 +1373,6 @@ int aux_rfxcomvl ( void )
       bufflen = &bufflenq[rcvr];
       nbits = &nbitsq[rcvr];
       type = &typeq[rcvr];
-      lasttype = &lasttypeq[rcvr];
       sensor_flag = &sensor_flagq[rcvr];
       use_old_buffer = &use_old_bufferq[rcvr];
       saddr = &saddrq[rcvr];
@@ -1603,7 +1601,6 @@ int aux_rfxcomvl ( void )
       *use_old_buffer = 0;
 
       if ( *count == 0 ) {
-	 *lasttype = *type;
          memcpy(lastbuff, buff, *bufflen);
          *lastlen = *bufflen;
          (*count)++;
@@ -1675,7 +1672,7 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], *type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( *type == *lasttype && memcmp(buff, lastbuff, *bufflen < *lastlen ? *bufflen : *lastlen) == 0 ) {
+      else if ( *bufflen == *lastlen && memcmp(buff, lastbuff, *bufflen) == 0 ) {
          /* Repeat of previous burst */
          (*count)++;
          nread = 0;
@@ -1749,7 +1746,7 @@ int aux_rfxcomvl ( void )
  +-------------------------------------------------------------*/
 int aux_rfxcomvl ( void )
 {
-   unsigned char  type, lasttype, subindx, subtype, trulen;
+   unsigned char  type, subindx, subtype, trulen;
    unsigned char  hcode, ucode, fcode, rfflood, nbits, addr, xmtr, rcvr;
    unsigned char  xbuff[64], *buff;
    unsigned char  lastbuff[64];
@@ -1781,7 +1778,6 @@ int aux_rfxcomvl ( void )
 
    lastlen = -1;
    type = 0;
-   lasttype = 0;
    subindx = 0;
    trulen = 0;
    nseq = 0;
@@ -2057,7 +2053,6 @@ int aux_rfxcomvl ( void )
       use_old_buffer = 0;
 
       if ( count == 0 ) {
-         lasttype = type;
          memcpy(lastbuff, buff, bufflen);
          lastlen = bufflen;
          count++;
@@ -2128,7 +2123,7 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( /*this_word == rfword */ type == lasttype && memcmp(buff, lastbuff, bufflen < lastlen ? bufflen : lastlen ) == 0 ) {
+      else if ( /*this_word == rfword */ bufflen == lastlen && memcmp(buff, lastbuff, bufflen) == 0 ) {
          /* Repeat of previous burst */
          count++;
          nread = 0;
