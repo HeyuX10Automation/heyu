@@ -1672,7 +1672,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], *type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( *bufflen == *lastlen && memcmp(buff, lastbuff, *bufflen) == 0 ) {
+      else if ((*bufflen == *lastlen ||
+              (*type == RF_STD && (*lastlen == 4 || (*lastlen = *bufflen) == 4))
+                                  ) && memcmp(buff, lastbuff, *lastlen) == 0 ) {
          /* Repeat of previous burst */
          (*count)++;
          nread = 0;
@@ -2123,7 +2125,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( /*this_word == rfword */ bufflen == lastlen && memcmp(buff, lastbuff, bufflen) == 0 ) {
+      else if ((bufflen == lastlen ||
+                (type == RF_STD && (lastlen == 4 || (lastlen = bufflen) == 4))
+                                    ) && memcmp(buff, lastbuff, lastlen) == 0) {
          /* Repeat of previous burst */
          count++;
          nread = 0;
