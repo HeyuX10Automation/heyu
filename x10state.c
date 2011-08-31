@@ -11854,8 +11854,6 @@ int c_start_engine ( int argc, char *argv[] )
          strcpy(argptr, "heyu_engine");
 
          close(0);
-         close(1);
-         close(2);
 
          pid = setsid();
          if ( pid < (PID_T)0 ) {
