@@ -19,19 +19,9 @@ BIN = /usr/local/bin
 MAN = /usr/local/man/man1
 MAN5 = /usr/local/man/man5
 
-#       set DFLAGS equal to:
-#          -DSYSV       if using SYSTEM V
-#          -DVOID       if compiler doesn't understand 'void'
-
 EoF
 
-CM17AFLAG="-DHASCM17A"
-EXT0FLAG="-DHASEXT0"
-RFXSENFLAG="-DHASRFXS"
-RFXMETFLAG="-DHASRFXM"
-DMXFLAG="-DHASDMX"
-OREFLAG="-DHASORE"
-KAKUFLAG="-DHASKAKU"
+OPTIONS=
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -47,6 +37,7 @@ while [ $# -ge 1 ] ; do
             echo " Switch -nodmx omits support for the Digimax thermostat."
             echo " Switch -noore omits support for Oregon sensors."
             echo " Switch -nokaku omits support for KaKu/HomeEasy signals"
+            echo " Switch -norfxlan omits support for RFXLAN receiver"
             echo " Switch -flags=n sets the number of user flags (32 min, 1024 max)"
             echo " Switch -counters=n sets the number of counters (32 min, 1024 max)"
             echo " Switch -timers=n sets the number of timers (32 min, 1024 max)"
@@ -54,59 +45,47 @@ while [ $# -ge 1 ] ; do
 	    rm Makefile 
 	    exit
 	    ;;
-        nocm17a|-nocm17a|NOCM17A|-NOCM17A)
-            CM17AFLAG=
+        nocm17a|-nocm17a|NOCM17A|-NOCM17A|--disable-cm17a)
+            OPTIONS="$OPTIONS --disable-cm17a"
             ;;
-        noext0|-noext0|NOEXT0|-NOEXT0)
-            EXT0FLAG=
+        noext0|-noext0|NOEXT0|-NOEXT0|--disable-ext0)
+            OPTIONS="$OPTIONS --disable-ext0"
             ;;
-        norfxs|-norfxs|NORFXS|-NORFXS)
-            RFXSENFLAG=
+        norfxs|-norfxs|NORFXS|-NORFXS|--disable-rfxs)
+            OPTIONS="$OPTIONS --disable-rfxs"
             ;;
-        norfxm|-norfxm|NORFXM|-NORFXM)
-            RFXMETFLAG=
+        norfxm|-norfxm|NORFXM|-NORFXM|--disable-rfxm)
+            OPTIONS="$OPTIONS --disable-rfxm"
             ;;
-        nodmx|-nodmx|NODMX|-NODMX)
-            DMXFLAG=
+        nodmx|-nodmx|NODMX|-NODMX|--disable-dmx)
+            OPTIONS="$OPTIONS --disable-dmx"
             ;;
-        noore|-noore|NOORE|-NOORE)
-            OREFLAG=
+        noore|-noore|NOORE|-NOORE|--disable-ore)
+            OPTIONS="$OPTIONS --disable-ore"
             ;;
-        nokaku|-nokaku|NOKAKU|-NOKAKU)
-            KAKUFLAG=
+        nokaku|-nokaku|NOKAKU|-NOKAKU|--disable-kaku)
+            OPTIONS="$OPTIONS --disable-kaku"
+            ;;
+        norfxlan|-norfxlan|NORFXLAN|-NORFXLAN|--disable-rfxlan)
+            OPTIONS="$OPTIONS --disable-rfxlan"
             ;;
 	flags=*|-flags=*|FLAGS=*|-FLAGS=*)
 	    IFS="${IFS}=" read keyword FLAGS <<EoF
 $1
 EoF
-	    [ $FLAGS -ge 1 ] && [ $FLAGS -le 1024 ] || {
-            	echo " Invalid flags argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    FLAGS_FLAG="-DNUM_FLAG_BANKS=`expr \( $FLAGS + 31 \) / 32`"
+            OPTIONS="$OPTIONS FLAGS=$FLAGS"
 	    ;;
 	counters=*|-counters=*|COUNTERS=*|-COUNTERS=*)
 	    IFS="${IFS}=" read keyword COUNTERS <<EoF
 $1
 EoF
-	    [ $COUNTERS -ge 1 ] && [ $COUNTERS -le 1024 ] || {
-            	echo " Invalid counters argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    COUNTERS_FLAG="-DNUM_COUNTER_BANKS=`expr \( $COUNTERS + 31 \) / 32`"
+            OPTIONS="$OPTIONS COUNTERS=$COUNTERS"
 	    ;;
 	timers=*|-timers=*|TIMERS=*|-TIMERS=*)
 	    IFS="${IFS}=" read keyword TIMERS <<EoF
 $1
 EoF
-	    [ $TIMERS -ge 1 ] && [ $TIMERS -le 1024 ] || {
-            	echo " Invalid timers argument, should be a number in the 1-1024 range"
-	    	rm Makefile
-		exit
-	    }
-	    TIMERS_FLAG="-DNUM_TIMER_BANKS=`expr \( $TIMERS + 31 \) / 32`"
+            OPTIONS="$OPTIONS TIMERS=$TIMERS"
 	    ;;
 	*)
 	    SYS="$1"
@@ -114,6 +93,17 @@ EoF
     esac
     shift
 done
+
+test -x configure && test configure -nt configure.ac && \
+test -s config.h.in && test config.h.in -nt configure.ac || {
+	type autoconf >/dev/null && type autoheader >/dev/null || {
+		echo "Please install autoconf package and re-run ./Configure"
+		rm Makefile 
+		exit
+	}
+	autoconf
+	autoheader
+}
 
 cat <<EoF
 
@@ -139,7 +129,7 @@ case "$SYS" in
 	GROUP = root 
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
-	DFLAGS = -DSYSV -DPOSIX -DHAS_ITIMER -DLINUX -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	LIBS = -lm -lc
 EoF
 	;;
@@ -156,7 +146,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DSOLARIS -DLOCKDIR=\"/var/spool/locks\" -DHASSELECT -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -179,7 +169,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DSOLARIS  -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" -DHASSELECT -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG
+	DFLAGS = -DSYSBASEDIR=\"/opt/heyu/etc\" -DLOCKDIR=\"/var/spool/locks\" 
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -197,7 +187,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = sys
-	DFLAGS = -DSYSV -DPOSIX -DSOLARIS -DLOCKDIR=\"/var/spool/locks\" -DHASSELECT -DHASTZ $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 	CFLAGS = -g -O \$(DFLAGS) \$WALLFLAG
 	LIBS = -lm -lc -lrt
 EoF
@@ -209,7 +199,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DHASSELECT -DNEEDGTIME -DFREEBSD -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
 	;;
     openbsd)
@@ -219,14 +209,14 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS= -DPOSIX -DHASSELECT -DNEEDGTIME -DOPENBSD -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DLOCKDIR=\"/var/spool/lock\" -DSYSBASEDIR=\"/etc/heyu\" -DSPOOLDIR=\"/var/tmp/heyu\"
 EoF
        ;;
     netbsd)
 	cat >> Makefile <<-EoF
 	OWNER= root
 	GROUP = wheel
-	DFLAGS = -DPOSIX -DNETBSD -DHASSELECT -DLOCKDIR=\"/var/spool/lock\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/lock\"
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -236,7 +226,7 @@ EoF
 	cat >> Makefile <<-EoF
 	OWNER = root
 	GROUP = wheel
-	DFLAGS = -DPOSIX -DDARWIN -DHASSELECT $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
@@ -252,7 +242,7 @@ EoF
 	MAN5 = /usr/local/man/man.5
 	CFLAGS = -O \$(DFLAGS)
 	LIBS = -lm -lc -lsocket
-	DFLAGS= -DSYSV -DHASSELECT -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= -DSCO -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/usr/tmp/heyu\"
 EoF
 	;;
     aix|sysv)
@@ -262,7 +252,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DPOSIX -DNSLEEP $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 EoF
 	;;
     attsvr4)
@@ -273,7 +263,7 @@ EoF
 	CC = cc
 	CFLAGS = -I/usr/local/include -g -O \$(DFLAGS)
 	LIBS = -lc -L/usr/ucblib -lucb -lm -lgen -lcmd
-	DFLAGS = -DATTSVR4 -DHASTZ -DSYSV -DPOSIX -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\" -DSPOOLDIR=\"/var/spool/heyu\" -DSYSBASEDIR=\"/usr/local/etc/heyu\"
 EoF
 	;;
     nextstep)
@@ -281,7 +271,7 @@ EoF
 	OWNER = root
 	GROUP = sys
 	CC = gcc
-	DFLAGS =  -DPOSIX $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS =
 	CFLAGS = -g \$(DFLAGS) -posix
 	LDFLAGS = -posix
 	LIBS = -lm -lposix
@@ -294,7 +284,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g \$(DFLAGS)
 	LIBS = -lm -lc
-	DFLAGS = -DSYSV -DHAS_ITIMER -DOSF1 -DLOCKDIR=\"/var/spool/locks\" $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS = -DLOCKDIR=\"/var/spool/locks\"
 EoF
       ;;
     generic)
@@ -304,7 +294,7 @@ EoF
 	CC = gcc
 	CFLAGS = -g -O \$(DFLAGS) -Wall
 	LIBS = -lm -lc
-	DFLAGS=  $CM17AFLAG $EXT0FLAG $RFXSENFLAG $RFXMETFLAG $DMXFLAG $OREFLAG $KAKUFLAG $FLAGS_FLAG $TIMERS_FLAG $COUNTERS_FLAG
+	DFLAGS= 
 EoF
 	;;
     *)
@@ -315,76 +305,6 @@ EoF
     	;;
 esac
 
-# echo "checking for unsigned long long variable type"
-
-rm -f local.h
-
-rm -f testull.c testull
-cat > testull.c <<EoF
-int main()
-{
-   unsigned long long x;
-   x=1;
-   return 0;
-}
-EoF
-$CC -o testull testull.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASULL" >> local.h
-#    echo "Has unsigned long long"
-# else
-#   echo "Does not have unsigned long long"
-fi
-rm -f testull.c testull
-
-# echo "checking for siginterrupt()"
-
-rm -f testsigi.c testsigi
-cat > testsigi.c <<EoF
-#include <signal.h>
-int main()
-{
-   int x;
-   x=siginterrupt(SIGALRM,1);
-   return 0;
-}
-EoF
-$CC -o testsigi testsigi.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASSIGINT" >> local.h
-#    echo "Using siginterrupt()"
-# else
-#   echo "Not using siginterrupt()"
-fi
-rm -f testsigi.c testsigi
-
-
-# echo "checking for sigaction()"
-
-rm -f testsiga.c testsiga
-cat > testsiga.c <<EoF
-#include <signal.h>
-int main()
-{
-   int x;
-   struct sigaction act, old;
-   x=sigaction(SIGALRM, &act, &old);
-   return 0;
-}
-EoF
-$CC -o testsiga testsiga.c  >/dev/null 2>&1
-if [ $? = 0 ] ; then
-    echo "#define HASSIGACT" >>local.h
-#    echo "Using sigaction()"
-# else
-#    echo "Not using sigaction()"
-fi
-rm -f testsiga.c testsiga
-
-if [ ! -f local.h ] ; then
-    touch local.h
-fi
-
 
 cat >> Makefile <<EoF
 # # The rest of the makefile should need no changes
@@ -392,6 +312,13 @@ cat >> Makefile <<EoF
 EoF
 
 cat Makefile.in >> Makefile
+
+(	set -x
+	./configure $OPTIONS
+) || {
+	rm Makefile
+	exit
+}
 
 if [ "$SYS" = "sysv" ] ; then
 echo "The Makefile has been created for sysv, however if"

@@ -1,6 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 #include <time.h>
 
 /* Some array length limits */
@@ -1183,8 +1190,10 @@ typedef struct {
   char          tty[PATH_LEN + 1];   /* Serial port to use */
   char          suffix[PATH_LEN + 1]; /* Suffix for file locks */
   char          ttyaux[PATH_LEN + 1]; /* Auxiliary input serial port */
+#ifdef HAVE_FEATURE_RFXLAN
   char          auxhost[NAME_LEN + 1]; /* Auxiliary input network host address or name */
   char          auxport[NAME_LEN + 1]; /* Auxiliary input network port number or name */
+#endif
   char          suffixaux[PATH_LEN + 1]; /* Suffix for aux file lock */
   char          ttyrfxmit[PATH_LEN + 1]; /* RFXmitter serial port */
   unsigned char rfxmit_freq;      /* RFXmitter frequency */
