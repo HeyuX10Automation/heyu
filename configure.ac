@@ -81,6 +81,16 @@ AC_MSG_CHECKING([whether to enable support for KaKu/HomeEasy signals])
 	AS_IF([test "x$enable_kaku" != "xno"], [AC_DEFINE([HAVE_FEATURE_KAKU],
 		[1], [Define if you have KaKu/HomeEasy devices])], [])
 
+AC_MSG_CHECKING([whether to enable split processing of RFXCOM master/slave])
+	AC_ARG_ENABLE([rfxdual], [AS_HELP_STRING([--enable-rfxdual],
+		[enable independent processing of RF streams in RFXCOM dual (master/slave) receiver configurations (EXPERIMENTAL)]
+		)], [], [enable_rfxdual=no])
+	AC_MSG_RESULT([$enable_rfxdual])
+	AS_IF([test "x$enable_rfxdual" == "xyes"], [AC_DEFINE([RFXCOM_DUAL],
+		[1],
+		[Define if you have a dual RFXCOM receiver and want to try an experimetal feature of independent master/slave processing]
+		)], [])
+
 AC_MSG_CHECKING([for number of user flags])
 	AC_ARG_VAR([FLAGS], [set number of user flags (1 < n < 1024) [32]])
 	AS_IF([test "x$FLAGS" = "x"], [FLAGS=32],

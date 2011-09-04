@@ -75,8 +75,6 @@
 #define PID_T long
 #endif
 
-//#define RFXCOM_DUAL
-
 #define W800_LEN 4
 #define PACKET_LEN  4
 #define BSIZE (100 * PACKET_LEN)

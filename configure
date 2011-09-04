@@ -719,6 +719,7 @@ enable_rfxm
 enable_dmx
 enable_ore
 enable_kaku
+enable_rfxdual
 enable_postinst
 enable_dependency_tracking
 enable_rfxlan
@@ -1362,6 +1363,9 @@ Optional Features:
   --disable-dmx           omit support for the Digimax thermostat
   --disable-ore           omit support for Oregon sensors
   --disable-kaku          omit support for KaKu/HomeEasy signals
+  --enable-rfxdual        enable independent processing of RF streams in
+                          RFXCOM dual (master/slave) receiver configurations
+                          (EXPERIMENTAL)
   --enable-postinst       enable custom make rules, used for calling Heyu
                           custom post-install script
   --disable-dependency-tracking  speeds up one-time build
@@ -2390,6 +2394,23 @@ $as_echo "$enable_kaku" >&6; }
 	if test "x$enable_kaku" != "xno"; then :
 
 $as_echo "#define HAVE_FEATURE_KAKU 1" >>confdefs.h
+
+fi
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable split processing of RFXCOM master/slave" >&5
+$as_echo_n "checking whether to enable split processing of RFXCOM master/slave... " >&6; }
+	# Check whether --enable-rfxdual was given.
+if test "${enable_rfxdual+set}" = set; then :
+  enableval=$enable_rfxdual;
+else
+  enable_rfxdual=no
+fi
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $enable_rfxdual" >&5
+$as_echo "$enable_rfxdual" >&6; }
+	if test "x$enable_rfxdual" == "xyes"; then :
+
+$as_echo "#define RFXCOM_DUAL 1" >>confdefs.h
 
 fi
 

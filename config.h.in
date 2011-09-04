@@ -256,6 +256,10 @@
 /* Release date of package */
 #undef RELEASE_DATE
 
+/* Define if you have a dual RFXCOM receiver and want to try an experimetal
+   feature of independent master/slave processing */
+#undef RFXCOM_DUAL
+
 /* required for correct termio handling */
 #undef SCO
 

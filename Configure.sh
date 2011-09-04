@@ -38,6 +38,7 @@ while [ $# -ge 1 ] ; do
             echo " Switch -noore omits support for Oregon sensors."
             echo " Switch -nokaku omits support for KaKu/HomeEasy signals"
             echo " Switch -norfxlan omits support for RFXLAN receiver"
+            echo " Switch -rfxdual enables experimental split processing of RFXCOM master/slave"
             echo " Switch -flags=n sets the number of user flags (32 min, 1024 max)"
             echo " Switch -counters=n sets the number of counters (32 min, 1024 max)"
             echo " Switch -timers=n sets the number of timers (32 min, 1024 max)"
@@ -68,6 +69,9 @@ while [ $# -ge 1 ] ; do
             ;;
         norfxlan|-norfxlan|NORFXLAN|-NORFXLAN|--disable-rfxlan)
             OPTIONS="$OPTIONS --disable-rfxlan"
+            ;;
+        rfxdual|-rfxdual|RFXDUAL|-RFXDUAL|--enable-rfxdual)
+            OPTIONS="$OPTIONS --enable-rfxdual"
             ;;
 	flags=*|-flags=*|FLAGS=*|-FLAGS=*)
 	    IFS="${IFS}=" read keyword FLAGS <<EoF
