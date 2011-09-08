@@ -3,16 +3,6 @@
  * Pleasanton Ca. 94588 USA
  * E-MAIL dbs@tanj.com
  *
- * You may freely copy, use, and distribute this software,
- * in whole or in part, subject to the following restrictions:
- *
- *  1)  You may not charge money for it.
- *  2)  You may not remove or alter this copyright notice.
- *  3)  You may not claim you wrote it.
- *  4)  If you make improvements (or other changes), you are requested
- *      to send them to me, so there's a focal point for distributing
- *      improved versions.
- *
  */
 
 /*
@@ -22,6 +12,22 @@
 
 /* 
  * Code modified for Heyu ver 2 by Charles Sullivan 
+ */
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include <stdio.h>

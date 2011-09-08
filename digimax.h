@@ -1,3 +1,36 @@
+/*----------------------------------------------------------------------------+
+ |                                                                            |
+ |                    Digimax Support for HEYU                                |
+ |                Copyright 2008 Charles W. Sullivan                          |
+ |                                                                            |
+ |                                                                            |
+ | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
+ | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
+ | The author is not affiliated with either entity.                           |
+ |                                                                            |
+ | Charles W. Sullivan                                                        |
+ | Co-author and Maintainer                                                   |
+ | Greensboro, North Carolina                                                 |
+ | Email ID: cwsulliv01                                                       |
+ | Email domain: -at- heyu -dot- org                                          |
+ |                                                                            |
+ +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 /* Bitfields for DigiMax 210 */
 
