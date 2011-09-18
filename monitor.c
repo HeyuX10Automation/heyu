@@ -15,33 +15,62 @@
  *
  */
 
-
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <setjmp.h>
-#include <errno.h>
-#include <syslog.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
-#include <string.h>
-#else
-#include <strings.h>
+#ifdef HAVE_CONFIG_H
+#include <config.h>
 #endif
 
-#include <time.h>
+#include <stdio.h>
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+#include <signal.h>
+#include <setjmp.h>
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 #include "x10.h"
 #include "process.h"
 
 
-#ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 

@@ -46,12 +46,20 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
-#ifdef HASCM17A  /* Compile only if configured for CM17A */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_FEATURE_CM17A  /* Compile only if configured for CM17A */
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <ctype.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include "x10.h"
 #include "process.h"
 
@@ -60,45 +68,58 @@
 #undef  _IBCS2 /* conflicts with SVID3  */
 #endif
 
-#ifdef ATTSVR4
-#include <sys/time.h>
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
 #endif
 
-#include <time.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <signal.h>
 
-#ifdef LINUX
+#ifdef HAVE_ASM_IOCTLS_H
 #include <asm/ioctls.h>
-#   ifdef OLDLINUX
+#endif
+#ifdef HAVE_LINUX_SERIAL_REG_H
 #include <linux/serial_reg.h>
-#   endif
+#endif
+#ifdef HAVE_LINUX_SERIAL_H
 #include <linux/serial.h>
+#endif
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#else
-#    if (defined(POSIX) || defined(FREEBSD) || defined(OPENBSD))
+#endif
+#ifdef HAVE_SYS_TERMIOS_H
 #include <sys/termios.h>
-#    else
-#         ifdef SCO
+#endif
+#ifdef HAVE_SYS_TERMIO_H
 #include <sys/termio.h>
-#         else
-#              ifdef DARWIN
+#endif
+#ifdef HAVE_TERMIOS_H
 #include <termios.h>
-#              else
+#endif
+#ifdef HAVE_TERMIO_H
 #include <termio.h>
-#              endif
-#         endif
-#    endif
 #endif
 
-#if (defined(OSF) || defined(DARWIN) || defined(NETBSD))
+#ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
 
-#ifdef HASSELECT
-#include <sys/time.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 
@@ -216,7 +237,7 @@ static void stdtimer ( void )
 {
    long microsec = configp->cm17a_bit_delay;
 
-#ifdef NSLEEP
+#ifdef HAVE_NSLEEP
    struct timestruc_t tspec;
 
    tspec.tv_sec = microsec / 1000000L;
@@ -225,7 +246,7 @@ static void stdtimer ( void )
    while ( nsleep( &tspec, &tspec ) == -1 );
    return;
 #else
-#ifdef ATTSVR4
+#ifndef HAVE_NANOSLEEP
    struct timeval tspec;
 
    tspec.tv_sec = microsec / 1000000;
@@ -238,7 +259,7 @@ static void stdtimer ( void )
    tspec.tv_nsec = 1000L * (microsec % 1000000L);
 
    while ( nanosleep( &tspec, &tspec ) == -1 );
-#endif /* ATTSVR4 */
+#endif /* HAVE_NANOSLEEP */
    return;
 #endif
 }  
@@ -456,7 +477,7 @@ int display_rf_xmit ( unsigned char type, unsigned int rfword, int bursts )
 #else  /* Stubs */
 void xlate_rf( unsigned char type, char **fname, unsigned int rfword,
 		     char *hcp, int *unitp, unsigned char *nosw ) {}
-#endif  /* End of HASCM17A code */
+#endif  /* End of HAVE_FEATURE_CM17A code */
 
 
 

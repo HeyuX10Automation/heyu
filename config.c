@@ -46,20 +46,35 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 
 #include <ctype.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include <time.h>
 
 #include "x10.h"
@@ -454,8 +469,10 @@ void initialize_config ( void )
    configp->max_dusk = DEF_MAX_DUSK;
    strncpy2(configp->tty, DEF_TTY, sizeof(config.tty) - 1);
    configp->ttyaux[0] = '\0';
+#ifdef HAVE_FEATURE_RFXLAN
    configp->auxhost[0] = '\0';
    configp->auxport[0] = '\0';
+#endif
    configp->suffixaux[0] = '\0';
    configp->auxdev = 0;
    configp->newformat = 0;
@@ -1308,6 +1325,7 @@ int parse_config_tail ( char *buffer, unsigned char source )
                break;
 	    }
 
+#ifdef HAVE_FEATURE_RFXLAN
 	    if ( ( configp->auxdev == DEV_RFXCOM32 || configp->auxdev == DEV_RFXCOMVL ) && *configp->ttyaux != '/' ) {
 	       sp = strchr(tokv[0], ':');
 
@@ -1320,6 +1338,7 @@ int parse_config_tail ( char *buffer, unsigned char source )
                   (void) strncpy2(configp->auxport, sp, sizeof(config.auxport) - 1);
 	       }
 	    }
+#endif
 
             if ( configp->auxdev == DEV_RFXCOMVL && tokc > 2 ) {
                strupper(tokv[2]);
@@ -3463,7 +3482,7 @@ int lookup_launcher ( LAUNCHER *launcherp, char *label )
  +---------------------------------------------------------------------*/
 int create_oregon_ignore_list ( void )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    ALIAS *aliasp;
    int   j, k;
 
@@ -3482,7 +3501,7 @@ int create_oregon_ignore_list ( void )
       }
       j++;
    }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
    return 0;
 }
 
@@ -3726,7 +3745,7 @@ int finalize_config ( unsigned char mode )
    set_elec1_nvar(configp->els_number);
 
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    create_rfxpower_panels();
 #endif
 
@@ -5138,22 +5157,22 @@ void get_help_topics ( char **topic, int *ntopic )
    topic[(*ntopic)++] = "direct";
    topic[(*ntopic)++] = "state";
    topic[(*ntopic)++] = "internal";
-#ifdef HASCM17A
+#ifdef HAVE_FEATURE_CM17A
    topic[(*ntopic)++] = "cm17a";
 #endif
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
    topic[(*ntopic)++] = "shutter";
 #endif
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    topic[(*ntopic)++] = "rfxsensor";
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    topic[(*ntopic)++] = "rfxmeter";
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    topic[(*ntopic)++] = "digimax";
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    topic[(*ntopic)++] = "oregon";
 #endif
 
