@@ -1463,8 +1463,10 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_RAWVL, xbuff, *bufflen + 1);
             }
             *saddr = buff[4] << 8 | buff[0];
-            /* Remove unreliable parity bit */
-            buff[5] = 0;
+	    if ( configp->securid_parity == NO ) {
+               /* Remove unreliable parity bit */
+               buff[5] = 0;
+	    }
             *sensor_flag = 0;
          }
       }
@@ -1904,8 +1906,10 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_RAWVL, xbuff, bufflen + 1);
             }
             saddr = buff[4] << 8 | buff[0];
-            /* Remove unreliable parity bit */
-            buff[5] = 0;
+	    if ( configp->securid_parity == NO ) {
+               /* Remove unreliable parity bit */
+               buff[5] = 0;
+	    }
             sensor_flag = 0;
          }
       }
