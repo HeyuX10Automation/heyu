@@ -399,7 +399,8 @@ int check4poll( int showdata, int timeout )
                       /* An address */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-		      chksum_alert = chksum;
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -408,7 +409,8 @@ int check4poll( int showdata, int timeout )
                       /* Standard function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-		      chksum_alert = chksum;
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
