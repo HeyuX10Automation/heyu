@@ -189,7 +189,7 @@ int check4poll( int showdata, int timeout )
     extern char *translate_rfxtype_message ( unsigned char * );
     extern char *translate_rfxsensor_ident ( unsigned char * );
     extern char *display_variable_aux_data ( unsigned char * );
-    extern int set_counter ( unsigned char, unsigned short, unsigned char );
+    extern int set_counter ( int, unsigned short, unsigned char );
     extern char *translate_counter_action ( unsigned char * );
     extern char *translate_kaku ( unsigned char *, unsigned char *, int * );
     extern char *translate_visonic ( unsigned char *, unsigned char *, int * );
