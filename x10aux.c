@@ -1626,7 +1626,6 @@ int aux_rfxcomvl ( void )
          }
          else if ( *type == RF_VISONIC ) {
             if ( *count == *mincount )
-//               forward_variable_aux_data(*type, xbuff, *bufflen + 1);
                send_virtual_aux_data(0, buff[2], *type, buff[0], buff[1], buff[4], 0);
          }
          else if ( *type == RF_SEC || *type == RF_ENT || *type == RF_XJAM ) {
@@ -1698,7 +1697,6 @@ int aux_rfxcomvl ( void )
                send_virtual_aux_data(0, buff[2], RF_SEC, buff[0], buff[4], 0, 0);
             }
             else if ( *type == RF_VISONIC ) {
-//               forward_variable_aux_data(*type, xbuff, *bufflen + 1);
                send_virtual_aux_data(0, buff[2], *type, buff[0], buff[1], buff[4], 0);
             }
 
@@ -2103,7 +2101,7 @@ int aux_rfxcomvl ( void )
          }
          else if ( type == RF_VISONIC ) {
             if ( count == mincount )
-               forward_variable_aux_data(type, xbuff, bufflen + 1);
+               send_virtual_aux_data(0, buff[2], type, buff[0], buff[1], buff[4], 0);
          }
          else if ( type == RF_DIGIMAX ) {
             if ( count == mincount ) {
@@ -2167,7 +2165,7 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_KAKU, xbuff, bufflen + 1);
             }
             else if ( type == RF_VISONIC ) {
-               forward_variable_aux_data(type, xbuff, bufflen + 1);
+               send_virtual_aux_data(0, buff[2], type, buff[0], buff[1], buff[4], 0);
             }
             else if ( type == RF_DIGIMAX ) {
                forward_digimax(buff);
