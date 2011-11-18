@@ -189,7 +189,7 @@ int check4poll( int showdata, int timeout )
     extern char *translate_rfxtype_message ( unsigned char * );
     extern char *translate_rfxsensor_ident ( unsigned char * );
     extern char *display_variable_aux_data ( unsigned char * );
-    extern int set_counter ( unsigned char, unsigned short, unsigned char );
+    extern int set_counter ( int, unsigned short, unsigned char );
     extern char *translate_counter_action ( unsigned char * );
     extern char *translate_kaku ( unsigned char *, unsigned char *, int * );
     extern char *translate_visonic ( unsigned char *, unsigned char *, int * );
@@ -399,7 +399,8 @@ int check4poll( int showdata, int timeout )
                       /* An address */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-		      chksum_alert = chksum;
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -408,7 +409,8 @@ int check4poll( int showdata, int timeout )
                       /* Standard function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-		      chksum_alert = chksum;
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }

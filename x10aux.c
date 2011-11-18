@@ -1249,8 +1249,8 @@ int aux_rfxcomvl ( void )
    unsigned char  subindx, subtype;
    unsigned char  hcode, ucode, fcode, rfflood, addr, xmtr, rcvr;
 
-   unsigned char  typeq[2], lasttypeq[2], nbitsq[2], trulenq[2];
-   unsigned char  *type, *lasttype, *nbits, *trulen;
+   unsigned char  typeq[2], nbitsq[2], trulenq[2];
+   unsigned char  *type, *nbits, *trulen;
 
    unsigned char  xbuffq[2][64];
    unsigned char  *xbuff, *buff;
@@ -1309,7 +1309,6 @@ int aux_rfxcomvl ( void )
    countq[0] = countq[1] = 0;
    lastlenq[0] = lastlenq[1] = -1;
    typeq[0] = typeq[1] = 0;
-   lasttypeq[0] = lasttypeq[1] = 0;
    subindx = 0;
    trulenq[0] = trulenq[1] = 0;
    nseqq[0] = nseqq[1] = 0;
@@ -1374,7 +1373,6 @@ int aux_rfxcomvl ( void )
       bufflen = &bufflenq[rcvr];
       nbits = &nbitsq[rcvr];
       type = &typeq[rcvr];
-      lasttype = &lasttypeq[rcvr];
       sensor_flag = &sensor_flagq[rcvr];
       use_old_buffer = &use_old_bufferq[rcvr];
       saddr = &saddrq[rcvr];
@@ -1465,8 +1463,10 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_RAWVL, xbuff, *bufflen + 1);
             }
             *saddr = buff[4] << 8 | buff[0];
-            /* Remove unreliable parity bit */
-            buff[5] = 0;
+	    if ( configp->securid_parity == NO ) {
+               /* Remove unreliable parity bit */
+               buff[5] = 0;
+	    }
             *sensor_flag = 0;
          }
       }
@@ -1603,7 +1603,6 @@ int aux_rfxcomvl ( void )
       *use_old_buffer = 0;
 
       if ( *count == 0 ) {
-	 *lasttype = *type;
          memcpy(lastbuff, buff, *bufflen);
          *lastlen = *bufflen;
          (*count)++;
@@ -1627,7 +1626,6 @@ int aux_rfxcomvl ( void )
          }
          else if ( *type == RF_VISONIC ) {
             if ( *count == *mincount )
-//               forward_variable_aux_data(*type, xbuff, *bufflen + 1);
                send_virtual_aux_data(0, buff[2], *type, buff[0], buff[1], buff[4], 0);
          }
          else if ( *type == RF_SEC || *type == RF_ENT || *type == RF_XJAM ) {
@@ -1675,7 +1673,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], *type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( *type == *lasttype && memcmp(buff, lastbuff, *bufflen < *lastlen ? *bufflen : *lastlen) == 0 ) {
+      else if ((*bufflen == *lastlen ||
+              (*type == RF_STD && (*lastlen == 4 || (*lastlen = *bufflen) == 4))
+                                  ) && memcmp(buff, lastbuff, *lastlen) == 0 ) {
          /* Repeat of previous burst */
          (*count)++;
          nread = 0;
@@ -1697,7 +1697,6 @@ int aux_rfxcomvl ( void )
                send_virtual_aux_data(0, buff[2], RF_SEC, buff[0], buff[4], 0, 0);
             }
             else if ( *type == RF_VISONIC ) {
-//               forward_variable_aux_data(*type, xbuff, *bufflen + 1);
                send_virtual_aux_data(0, buff[2], *type, buff[0], buff[1], buff[4], 0);
             }
 
@@ -1749,7 +1748,7 @@ int aux_rfxcomvl ( void )
  +-------------------------------------------------------------*/
 int aux_rfxcomvl ( void )
 {
-   unsigned char  type, lasttype, subindx, subtype, trulen;
+   unsigned char  type, subindx, subtype, trulen;
    unsigned char  hcode, ucode, fcode, rfflood, nbits, addr, xmtr, rcvr;
    unsigned char  xbuff[64], *buff;
    unsigned char  lastbuff[64];
@@ -1781,7 +1780,6 @@ int aux_rfxcomvl ( void )
 
    lastlen = -1;
    type = 0;
-   lasttype = 0;
    subindx = 0;
    trulen = 0;
    nseq = 0;
@@ -1908,8 +1906,10 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_RAWVL, xbuff, bufflen + 1);
             }
             saddr = buff[4] << 8 | buff[0];
-            /* Remove unreliable parity bit */
-            buff[5] = 0;
+	    if ( configp->securid_parity == NO ) {
+               /* Remove unreliable parity bit */
+               buff[5] = 0;
+	    }
             sensor_flag = 0;
          }
       }
@@ -2057,7 +2057,6 @@ int aux_rfxcomvl ( void )
       use_old_buffer = 0;
 
       if ( count == 0 ) {
-         lasttype = type;
          memcpy(lastbuff, buff, bufflen);
          lastlen = bufflen;
          count++;
@@ -2102,7 +2101,7 @@ int aux_rfxcomvl ( void )
          }
          else if ( type == RF_VISONIC ) {
             if ( count == mincount )
-               forward_variable_aux_data(type, xbuff, bufflen + 1);
+               send_virtual_aux_data(0, buff[2], type, buff[0], buff[1], buff[4], 0);
          }
          else if ( type == RF_DIGIMAX ) {
             if ( count == mincount ) {
@@ -2128,7 +2127,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ( /*this_word == rfword */ type == lasttype && memcmp(buff, lastbuff, bufflen < lastlen ? bufflen : lastlen ) == 0 ) {
+      else if ((bufflen == lastlen ||
+                (type == RF_STD && (lastlen == 4 || (lastlen = bufflen) == 4))
+                                    ) && memcmp(buff, lastbuff, lastlen) == 0) {
          /* Repeat of previous burst */
          count++;
          nread = 0;
@@ -2164,7 +2165,7 @@ int aux_rfxcomvl ( void )
                forward_variable_aux_data(RF_KAKU, xbuff, bufflen + 1);
             }
             else if ( type == RF_VISONIC ) {
-               forward_variable_aux_data(type, xbuff, bufflen + 1);
+               send_virtual_aux_data(0, buff[2], type, buff[0], buff[1], buff[4], 0);
             }
             else if ( type == RF_DIGIMAX ) {
                forward_digimax(buff);

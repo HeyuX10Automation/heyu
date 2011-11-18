@@ -8159,7 +8159,7 @@ static struct {
             case OreBaroFunc :
                obaro = (int)(longvdata & ORE_DATAMSK) >> ORE_DATASHFT;
                odbaro = (double)obaro * configp->ore_bpscale + configp->ore_bpoffset;
-               sprintf(minibuf, "X10_%c%d_oreBP"FMT_OREBP, hc, unit, odbaro);
+               sprintf(minibuf, "X10_%c%d_oreBP="FMT_OREBP, hc, unit, odbaro);
                *ep++ = add_envptr(minibuf);
                sprintf(minibuf, "%s_%s_oreBP="FMT_OREBP, configp->env_alias_prefix, aliaslabel, odbaro);
                *ep++ = add_envptr(minibuf);
@@ -11854,8 +11854,6 @@ int c_start_engine ( int argc, char *argv[] )
          strcpy(argptr, "heyu_engine");
 
          close(0);
-         close(1);
-         close(2);
 
          pid = setsid();
          if ( pid < (PID_T)0 ) {
