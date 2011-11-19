@@ -32,33 +32,65 @@
  * by doing the System V port and adding some nice features.  Thanks!
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #ifdef        SCO
 #define       _IBCS2
 #endif
 
 
 #include <stdio.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
+#endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#include <strings.h>
-#include <string.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <limits.h>
-#include <stdlib.h>
-#ifdef SOLARIS
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-#ifdef __GLIBC__
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_SYSLOG_H
+#include <syslog.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_PTY_H
 #include <pty.h>
 #endif
 
+#ifdef HAVE_FEATURE_RFXLAN
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#endif
 
 #include "x10.h"
 #include "process.h"
@@ -85,35 +117,35 @@ int lock_device();
 int tty_aux = -1;		/* Real tty */
 
 
-#ifdef POSIX
-#ifndef SYSV
-#define SYSV   /* POSIX implies SYSV */
-#endif
+#ifdef HAVE_SYS_IOCTL_H
+#include <sys/ioctl.h>
 #endif
 
-
-#ifndef SYSV
-#include <sgtty.h>
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
+# include <sgtty.h>
 struct sgttyb oldsb, newsb;
 void hangup();
 #else
-#ifndef POSIX
-#include <termio.h>
-#ifndef NCC
-#define NCC NCCS
-#endif
+# ifndef HAVE_STRUCT_TERMIOS
+#  ifdef HAVE_TERMIO_H
+#   include <termio.h>
+#  endif
+#  ifdef HAVE_SYS_TERMIO_H
+#   include <sys/termio.h>
+#  endif
 struct termio oldsb, newsb;
-#else
-#include <termios.h>
-#if defined(DARWIN) || defined(NETBSD)
-#include <sys/ioctl.h>
-#endif
-#ifndef NCC
-#define NCC NCCS
-#endif
+# else
+#  ifdef HAVE_TERMIOS_H
+#   include <termios.h>
+#  endif
+#  ifdef HAVE_SYS_TERMIOS_H
+#   include <sys/termios.h>
+#  endif
 struct termios oldsb, newsb;
-#endif
-
+# endif
+# ifndef NCC
+#  define NCC NCCS
+# endif
 #endif
 
 /*---------------------------------------------------------------+
@@ -159,6 +191,8 @@ int setup_tty_aux( int auxbaud, int lockflag )
     syslog(LOG_ERR, "Opening tty_aux line.");
 #endif
 
+#ifdef HAVE_FEATURE_RFXLAN
+#if defined(HAVE_NETDB_H) && defined(HAVE_MEMSET) && defined(HAVE_SOCKET)
     if ( configp->auxhost[0] && configp->auxport[0] ) {
        struct addrinfo hints;
        struct addrinfo *result, *rp;
@@ -203,6 +237,10 @@ int setup_tty_aux( int auxbaud, int lockflag )
 	  }
        }
     }
+#else
+#error "No system support required for RFXLAN feature, please disable."
+#endif
+#endif
 
 #ifdef O_NONBLOCK
     /* Open with non-blocking I/O, we'll fix after we set CLOCAL */
@@ -222,7 +260,7 @@ int setup_tty_aux( int auxbaud, int lockflag )
 #endif
 
 
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
     /* Old-style BSD/v7 sgtty calls */
     (void) ioctl(tty_aux, TIOCFLUSH, (struct sgttyb *) NULL);
     (void) ioctl(tty_aux, TIOCGETP, &oldsb);
@@ -232,8 +270,7 @@ int setup_tty_aux( int auxbaud, int lockflag )
     hangup();
     newsb.sg_ispeed = newsb.sg_ospeed = auxbaud;	/* raise DTR & set speed */
     (void) ioctl(tty_aux, TIOCSETN, &newsb);
-#else
-#ifndef POSIX
+#elif !defined(HAVE_STRUCT_TERMIOS)
     /* SVr2-style termio */
     if (ioctl(tty_aux, TCGETA, &oldsb) < 0) {
     	syslog(LOG_ERR,"ioctl get");
@@ -292,7 +329,6 @@ int setup_tty_aux( int auxbaud, int lockflag )
 	tcsetattr(tty_aux, TCSADRAIN, &newsb);
     }
 #endif
-#endif
 
 #ifdef O_NONBLOCK
     /* Now that we have set CLOCAL on the port, we can use blocking I/O */
@@ -305,19 +341,17 @@ int setup_tty_aux( int auxbaud, int lockflag )
 
 void restore_tty_aux()
 {
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
     hangup();
     (void) ioctl(tty_aux, TIOCSETN, &oldsb);
-#else
-#ifndef POSIX
+#elif !defined(HAVE_STRUCT_TERMIOS)
     (void) ioctl(tty_aux, TCSETAF, &oldsb);
 #else
     tcsetattr(tty_aux, TCSADRAIN, &oldsb);
 #endif
-#endif
 }
 
-#ifndef SYSV
+#if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
 void hangup_aux()
 {
     newsb.sg_ispeed = newsb.sg_ospeed = B0;	/* drop DTR */

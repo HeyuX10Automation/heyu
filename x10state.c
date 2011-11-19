@@ -46,31 +46,63 @@
  |                                                                            |
  +----------------------------------------------------------------------------*/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <ctype.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#include <sys/time.h>
+#endif
 
-#ifdef POSIX
+#ifdef TIME_WITH_SYS_TIME
+# include <sys/time.h>
+# include <time.h>
+#else
+# ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+# else
+#  include <time.h>
+# endif
+#endif
+
+#ifdef _POSIX_VERSION
 #define EXEC_POSIX
 #endif
 
-#ifdef EXEC_POSIX
+#ifdef HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
+#ifndef WEXITSTATUS
+# define WEXITSTATUS(stat_val) ((unsigned int) (stat_val) >> 8)
+#endif
+#ifndef WIFEXITED
+# define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif
 
 #include <signal.h>
-#include <time.h>
 #include "x10.h"
 #include "process.h"
 #include "sun.h"
@@ -78,8 +110,6 @@
 #include "rfxcom.h"
 #include "digimax.h"
 #include "oregon.h"
-#include "local.h"
-#include "version.h"
 
 #ifdef pid_t
 #define PID_T pid_t
@@ -3464,7 +3494,7 @@ void x10state_update_ext3func ( unsigned char *buf, int *launchp )
    return;
 }
 
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
 /*----------------------------------------------------------------------------+
  | Update the x10state structure per the contents of the argument 'buf'       |
  | for type 0 extended codes.  'buf' will always contain 4 bytes.             |
@@ -3697,7 +3727,7 @@ void x10state_update_ext0func ( unsigned char *buf, int *launchp )
    return;
 }
 
-#endif  /* End of HASEXT0 block */
+#endif  /* End of HAVE_FEATURE_EXT0 block */
 
 /*----------------------------------------------------------------------------+
  | Handler for extended code type/function which are otherwise undefined.     |
@@ -5885,7 +5915,7 @@ char *translate_virtual ( unsigned char *buf, int len, unsigned char *sunchanged
    ALIAS *aliasp;
    static char *typename[] = {"Std", "Ent", "Sec", "RFXSensor", "RFXMeter", "Dusk", "Visonic", "Noise"};
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    char *marker = "";
    char valbuf[60];
    int  stype;
@@ -6106,7 +6136,7 @@ else {
            funclabel[func], hc, unit, vdata, aliasp[index].label);
       }
    }
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    else if ( vtype == RF_XSENSOR ) {
       hcode = ucode = 0;
       found = 0;
@@ -6255,7 +6285,7 @@ else {
          snprintf(outbuf + strlen(outbuf), sizeof(outbuf), "%s", (*sunchanged ? " UnChg" : " Chg"));
       }
    }
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
    else if ( vtype == RF_RAWW800 ) {
       x10global.longvdata = (buf[3] << 24) | (buf[5] << 16) | (buf[6] << 8) | buf[7];
       sprintf(outbuf, "func %12s : Data (hex) %02X %02X %02X %02X",
@@ -6413,7 +6443,7 @@ char *translate_sent ( unsigned char *buf, int len, int *launchp )
       if ( xtype == 3 ) {
          x10state_update_ext3func(buf + 1, launchp);
       }
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
       else if ( xtype == 0 ) {
          x10state_update_ext0func(buf + 1, launchp);
       }
@@ -6527,7 +6557,7 @@ char *translate_sent ( unsigned char *buf, int len, int *launchp )
 
       }
 
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
       else if ( xfunc == 0x01 ) {
            sprintf(outbuf, "func    shOpenLim : hu %c%-2d%s level %d (%s)",
               hc, unit, stmp, xdata & 0x1f, lookup_label(hc, bmap));
@@ -6546,7 +6576,7 @@ char *translate_sent ( unsigned char *buf, int len, int *launchp )
       else if ( xfunc == 0x0B ) {
            sprintf(outbuf, "func   shCloseAll : hc %c", hc);
       }
-#endif  /* HASEXT0 block */
+#endif  /* HAVE_FEATURE_EXT0 block */
 
       else if ( xfunc == 0xff )
             sprintf(outbuf, "func      ExtCode : Incomplete xcode in buffer.");
@@ -7102,28 +7132,28 @@ char **create_heyu_environment( LAUNCHER *launcherp, unsigned char option)
    unsigned long longvdata;
    int           unit;
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    int           tempc, settempc;
    unsigned char status, oostatus;
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
 
-#if (defined(HASRFXS) || defined(HASRFXM))
+#if (defined(HAVE_FEATURE_RFXS) || defined(HAVE_FEATURE_RFXM))
    char          valbuf[80];
 #endif 
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    unsigned int  inmap, outmap;
    double        temp, vsup, vad, var2;
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    unsigned long rfxdata;
    extern int    npowerpanels;
    extern int    powerpanel_query(unsigned char, unsigned long *);
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int    otempc;
    double otemp;
    int    obaro;
@@ -7141,7 +7171,7 @@ char **create_heyu_environment( LAUNCHER *launcherp, unsigned char option)
    extern char *forecast_txt( int );
    int    uvfactor;
    double dblpower, dblenergy;
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
 #if 0
 static struct {
@@ -7371,7 +7401,7 @@ static struct {
             *ep++ = add_envptr(minibuf);
          }
 
-#ifdef HASDMX        
+#ifdef HAVE_FEATURE_DMX        
          if ( actfunc == DmxSetPtFunc ) {
             longvdata = x10global.longvdata;
             settempc = (int)((longvdata & TSETPMASK) >> TSETPSHIFT);
@@ -7410,10 +7440,10 @@ static struct {
             }
          }
         
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
       }
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
       if ( actfunc == OreTempFunc || actfunc == OreHumidFunc || actfunc == OreBaroFunc ||
            actfunc == OreWeightFunc || actfunc == ElsCurrFunc ||
            actfunc == OreWindSpFunc || actfunc == OreWindAvSpFunc || actfunc == OreWindDirFunc ||
@@ -7535,7 +7565,7 @@ static struct {
          dblenergy = dblenergy / 10000.0 * OWLESC * configp->owl_calib_energy * (configp->owl_voltage / OWLVREF);
          sprintf(minibuf, "X10_owlEnergy=%.4f", dblenergy);
          *ep++ = add_envptr(minibuf);
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
          sprintf(minibuf, "X10_owlEnergyCount=%lld",
             (unsigned long long)x10global.longvdata3 << 32 | (unsigned long long)x10global.longvdata2);
 #else
@@ -7547,7 +7577,7 @@ static struct {
       }
 
 
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
             
       if ( actfunc == DimFunc || actfunc == BrightFunc ) {
          sprintf(minibuf, "X10_RawVal=%d", launcherp->rawdim);
@@ -7870,7 +7900,7 @@ static struct {
       }
    }
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
 
    /* Add RFXMeter data if any */
    aliasp = configp->aliasp;
@@ -7940,9 +7970,9 @@ static struct {
       }
    }
 
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    /* Add RFXSensor data if any */
    aliasp = configp->aliasp;
    j = 0;
@@ -8016,9 +8046,9 @@ static struct {
 
       j++;
    }
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    /* Add Digimax data if any */
    aliasp = configp->aliasp;
    j = 0;
@@ -8088,9 +8118,9 @@ static struct {
 
       j++;
    }
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
       
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    /* Add Oregon data if any */
    aliasp = configp->aliasp;
    aliasindex = 0;
@@ -8284,7 +8314,7 @@ static struct {
                *ep++ = add_envptr(minibuf);
                sprintf(minibuf, "%s_%s_owlEnergy=%.4f", configp->env_alias_prefix, aliaslabel, dblenergy);
                *ep++ = add_envptr(minibuf);
-#ifdef HASULL
+#ifdef HAVE_UNSIGNED_LONG_LONG_INT
                sprintf(minibuf, "X10_%c%d_owlEnergyCount=%llu", hc, unit,
                   (unsigned long long)x10global.data_storage[loc + 2] << 32 | (unsigned long long)x10global.data_storage[loc + 1]);
 #else
@@ -8301,7 +8331,7 @@ static struct {
       }
       aliasindex++;
    }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
    /* Append the user's original environment */
    for ( j = 0; j < size; j++ ) {
@@ -10748,7 +10778,7 @@ int create_normal_launcher ( LAUNCHER *launcherp, int tokc, char **tokv )
          *tokv[k] = '\0';
       }
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
       else if ( strcmp("heat", tbuf) == 0 || strcmp("notcool", tbuf) == 0 ) {
          /* Digimax */
          launcherp->vflags |= DMX_HEAT;
@@ -10789,9 +10819,9 @@ int create_normal_launcher ( LAUNCHER *launcherp, int tokc, char **tokv )
          launcherp->notvflags |= DMX_TEMP;
          *tokv[k] = '\0';
       }
-#endif  /* HASDMX */
+#endif  /* HAVE_FEATURE_DMX */
 
-#ifdef  HASORE
+#ifdef  HAVE_FEATURE_ORE
       else if ( strcmp("tmin", tbuf) == 0 ) {
          /* Oregon Temperature */
          launcherp->vflags |= ORE_TMIN;
@@ -10823,7 +10853,7 @@ int create_normal_launcher ( LAUNCHER *launcherp, int tokc, char **tokv )
          launcherp->vflags |= ORE_BPMAX;
          *tokv[k] = '\0';
       }
-#endif   /* HASORE */
+#endif   /* HAVE_FEATURE_ORE */
 
    }
 
