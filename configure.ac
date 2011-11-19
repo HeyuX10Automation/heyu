@@ -30,7 +30,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([Heyu], [2.10-rc2],
+AC_INIT([Heyu], [2.10-rc3+autotools],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
 AC_DEFINE([RELEASE_DATE], ["20110807"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
