@@ -361,12 +361,12 @@ For sensor models which transmit this information:
 .br
   X10_Hu_oreForecast x10_<Hu_alias>_oreForecast 
 .PP
-If a Heyu script is launched by one of the functions "oretemp",
-"orerh", "orebp", "orewgt", "orewindsp", "orewindavsp", "orewinddir",
+If a Heyu script is launched by one of the signals "oretemp", "orerh",
+"orebp", "orewgt", "oredt", "orewindsp", "orewindavsp", "orewinddir",
 "orerainrate", "oreraintot", "elscurr", "owlpower", or "owlenergy",
 the environment will additionally include variables for values
 and flags without the "Hu" identification, e.g., X10_oreTemp,
-X10_oreWgt, X10_elsCurr.
+X10_oreWgt, X10_oreDT, X10_elsCurr.
 .PP
 No variable is created for data which is invalid or "not ready".
 
@@ -443,6 +443,14 @@ separate ALIAS directive, consuming one extra Hu address.  Since both
 subdevices share the same transmitter with the same ID, an artificial
 ID, incremented by 1, is presented and used internally for the clock
 part.
+.PP
+The last received time value in the UNIX time format, i.e. as a number
+of seconds since 1970-01-01 00:00:00 +0000 (the UNIX Epoch), is made
+available to Heyu scripts through X10_oreDT environment variable
+('oredt' signal only).
+This number can be further processed by user scripts, possibly with the
+\'date -d @<value> +<FORMAT>' command, which can be used to convert it
+to other formats.
 .PP
 As one might expect, the date/time value, in a human readable form
 (English, local timezone dependent), is reported to the Heyu engine log

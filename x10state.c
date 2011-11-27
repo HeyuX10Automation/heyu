@@ -7485,6 +7485,10 @@ static struct {
          sprintf(minibuf, "X10_oreWgt="FMT_OREWGT, weight);
          *ep++ = add_envptr(minibuf);
       }
+      else if ( actfunc == OreDTFunc ) {
+         sprintf(minibuf, "X10_oreDT=%lld", c_oredt(&x10global.longvdata));
+         *ep++ = add_envptr(minibuf);
+      }
       else if ( actfunc == ElsCurrFunc ) {
          longvdata = x10global.longvdata;
          deciamps = (int)((longvdata & ORE_DATAMSK) >> ORE_DATASHFT);

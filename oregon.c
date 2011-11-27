@@ -584,11 +584,12 @@ static void oredt1_to_tm(unsigned char *vdatap, struct tm *tm)
 }
 
 static void translate_oredt(unsigned char *vdatap, unsigned char subtype,
-			    char *buf, unsigned len)
+                           unsigned long *data_storage, char *buf, unsigned len)
 {
 	struct tm tm = {
 		.tm_isdst = -1,
 	};
+	time_t *valp = (time_t *)(data_storage + 1);
 
 	switch(subtype) {
 	    case OreDT1:
@@ -596,6 +597,7 @@ static void translate_oredt(unsigned char *vdatap, unsigned char subtype,
 		break;
 	}
 
+	*valp = mktime(&tm);
 	tm_to_dtstring(&tm, buf, len);
 }
 #endif
@@ -1352,21 +1354,16 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 
          create_flagslist (vtype, vflags, flagslist);
 
-         translate_oredt(vdatap, subtype, minibuf, sizeof(minibuf));
+         x10global.longvdata = longvdata;
+
+         translate_oredt(vdatap, subtype, &x10global.longvdata,
+                                     minibuf, sizeof(minibuf));
 
          sprintf(outbuf, "func %12s : hu %c%-2d %s%s%s %s%s(%s)",  
             funclabel[func], hc, unit, chstr, minibuf, rawstring, batstr,
             flagslist, aliasp[index].label);
 
-         x10global.longvdata = longvdata;
-
-         x10global.data_storage[loc] = longvdata;
-         x10state[hcode].longdata = longvdata;
-
-         if ( unchanged == 0 )
-            changestate |= bitmap;
-         else
-            changestate &= ~bitmap;
+         x10state[hcode].longdata = x10global.longvdata;
 
          break;       
 

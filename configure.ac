@@ -179,6 +179,9 @@ AS_IF([test "x$no_CFLAGS" = "xyes" && test "x$GCC" = "xyes"],
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
+# Checks for compiler characteristics
+AC_C_INLINE
+
 # Checks for libraries.
 AC_SEARCH_LIBS([sqrt], [m])
 AC_SEARCH_LIBS([nanosleep], [rt])

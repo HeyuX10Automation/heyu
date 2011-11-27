@@ -32,6 +32,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 /* Formats for Oregon data */
 #define  FMT_ORET       "%.1f"  /* Temperature */
 #define  FMT_OREBP      "%.4g"  /* Barometric Pressure */
@@ -81,3 +85,7 @@ char *translate_gen_longdata ( unsigned char *, unsigned char *, int * );
 char *translate_ore_emu ( unsigned char *, unsigned char *, int * );
 char *translate_oregon( unsigned char *, unsigned char *, int * );
 int is_ore_ignored ( unsigned int );
+static inline long long c_oredt(unsigned long *data_storage)
+{
+	return *(time_t *)(data_storage + 1);
+}
