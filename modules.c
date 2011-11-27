@@ -1926,12 +1926,17 @@ int opt_oreTHB2 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
  +---------------------------------------------------------------------*/
 int opt_oreDT1 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
+   int units;
+
    if ( opt_oregon(aliasp, aliasindex, tokens, ntokens) != 0 )
       return 1;
 
    aliasp[aliasindex].subtype = OreDT1;
    aliasp[aliasindex].nvar = 1;
-   aliasp[aliasindex].storage_units = 1;
+   /* Need extra storage locations for current and last changed time_t data */
+   units = sizeof(time_t) > sizeof(unsigned long) ?
+		sizeof(time_t) / sizeof(unsigned long) : 1;
+   aliasp[aliasindex].storage_units = 1 + 2 * units * aliasp[aliasindex].nvar;
    aliasp[aliasindex].funclist[0] = OreDTFunc;
 
    return 0;

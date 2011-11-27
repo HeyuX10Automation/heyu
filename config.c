@@ -123,7 +123,8 @@ enum {
    RfxPowerScale, RfxWaterScale, RfxGasScale, RfxPulseScale, RfxComEnable, RfxComDisable,
    LockupCheck, TailPath, RfxJam, DispDmxTemp, SecID16, SecIDPar, LogDateYr,
    DmxTscale, OreTscale, OreBPscale, OreWgtscale, OreLowBatt, DispOreAll,
-   OreChgBitsT, OreChgBitsRH, OreChgBitsBP, OreChgBitsWgt, OreDataEntry, OreDispChan, OreID16,
+   OreChgBitsT, OreChgBitsRH, OreChgBitsBP, OreChgBitsWgt, OreChgBitsDT,
+   OreDataEntry, OreDispChan, OreID16,
    OreDispFcast, LogDateUnix, InactiveTimeoutOre, DispSensorIntv, DateFormat, LockTimeout,
    CM11QueryDelay, ElsNumber, ElsVoltage, ElsChgBitsCurr, OreWindscale, OreWindSensorDir,
    OreRainRatescale, OreRainTotscale, OreDispBatLvl, OreWindDirMode, OreDispCount,
@@ -288,6 +289,7 @@ static struct conf {
    {"ORE_CHGBITS_RH",       2, 2, 0, 0, 0,       OreChgBitsRH},
    {"ORE_CHGBITS_BP",       2, 2, 0, 0, 0,       OreChgBitsBP},
    {"ORE_CHGBITS_WGT",      2, 2, 0, 0, 0,       OreChgBitsWgt},
+   {"ORE_CHGBITS_DT",       2, 2, 0, 0, 0,       OreChgBitsDT},
    {"ORE_CHGBITS_WSP",      2, 2, 0, 0, CIGN,    Ignored},
    {"ORE_CHGBITS_WINDSP",   2, 2, 0, 0, 0,       OreChgBitsWsp},
    {"ORE_CHGBITS_WAVSP",    2, 2, 0, 0, CIGN,    Ignored},
@@ -589,6 +591,7 @@ void initialize_config ( void )
    configp->ore_chgbits_rh = DEF_ORE_CHGBITS_RH;
    configp->ore_chgbits_bp = DEF_ORE_CHGBITS_BP;
    configp->ore_chgbits_wgt = DEF_ORE_CHGBITS_WGT;
+   configp->ore_chgbits_dt = DEF_ORE_CHGBITS_DT;
    configp->ore_chgbits_wsp = DEF_ORE_CHGBITS_WSP;
    configp->ore_chgbits_wavsp = DEF_ORE_CHGBITS_WAVSP;
    configp->ore_chgbits_wdir = DEF_ORE_CHGBITS_WDIR;
@@ -2915,6 +2918,15 @@ int parse_config_tail ( char *buffer, unsigned char source )
                errors++;
             }
             configp->ore_chgbits_wgt = (unsigned char)value;
+            break;
+            
+         case OreChgBitsDT :
+            longvalue = strtol(tokv[0], &sp, 10);
+            if ( !strchr(" \t\n\r", *sp) || longvalue < 1 || longvalue > 255 ) {
+               store_error_message("ORE_CHGBITS_DT must be 1 though 65535");
+               errors++;
+            }
+            configp->ore_chgbits_dt = (unsigned int)longvalue;
             break;
             
          case OreChgBitsWsp :

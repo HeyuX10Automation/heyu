@@ -395,6 +395,8 @@ data in question, which correspond to:
 .br
   ORE_CHGBITS_WGT Weight  0.1kg
 .br
+  ORE_CHGBITS_DT  Date and time  1min
+.br
   ORE_CHGBITS_WINDSP Wind Speed  0.1meters/second
 .br
   ORE_CHGBITS_WINDAVSP Wind Average Speed 0.1meters/second
@@ -455,6 +457,10 @@ to other formats.
 As one might expect, the date/time value, in a human readable form
 (English, local timezone dependent), is reported to the Heyu engine log
 or monitor output on every clock signal received.
+.PP
+Using the 'changed' launch flag, combined with a tuned ORE_CHGBITS_DT
+value, a user can implement a single cron like (though not very
+accurate) job, actually using a Heyu script, not a cron entry, for this.
 
 .SH CURRENT SENSORS
 Heyu supports decoding of signals from the Electrisave CM113 and the

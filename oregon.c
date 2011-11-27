@@ -583,13 +583,15 @@ static void oredt1_to_tm(unsigned char *vdatap, struct tm *tm)
 	tm->tm_year  = (vdatap[9] >> 4) + 10 * (vdatap[10] & 0xf) + 100;
 }
 
-static void translate_oredt(unsigned char *vdatap, unsigned char subtype,
+static int translate_oredt(unsigned char *vdatap, unsigned char subtype,
                            unsigned long *data_storage, char *buf, unsigned len)
 {
 	struct tm tm = {
 		.tm_isdst = -1,
 	};
-	time_t *valp = (time_t *)(data_storage + 1);
+	time_t *valp = (time_t *)(data_storage + 1), *lastchvalp = valp + 1;
+	time_t delta;
+	int unchanged;
 
 	switch(subtype) {
 	    case OreDT1:
@@ -599,6 +601,14 @@ static void translate_oredt(unsigned char *vdatap, unsigned char subtype,
 
 	*valp = mktime(&tm);
 	tm_to_dtstring(&tm, buf, len);
+
+	delta = abs(*valp - *lastchvalp);
+	unchanged = delta / 60 < configp->ore_chgbits_dt ? 1 : 0;
+
+	if (!unchanged)
+		*lastchvalp = *valp;
+
+	return unchanged;
 }
 #endif
 
@@ -1350,20 +1360,30 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
          batchange = (batstatus ^ (unsigned char)(*prevvalp)) & ORE_LOBAT;
 
          func = aliasp[index].funclist[0];
+         trig = OreDTTrig;
          vflags |= (status & ORE_LOBAT) ? SEC_LOBAT : 0;
 
          create_flagslist (vtype, vflags, flagslist);
 
-         x10global.longvdata = longvdata;
+         *prevvalp = longvdata;
 
-         translate_oredt(vdatap, subtype, &x10global.longvdata,
+         unchanged = translate_oredt(vdatap, subtype, prevvalp,
                                      minibuf, sizeof(minibuf));
 
          sprintf(outbuf, "func %12s : hu %c%-2d %s%s%s %s%s(%s)",  
             funclabel[func], hc, unit, chstr, minibuf, rawstring, batstr,
             flagslist, aliasp[index].label);
 
-         x10state[hcode].longdata = x10global.longvdata;
+         x10state[hcode].longdata = *prevvalp;
+
+         x10global.longvdata = *prevvalp;
+         x10global.longvdata2 = *(++prevvalp);
+         x10global.longvdata3 = *(++prevvalp);
+
+         if ( unchanged == 0 )
+            changestate |= bitmap;
+         else
+            changestate &= ~bitmap;
 
          break;       
 

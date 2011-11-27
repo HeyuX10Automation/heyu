@@ -529,6 +529,7 @@ enum {ArmLogicStrict, ArmLogicMedium, ArmLogicLoose};
 #define DEF_ORE_CHGBITS_RH         1
 #define DEF_ORE_CHGBITS_BP         1
 #define DEF_ORE_CHGBITS_WGT        1
+#define DEF_ORE_CHGBITS_DT         1
 #define DEF_ORE_CHGBITS_WSP        1
 #define DEF_ORE_CHGBITS_WAVSP      1
 #define DEF_ORE_CHGBITS_WDIR       1
@@ -1369,6 +1370,7 @@ typedef struct {
   unsigned char ore_chgbits_rh;   /* Change in least bits for humidity changed state */
   unsigned char ore_chgbits_bp;   /* Change in least bits for baro pressure changed state */
   unsigned char ore_chgbits_wgt;  /* Change in least bits for weight changed state */
+  unsigned int  ore_chgbits_dt;   /* Change in least bits for date/time changed state */
   unsigned int  ore_chgbits_wsp;  /* Change in least bits for wind speed changed state */
   unsigned int  ore_chgbits_wavsp; /* Change in least bits for wind avg speed changed state */
   unsigned int  ore_chgbits_wdir;  /* Change in least bits for wind direction changed state */
