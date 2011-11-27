@@ -9,7 +9,8 @@ See man page \fIheyu\fP(1) for usage information.
 .PP
 .I Oregon
 sensors transmit encoded RF signals for Temperature, Relative
-Humidity, Barometric Pressure, Wind speed, Rainfall, and other variables.
+Humidity, Barometric Pressure, Date and Time, Wind speed, Rainfall,
+and other variables.
 When equipped with a compatible RF receiver, Heyu can receive and
 decode this information.  Also included in the same category are two
 miscellaneous sensors, the Electrisave CM113 and the OWL CM119, which
@@ -186,6 +187,10 @@ Temperature / Humidity / Barometric Pressure sensors:
 Weight sensors
 .br
   ORE_WGT1 : BWR101 BWR102
+.PP
+Radio clocks
+.br
+  ORE_DT1 : RTGR328N
 .PP
 Wind sensors
 .br
@@ -428,6 +433,20 @@ in Oregon native units (Celsius for Temperature, percent for RH, or
 hectoPascals for BP) or in the scaled units defined by directives ORE_TSCALE
 and ORE_BPSCALE.  This also applies to TMIN and TMAX setpoint temperatures
 when the entered temperature does not have a temperature scale suffix.
+
+.SH RADIO CLOCKS
+The only model supported so far is RTGR328N, ie. combined Temperature/
+Humidity and Radio clock device. The clock part transmits its own
+signals, independent of Temerature/Humidity reports, hence it has been
+implemented as a separate module type and should be configured with a
+separate ALIAS directive, consuming one extra Hu address.  Since both
+subdevices share the same transmitter with the same ID, an artificial
+ID, incremented by 1, is presented and used internally for the clock
+part.
+.PP
+As one might expect, the date/time value, in a human readable form
+(English, local timezone dependent), is reported to the Heyu engine log
+or monitor output on every clock signal received.
 
 .SH CURRENT SENSORS
 Heyu supports decoding of signals from the Electrisave CM113 and the
@@ -973,7 +992,10 @@ expand this table.)
   BTHR968    THB2   38
 .br
   BTHR918N   THB2   38
-
+.PP
+Radio clocks:
+.br
+  RTGR328N   DT1   318  354  366  402  426   (samples, to be verified)
 .PP
 Rebranded Units: 
 .br

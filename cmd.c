@@ -744,7 +744,7 @@ int nx10cmds = sizeof(x10command)/sizeof(struct cmd_list);
 /* Function labels for monitor display (must align with enum in process.h) */
 /* (with fake add-on function "AllOn") */
 
-char *funclabel[76] = {
+char *funclabel[77] = {
    "AllOff", "LightsOn", "On", "Off", "Dim", "Bright", "LightsOff",
    "Extended", "Hail", "HailAck", "Preset", "Preset",
    "DataXfer", "StatusOn", "StatusOff", "StatusReq", "AllOn",
@@ -758,7 +758,7 @@ char *funclabel[76] = {
    "oreWindSp", "oreWindAvSp", "oreWindDir",
    "oreRainRate", "oreRainTot", "elsCurr", "oreUV",
    "kOff", "kOn", "kGrpOff", "kGrpOn", "kUnkFunc", "kPreset", "kGrpPreset", "kUnkPresetFunc",
-   "owlPower", "owlEnergy", "Inactive",
+   "owlPower", "owlEnergy", "Inactive", "oreDT",
    "_Invalid_",
 };
 

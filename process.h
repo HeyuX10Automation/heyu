@@ -1029,7 +1029,8 @@ enum {
    OreRainRateFunc, OreRainTotFunc,  ElsCurrFunc, OreUVFunc,
    KakuOffFunc, KakuOnFunc, KakuGrpOffFunc, KakuGrpOnFunc, KakuUnkFunc,
    KakuPreFunc, KakuGrpPreFunc, KakuUnkPreFunc,
-   OwlPowerFunc, OwlEnergyFunc, InactiveFunc, InvalidFunc
+   OwlPowerFunc, OwlEnergyFunc, InactiveFunc, OreDTFunc,
+   InvalidFunc
 };
 
 #if 0

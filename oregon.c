@@ -430,7 +430,7 @@ static struct oregon_st {
    {108, 11, 0xff, 0x00, 0x1a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x2a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x3a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
-   {96,  12, 0xff, 0xff, 0x8a, 0xec, 2, CM2, BM2, 1, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
+   {96,  12, 0xff, 0xff, 0x8a, 0xec, 1, CM2, BM2, 1, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
 
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 1, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_TEMU",   OreTemu,   csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 2, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THEMU",  OreTHemu,  csFail}, /* Dummy */
@@ -551,6 +551,54 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
    return 1;
 #endif /* HAVE_FEATURE_ORE */
 }
+
+
+#ifdef HAVE_FEATURE_ORE
+static void tm_to_dtstring(struct tm *tm, char *buf, unsigned len)
+{
+	char *s = NULL;
+	int result;
+	
+	if (tm)
+		s = asctime(tm);
+	if (!s)
+		s = "----";
+
+	result = snprintf(buf, len, "DT %s", s);
+	if (result > 0) {
+		s = strchr(buf, '\n');
+		if (s)
+			*s = '\0';
+	}	
+}
+
+static void oredt1_to_tm(unsigned char *vdatap, struct tm *tm)
+{
+	tm->tm_sec   = (vdatap[4] >> 4) + 10 * (vdatap[ 5] & 0xf);
+	tm->tm_min   = (vdatap[5] >> 4) + 10 * (vdatap[ 6] & 0xf);
+	tm->tm_hour  = (vdatap[6] >> 4) + 10 * (vdatap[ 7] & 0xf);
+	tm->tm_mday  = (vdatap[7] >> 4) + 10 * (vdatap[ 8] & 0xf);
+	tm->tm_mon   = (vdatap[8] >> 4)				  - 1;
+	tm->tm_wday  =		 	       (vdatap[ 9] & 0x7);
+	tm->tm_year  = (vdatap[9] >> 4) + 10 * (vdatap[10] & 0xf) + 100;
+}
+
+static void translate_oredt(unsigned char *vdatap, unsigned char subtype,
+			    char *buf, unsigned len)
+{
+	struct tm tm = {
+		.tm_isdst = -1,
+	};
+
+	switch(subtype) {
+	    case OreDT1:
+	    	oredt1_to_tm(vdatap, &tm);
+		break;
+	}
+
+	tm_to_dtstring(&tm, buf, len);
+}
+#endif
 
 
 /*----------------------------------------------------------------------------+
@@ -1283,6 +1331,45 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 
          break;       
          
+
+      case OreDT1 :
+         /* Process radio clock data */
+         vflags_mask = SEC_LOBAT;
+         loc = aliasp[index].storage_index;
+         status = 0;
+
+         longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
+
+         status = ORE_VALID | batstatus;
+         longvdata |= status | ((unsigned long)blevel << ORE_BATSHFT);
+
+         prevvalp = &x10global.data_storage[loc];
+
+         batchange = (batstatus ^ (unsigned char)(*prevvalp)) & ORE_LOBAT;
+
+         func = aliasp[index].funclist[0];
+         vflags |= (status & ORE_LOBAT) ? SEC_LOBAT : 0;
+
+         create_flagslist (vtype, vflags, flagslist);
+
+         translate_oredt(vdatap, subtype, minibuf, sizeof(minibuf));
+
+         sprintf(outbuf, "func %12s : hu %c%-2d %s%s%s %s%s(%s)",  
+            funclabel[func], hc, unit, chstr, minibuf, rawstring, batstr,
+            flagslist, aliasp[index].label);
+
+         x10global.longvdata = longvdata;
+
+         x10global.data_storage[loc] = longvdata;
+         x10state[hcode].longdata = longvdata;
+
+         if ( unchanged == 0 )
+            changestate |= bitmap;
+         else
+            changestate &= ~bitmap;
+
+         break;       
+
 
       case OreTH1 :
       case OreTH2 :

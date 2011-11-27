@@ -217,7 +217,8 @@ opt_bmb_sd18(),
 opt_secignore(), opt_visonic(),
 opt_oreWind1(), opt_oreWind2(), opt_oreWind3(),
 opt_oreRain1(), opt_oreRain2(), opt_oreRain3(),
-opt_oreUV1(), opt_oreUV2(), opt_kaku(), opt_owlElec2(), opt_owlElec2new(), opt_owlElec2rev();
+opt_oreUV1(), opt_oreUV2(), opt_kaku(), opt_owlElec2(), opt_owlElec2new(), opt_owlElec2rev(),
+opt_oreDT1();
 
 /* Decoder functions for modules */
 int fn_ds10a(), fn_ds90(), fn_ms10a(), fn_sh624(), fn_kr10a(), fn_ur81a(),
@@ -385,6 +386,7 @@ struct modules_st {
   {"ORE_TH3",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH3, NULL},
   {"RTGN318",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH3, NULL},
   {"RTGR328N",    MXLV, VORE,  VIRTUAL,   0, opt_oreTH3, NULL},
+  {"RTGR328N_TH", MXLV, VORE,  VIRTUAL,   0, opt_oreTH3, NULL},
   {"ORE_TH4",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH4, NULL},
   {"ORE_TH5",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH5, NULL},
   {"ORE_TH6",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH6, NULL},
@@ -403,6 +405,8 @@ struct modules_st {
   {"BTHR918N",    MXLV, VORE,  VIRTUAL,   0, opt_oreTHB2, NULL},
   {"ORE_WGT1",    MXLV, VORE,  VIRTUAL,   0, opt_oreWeight1, NULL},
   {"BWR102",      MXLV, VORE,  VIRTUAL,   0, opt_oreWeight1, NULL},
+  {"ORE_DT1",     MXLV, VORE,  VIRTUAL,   0, opt_oreDT1, NULL},
+  {"RTGR328N_DT", MXLV, VORE,  VIRTUAL,   0, opt_oreDT1, NULL},
   {"ORE_TEMU",    MXLV, VORE,  VIRTUAL,   0, opt_oreTemu,   NULL},  /* Dummy */
   {"ORE_THEMU",   MXLV, VORE,  VIRTUAL,   0, opt_oreTHemu,  NULL},  /* Dummy */
   {"ORE_THBEMU",  MXLV, VORE,  VIRTUAL,   0, opt_oreTHBemu, NULL},  /* Dummy */
@@ -1913,6 +1917,22 @@ int opt_oreTHB2 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
    aliasp[aliasindex].funclist[0] = OreTempFunc;
    aliasp[aliasindex].funclist[1] = OreHumidFunc;
    aliasp[aliasindex].funclist[2] = OreBaroFunc;
+
+   return 0;
+}
+
+/*---------------------------------------------------------------------+
+ | Options for Oregon DT1 Date and Time Radio Clocks
+ +---------------------------------------------------------------------*/
+int opt_oreDT1 ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
+{
+   if ( opt_oregon(aliasp, aliasindex, tokens, ntokens) != 0 )
+      return 1;
+
+   aliasp[aliasindex].subtype = OreDT1;
+   aliasp[aliasindex].nvar = 1;
+   aliasp[aliasindex].storage_units = 1;
+   aliasp[aliasindex].funclist[0] = OreDTFunc;
 
    return 0;
 }
