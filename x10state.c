@@ -4357,7 +4357,7 @@ int find_rfxjam_scripts ( void )
 /*---------------------------------------------------------------------+
  | Launch -lockup scripts which match the launch conditions.           |
  +---------------------------------------------------------------------*/
-int find_lockup_scripts ( unsigned char bootflag )
+int find_lockup_scripts(void)
 {
    LAUNCHER      *launcherp;
    int           j, launchp = -1;
