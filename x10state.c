@@ -250,6 +250,7 @@ static struct trig_type_st ore_trig_type[] = {
   {"orerh",        SpecOre, OreHumidTrig},
   {"orebp",        SpecOre, OreBaroTrig},
   {"orewgt",       SpecOre, OreWeightTrig},
+  {"oredt",        SpecOre, OreDTTrig},
   {"elscurr",      SpecOre, ElsCurrTrig},
   {"orewindsp",    SpecOre, OreWindSpTrig},
   {"orewindavsp",  SpecOre, OreWindAvSpTrig},
@@ -5163,6 +5164,7 @@ void show_launcher ( unsigned char hcode )
       if ( ofuncmap & (1 << OreHumidTrig) )  printf("%s ", "orerh");
       if ( ofuncmap & (1 << OreBaroTrig) )  printf("%s ", "orebp");
       if ( ofuncmap & (1 << OreWeightTrig) )  printf("%s ", "orewgt");
+      if ( ofuncmap & (1 << OreDTTrig) )  printf("%s ", "oredt");
       if ( ofuncmap & (1 << OreWindSpTrig) ) printf("%s ", "orewindsp");
       if ( ofuncmap & (1 << OreWindAvSpTrig) ) printf("%s ", "orewindavsp");
       if ( ofuncmap & (1 << OreWindSpTrig) ) printf("%s ", "orewindsp");

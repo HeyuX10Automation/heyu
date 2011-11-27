@@ -1001,7 +1001,8 @@ enum {
    OreTempTrig, OreHumidTrig, OreBaroTrig, OreWeightTrig,
    OreWindSpTrig, OreWindAvSpTrig, OreWindDirTrig,
    OreRainRateTrig, OreRainTotTrig, ElsCurrTrig, OreUVTrig,
-   OwlPowerTrig, OwlEnergyTrig, NumOreTriggers
+   OwlPowerTrig, OwlEnergyTrig, OreDTTrig,
+   NumOreTriggers
 };
 
 /* KaKu trigger types */
