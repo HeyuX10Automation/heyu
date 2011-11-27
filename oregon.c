@@ -430,7 +430,7 @@ static struct oregon_st {
    {108, 11, 0xff, 0x00, 0x1a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x2a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x3a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
-   {96,  11, 0xff, 0xff, 0x8a, 0xec, 1, CM2, BM2, 1, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
+   {96,  11, 0xff, 0xff, 0x8a, 0xec, 1, CM2, BM1, 1, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
 
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 1, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_TEMU",   OreTemu,   csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 2, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THEMU",  OreTHemu,  csFail}, /* Dummy */
