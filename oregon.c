@@ -572,6 +572,22 @@ static void tm_to_dtstring(struct tm *tm, char *buf, unsigned len)
 	}	
 }
 
+static char *show_oredt(unsigned long *data_storage)
+{
+	time_t time;
+	struct tm *tm = NULL;
+	static char buf[32];
+
+	if (*data_storage & ORE_VALID) {
+		time = c_oredt(data_storage);
+		tm = localtime(&time);
+	}
+
+	tm_to_dtstring(tm, buf, sizeof(buf));
+
+	return buf;
+}
+
 static void oredt1_to_tm(unsigned char *vdatap, struct tm *tm)
 {
 	tm->tm_sec   = (vdatap[4] >> 4) + 10 * (vdatap[ 5] & 0xf);
@@ -2700,6 +2716,10 @@ int show_oregon ( void )
                  printf("Total "FMT_ORERTOT"%s ", ((double)drain / 1000.0) * configp->ore_raintotscale, unitstring);
                }
 
+               break;
+
+            case OreDTFunc :
+               printf("%s ", show_oredt(&x10global.data_storage[loc]));
                break;
 
             case OwlPowerFunc :
