@@ -272,6 +272,7 @@ struct cmdentry {
     {"orerh", c_orecmds, 1, 1},
     {"orebp", c_orecmds, 1, 1},
     {"orewgt", c_orecmds, 1, 1},
+    {"oredt", c_orecmds, 1, 1},
     {"elscurr", c_orecmds, 1, 1},
     {"orewindsp", c_orecmds, 1, 1},
     {"orewindavsp", c_orecmds, 1, 1},

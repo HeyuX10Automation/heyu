@@ -2798,6 +2798,7 @@ int c_orecmds ( int argc, char *argv[] )
       {"orerh",       OreHumidFunc    },
       {"orebp",       OreBaroFunc     },
       {"orewgt",      OreWeightFunc   },
+      {"oredt",       OreDTFunc       },
       {"elscurr",     ElsCurrFunc     },
       {"orewindsp",   OreWindSpFunc   },
       {"orewindavsp", OreWindAvSpFunc },
@@ -2928,6 +2929,10 @@ int c_orecmds ( int argc, char *argv[] )
         rain = x10global.data_storage[loc + 1];
         printf(FMT_ORERTOT"\n", (double)rain / 1000.0 * configp->ore_raintotscale);
         break;
+
+     case OreDTFunc :
+         printf("%llu\n", c_oredt(&x10global.data_storage[loc]));
+         break;
 
      case OreUVFunc :
          uvfactor = (longvdata & ORE_DATAMSK) >> ORE_DATASHFT;

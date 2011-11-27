@@ -96,6 +96,8 @@ Examples:
   heyu orerh      Hu    - Relative Humidity
 .br
   heyu orebp      Hu    - Barometric Pressure
+.br
+  heyu oredt      Hu    - Date and Time
 
 .PP
 The command \'heyu show oregon\' will display stored data
@@ -463,6 +465,8 @@ or monitor output on every clock signal received.
 The same format is used when reporting by means of 'heyu show oregon'
 command.
 .PP
+A more interesting option than examinig the last received time value
+could be launching scripts on time reports received.
 Using the 'changed' launch flag, combined with a tuned ORE_CHGBITS_DT
 value, a user can implement a single cron like (though not very
 accurate) job, actually using a Heyu script, not a cron entry, for this.

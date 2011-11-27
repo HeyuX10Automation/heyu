@@ -314,6 +314,7 @@ static char *helporegon[][3] = {
     {"oretemp","Hu","Oregon sensor Temperature"},
     {"orerh","Hu","Oregon sensor Relative Humidity"},
     {"orebp","Hu","Oregon sensor Barometric Pressure"},
+    {"oredt","Hu","Oregon radio clock Date and Time"},
     {"orewindavsp","Hu","Oregon sensor Wind Average Speed"},
     {"orewindsp","Hu","Oregon sensor Wind Instantaneous Speed"},
     {"orewinddir","Hu","Oregon sensor Wind Direction"},
