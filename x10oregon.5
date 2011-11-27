@@ -337,6 +337,8 @@ alias (note lower case x10_) mapped to each Oregon unit.
 .br
   X10_Hu_oreWgt      x10_<Hu_alias>_oreWgt
 .br
+  X10_Hu_oreDT       x10_<Hu_alias>_oreDT
+.br
   X10_Hu_oreWindSp   x10_<Hu_alias>_oreWindSp
 .br
   X10_Hu_oreWindAvSp x10_<Hu_alias>_oreWindAvSp
@@ -449,7 +451,8 @@ part.
 The last received time value in the UNIX time format, i.e. as a number
 of seconds since 1970-01-01 00:00:00 +0000 (the UNIX Epoch), is made
 available to Heyu scripts through X10_oreDT environment variable
-('oredt' signal only).
+('oredt' signal only), as well as stored and then made available to any
+script over X10_Hu_oreDT and x10_<Hu_alias>_oreDT variables.
 This number can be further processed by user scripts, possibly with the
 \'date -d @<value> +<FORMAT>' command, which can be used to convert it
 to other formats.

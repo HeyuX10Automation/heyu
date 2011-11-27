@@ -8202,6 +8202,15 @@ static struct {
                *ep++ = add_envptr(minibuf);
                break;
 
+            case OreDTFunc :
+               sprintf(minibuf, "X10_%c%d_oreDT=%lld", hc, unit,
+	       	       c_oredt(&x10global.data_storage[loc]));
+               *ep++ = add_envptr(minibuf);
+               sprintf(minibuf, "%s_%s_oreDT=%lld", configp->env_alias_prefix,
+	               aliaslabel, c_oredt(&x10global.data_storage[loc]));
+               *ep++ = add_envptr(minibuf);
+               break;
+
             case ElsCurrFunc :
                if ( (channel = (int)((longvdata & ORE_CHANMSK) >> ORE_CHANSHFT)) > 0 ) {
                   sprintf(minibuf, "X10_%c%d_elsCh=%d", hc, unit, channel);
