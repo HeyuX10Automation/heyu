@@ -1674,7 +1674,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], *type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ((*bufflen == *lastlen ||
+      else if (((*type == RF_OREGON && subtype == OreDT1 &&
+                         *lastlen >= *trulen - 1 && (*lastlen = *trulen - 1)) ||
+              *bufflen == *lastlen ||
               (*type == RF_STD && (*lastlen == 4 || (*lastlen = *bufflen) == 4))
                                   ) && memcmp(buff, lastbuff, *lastlen) == 0 ) {
          /* Repeat of previous burst */
@@ -2128,7 +2130,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ((bufflen == lastlen ||
+      else if (((type == RF_OREGON && subtype == OreDT1 &&
+                             lastlen >= trulen - 1 && (lastlen = trulen - 1)) ||
+                bufflen == lastlen ||
                 (type == RF_STD && (lastlen == 4 || (lastlen = bufflen) == 4))
                                     ) && memcmp(buff, lastbuff, lastlen) == 0) {
          /* Repeat of previous burst */
