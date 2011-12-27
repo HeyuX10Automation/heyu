@@ -34,7 +34,7 @@ OBJS =	date.o erase.o info.o message.o relay.o \
 OTHERSRC = README README2 Makefile x10config.sample protocol.txt eeprom.h \
 	x10.sched.sample  heyu.1 x10.h x10config.5 x10cm17a.5 \
 	history.txt version.h heyufaq.txt x10sched.5 process.h sun.h \
-	x10scripts.5 Configure Makefile.in install.sh INSTALL LICENSE \
+	x10scripts.5 Configure Makefile.in install.sh AUTHORS COPYING INSTALL \
         README.cm10a x10aux.5 x10state.h rfxcom.h digimax.h oregon.h x10rfxsensors.5\
 	x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5 README.webhook 
 
