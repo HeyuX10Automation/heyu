@@ -1,8 +1,33 @@
+#
+# configure.ac - Autoconf source file for Heyu
+#
+# Copyright (C) 2011 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+#
+# Derived from an initial version genereted automatically by the
+# autoscan application.
+#
+#   This program is free software: you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation, either version 3 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([Heyu], [2.10+autotools],
+	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
+AC_COPYRIGHT([Heyu specific bits:
+Copyright (C) 2011 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -13,7 +38,9 @@ AC_PROG_MAKE_SET
 # Checks for libraries.
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h limits.h netdb.h sgtty.h stdlib.h string.h strings.h sys/filsys.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h syslog.h termio.h termios.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netdb.h sgtty.h stdlib.h string.h strings.h])
+AC_CHECK_HEADERS([sys/filsys.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h])
+AC_CHECK_HEADERS([syslog.h termio.h termios.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T
@@ -29,7 +56,8 @@ AC_FUNC_MALLOC
 AC_FUNC_MKTIME
 AC_FUNC_REALLOC
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv socket sqrt strchr strdup strerror strrchr strstr strtol])
+AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
+AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
 
-AC_CONFIG_FILES([Makefile])
+dnl AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

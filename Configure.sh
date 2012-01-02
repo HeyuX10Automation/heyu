@@ -131,6 +131,17 @@ EoF
     shift
 done
 
+test -x configure && test configure -nt configure.ac && \
+test -s config.h.in && test config.h.in -nt configure.ac || {
+	type autoconf >/dev/null && type autoheader >/dev/null || {
+		echo "Please install autoconf package and re-run ./Configure.sh"
+		rm Makefile 
+		exit
+	}
+	autoconf
+	autoheader
+}
+
 cat <<EoF
 
 This script will create a Makefile based by default on
@@ -408,6 +419,10 @@ cat >> Makefile <<EoF
 EoF
 
 cat Makefile.in >> Makefile
+
+(	set -x
+	./configure
+)
 
 if [ "$SYS" = "sysv" ] ; then
 echo "The Makefile has been created for sysv, however if"

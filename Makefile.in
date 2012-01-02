@@ -18,6 +18,8 @@
 ##
 ##
 
+CPPFLAGS := $(CPPFLAGS) -DHAVE_CONFIG_H -I.
+
 SRCS =	date.c erase.c info.c  message.c relay.c \
 	monitor.c reset.c setclock.c stop.c \
 	tty.c x10.c xread.c xwrite.c status.c cm11a.c \
@@ -50,7 +52,7 @@ heyu:	$(OBJS) version.h
 	@echo "** Now become root and run 'make install' **"
 	@echo ""
 
-$(OBJS): x10.h process.h sun.h Makefile
+$(OBJS): config.h x10.h process.h sun.h Makefile
 
 eeprom.o:	eeprom.h
 info.o:		version.h
