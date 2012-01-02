@@ -166,6 +166,7 @@ AS_IF([test "x$CFLAGS" = "x"], [no_CFLAGS="yes"], [])
 AC_PROG_CC
 AS_IF([test "x$no_CFLAGS" = "xyes" && test "x$GCC" = "xyes"],
 	[CFLAGS="$CFLAGS -Wall"], [])
+AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
 # Checks for libraries.
