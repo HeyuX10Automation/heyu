@@ -124,14 +124,27 @@ communication via the house wiring) and has its own set of associated files.
 
 .SH OPTIONS
 .PP 
--v   Enable verbose mode
+.IP -v
+Enable verbose mode
 .PP
--c  \<pathname\>  Specify full configuration file pathname
+.IP -c\ <pathname>
+Specify full configuration file pathname
 .PP
--s  \<pathname\>  Specify full schedule file pathname
+.IP -s\ <pathname>
+Specify full schedule file pathname
 .PP
--0 ... -9  Look for config file in subdirectory /0 ... /9
+.IP -0\ ...\ -9
+Look for config file in subdirectory /0 ... /9
 of standard location, e.g., $HOME/.heyu/3/x10config
+.PP
+Additional options are available if Heyu was built with xPLLib:
+.PP 
+.IP -interface\ <if>
+Change the default interface xPLLib uses; can be specified as
+either a network interface name, like 'eth0', or an IP address
+.PP
+.IP -xpldebug
+Enable xPLLib debugging       
 
 .PP
 .SH COMMANDS

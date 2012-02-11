@@ -169,11 +169,15 @@ static char *helparg[] = {
 static char *options[] = {
     "Usage: heyu [options] <command>   (Run 'heyu help' for commands)\n",
     " [Options]",
-    "    -v             Enable verbose mode",
-    "    -c <pathname>  Specify full configuration file pathname",
-    "    -s <pathname>  Specify full schedule file pathname",
-    "    -0 ... -9      Config file is in subdirectory /0 ... /9",
-    "                   of standard location, e.g., $HOME/.heyu/3/x10config",
+    "    -v               Enable verbose mode",
+    "    -c <pathname>    Specify full configuration file pathname",
+    "    -s <pathname>    Specify full schedule file pathname",
+    "    -0 ... -9        Config file is in subdirectory /0 ... /9",
+    "                     of standard location, e.g., $HOME/.heyu/3/x10config",
+#ifdef HAVE_LIBXPL
+    "    -interface <if>  Change the default interface xPLLib uses",
+    "    -xpldebug        Enable xPLLib debugging",
+#endif
 };
 
 /* Descriptions of "administrative" commands */

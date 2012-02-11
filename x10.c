@@ -55,6 +55,9 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
+#ifdef HAVE_XPL_H
+#include <xPL.h>
+#endif
 #include "process.h" 
 
 /* msf - added for glibc/rh 5.0 */
@@ -339,6 +342,10 @@ int main ( int argc, char *argv[] )
 
     rtn = NULL;
 
+#ifdef HAVE_LIBXPL
+    /* Parse xPL specific command line parms first */
+    xPL_parseCommonArgs(&argc, argv, TRUE);
+#endif
 
     /* Check for and store options in options structure */
     /* Return number of tokens used for options, or -1  */
