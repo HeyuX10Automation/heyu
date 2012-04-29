@@ -249,6 +249,10 @@ LOCKDIR		LOCALSTATEDIR/lock; override with CPPFLAGS='...
 SPOOLDIR	LOCALSTATEDIR/tmp/heyu; override with CPPFLAGS='...
 		-DSPOOLDIR=\"path\" ...'
 
+and in case of xPL support enabled:
+
+XPLCONFDIR	same as SPOOLDIR; override with CPPFLAGS='...
+		-DXPLCONFDIR=\"path\" ...'
 
 Default installation directories passed through ./configure to 'make
 install':
@@ -314,4 +318,10 @@ to successfully build and run xPL enabled Heyu, compiled with the
 preinstalled xPL.h header, and linked dynamically to the preinstalled
 libxPL.so library. Obviously, no xPL hub can be built nor installed
 automatically with this method.
+
+It is possible to provide the ./configure script with a definition of
+a non-default directory name where xPL configuration files will be
+stored by appending it to the CPPFLAGS variable. The respective symbol
+name is XPLCONFDIR, and it defaults to the same value as the SPOOLDIR if
+not specified.
 

@@ -77,6 +77,12 @@
 #define SYSBASEDIR "/etc/heyu"
 #endif
 
+#ifdef HAVE_LIBXPL
+#ifndef XPLCONFDIR
+#define XPLCONFDIR SPOOLDIR
+#endif
+#endif
+
 #define SPOOLFILE  "heyu.out"
 #define RELAYFILE  "heyu.relay"
 #define WRITEFILE  "heyu.write"

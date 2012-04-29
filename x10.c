@@ -653,6 +653,9 @@ int c_list ()
       printf( "The SPOOLDIR is %s\n", SPOOLDIR);
       printf( "The LOCKDIR is %s\n", LOCKDIR);
       printf( "The SYSBASEDIR is %s\n", SYSBASEDIR);
+#ifdef HAVE_LIBXPL
+      printf( "The XPLCONFDIR is %s\n", XPLCONFDIR);
+#endif
       printf( "Number of Flags = %d\n", (32 * NUM_FLAG_BANKS));
       printf( "Number of Counters = %d\n", (32 * NUM_COUNTER_BANKS));
       printf( "Number of Timers = %d\n", (32 * NUM_TIMER_BANKS));
@@ -662,6 +665,9 @@ int c_list ()
       printf( "SPOOLDIR=%s\n", SPOOLDIR);
       printf( "LOCKDIR=%s\n", LOCKDIR);
       printf( "SYSBASEDIR=%s\n", SYSBASEDIR);
+#ifdef HAVE_LIBXPL
+      printf( "XPLCONFDIR=%s\n", XPLCONFDIR);
+#endif
       printf( "Flags=%d\n", (32 * NUM_FLAG_BANKS));
       printf( "Counters=%d\n", (32 * NUM_COUNTER_BANKS));
       printf( "Timers=%d\n", (32 * NUM_TIMER_BANKS));
