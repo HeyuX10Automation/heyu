@@ -1248,3 +1248,19 @@ int check4poll( int showdata, int timeout )
     return 0;
 }
 
+/*
+ * Process signals received from media other than the Heyu spool file.
+ *
+ * To avoid interferences with data stream read from the spool file, save
+ * then restore the current (spool file data stream maintained) signal_source.
+ */
+int process_received(unsigned char *buf, int len, int src) {
+	int save_source = signal_source;
+
+	signal_source = source_type[src];
+	process_sent(buf, len, NULL, (const char **)&source_name[src], NULL);
+	fflush(fdsout);
+	signal_source = save_source;
+	return 0;
+}
+
