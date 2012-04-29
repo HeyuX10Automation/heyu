@@ -56,6 +56,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = heyu$(EXEEXT)
+@XPLLIB_SRCDIR_TRUE@EXTRA_PROGRAMS = xPL_Hub$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
 	$(dist_man_MANS) $(dist_pkgsysconf_DATA) $(srcdir)/Makefile.am \
@@ -105,6 +106,8 @@ am_heyu_OBJECTS = heyu-date.$(OBJEXT) heyu-erase.$(OBJEXT) \
 	heyu-rfxcom.$(OBJEXT) heyu-digimax.$(OBJEXT) \
 	heyu-oregon.$(OBJEXT)
 heyu_OBJECTS = $(am_heyu_OBJECTS)
+@XPLLIB_SRCDIR_TRUE@nodist_xPL_Hub_OBJECTS = xPL_Hub.$(OBJEXT)
+xPL_Hub_OBJECTS = $(nodist_xPL_Hub_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -113,7 +116,8 @@ COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(nodist_libxPL_a_SOURCES) $(heyu_SOURCES)
+SOURCES = $(nodist_libxPL_a_SOURCES) $(heyu_SOURCES) \
+	$(nodist_xPL_Hub_SOURCES)
 DIST_SOURCES = $(heyu_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -278,6 +282,10 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 @XPLLIB_SRCDIR_TRUE@	$(xPLLib_srcdir)/xPL_priv.h $(xPLLib_srcdir)/xPL-service.c \
 @XPLLIB_SRCDIR_TRUE@	$(xPLLib_srcdir)/xPL-store.c $(xPLLib_srcdir)/xPL-utils.c
 
+@XPLLIB_SRCDIR_TRUE@nodist_xPL_Hub_SOURCES = $(xPLLib_srcdir)/examples/xPL_Hub.c
+@XPLLIB_SRCDIR_TRUE@xPL_Hub_DEPENDENCIES = libxPL.a
+@XPLLIB_SRCDIR_TRUE@xPL_Hub_LDADD = libxPL.a
+@XPLLIB_SRCDIR_TRUE@CLEANFILES = xPL_Hub stamp-xPL_Hub
 dist_man_MANS = heyu.1 x10config.5 x10sched.5 x10scripts.5 x10cm17a.5 x10aux.5 \
 	x10rfxsensors.5 x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5
 
@@ -391,6 +399,9 @@ clean-binPROGRAMS:
 heyu$(EXEEXT): $(heyu_OBJECTS) $(heyu_DEPENDENCIES) 
 	@rm -f heyu$(EXEEXT)
 	$(LINK) $(heyu_OBJECTS) $(heyu_LDADD) $(LIBS)
+xPL_Hub$(EXEEXT): $(xPL_Hub_OBJECTS) $(xPL_Hub_DEPENDENCIES) 
+	@rm -f xPL_Hub$(EXEEXT)
+	$(LINK) $(xPL_Hub_OBJECTS) $(xPL_Hub_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -439,6 +450,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xPL-service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xPL-store.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xPL-utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xPL_Hub.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -1027,6 +1039,20 @@ heyu-oregon.obj: oregon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='oregon.c' object='heyu-oregon.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o heyu-oregon.obj `if test -f 'oregon.c'; then $(CYGPATH_W) 'oregon.c'; else $(CYGPATH_W) '$(srcdir)/oregon.c'; fi`
+
+xPL_Hub.o: $(xPLLib_srcdir)/examples/xPL_Hub.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xPL_Hub.o -MD -MP -MF $(DEPDIR)/xPL_Hub.Tpo -c -o xPL_Hub.o `test -f '$(xPLLib_srcdir)/examples/xPL_Hub.c' || echo '$(srcdir)/'`$(xPLLib_srcdir)/examples/xPL_Hub.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/xPL_Hub.Tpo $(DEPDIR)/xPL_Hub.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(xPLLib_srcdir)/examples/xPL_Hub.c' object='xPL_Hub.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xPL_Hub.o `test -f '$(xPLLib_srcdir)/examples/xPL_Hub.c' || echo '$(srcdir)/'`$(xPLLib_srcdir)/examples/xPL_Hub.c
+
+xPL_Hub.obj: $(xPLLib_srcdir)/examples/xPL_Hub.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xPL_Hub.obj -MD -MP -MF $(DEPDIR)/xPL_Hub.Tpo -c -o xPL_Hub.obj `if test -f '$(xPLLib_srcdir)/examples/xPL_Hub.c'; then $(CYGPATH_W) '$(xPLLib_srcdir)/examples/xPL_Hub.c'; else $(CYGPATH_W) '$(srcdir)/$(xPLLib_srcdir)/examples/xPL_Hub.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/xPL_Hub.Tpo $(DEPDIR)/xPL_Hub.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(xPLLib_srcdir)/examples/xPL_Hub.c' object='xPL_Hub.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xPL_Hub.obj `if test -f '$(xPLLib_srcdir)/examples/xPL_Hub.c'; then $(CYGPATH_W) '$(xPLLib_srcdir)/examples/xPL_Hub.c'; else $(CYGPATH_W) '$(srcdir)/$(xPLLib_srcdir)/examples/xPL_Hub.c'; fi`
 install-man1: $(dist_man_MANS)
 	@$(NORMAL_INSTALL)
 	test -z "$(man1dir)" || $(MKDIR_P) "$(DESTDIR)$(man1dir)"
@@ -1382,6 +1408,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1393,6 +1420,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 @XPLLIB_ARCHIVE_FALSE@distclean-local:
 @POSTINST_FALSE@install-exec-hook:
+@POSTINST_FALSE@install-data-hook:
+@XPLLIB_SRCDIR_FALSE@install-data-hook:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
@@ -1419,7 +1448,8 @@ info-am:
 
 install-data-am: install-dist_docDATA install-dist_pkgsysconfDATA \
 	install-man
-
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
 
 install-dvi-am:
@@ -1471,7 +1501,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_docDATA \
 
 uninstall-man: uninstall-man1 uninstall-man5
 
-.MAKE: all install-am install-exec-am install-strip
+.MAKE: all install-am install-data-am install-exec-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am all-local am--refresh check check-am \
 	clean clean-binPROGRAMS clean-generic clean-noinstLIBRARIES \
@@ -1481,7 +1511,7 @@ uninstall-man: uninstall-man1 uninstall-man5
 	distclean-local distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dist_docDATA \
+	install-data-am install-data-hook install-dist_docDATA \
 	install-dist_pkgsysconfDATA install-dvi install-dvi-am \
 	install-exec install-exec-am install-exec-hook install-html \
 	install-html-am install-info install-info-am install-man \
@@ -1500,7 +1530,7 @@ uninstall-man: uninstall-man1 uninstall-man5
 
 *.o: Makefile
 
-@XPLLIB_ARCHIVE_TRUE@$(nodist_libxPL_a_SOURCES): $(xPLLib_archive)
+@XPLLIB_ARCHIVE_TRUE@$(nodist_libxPL_a_SOURCES) $(nodist_xPL_Hub_SOURCES): $(xPLLib_archive)
 @XPLLIB_ARCHIVE_TRUE@	@mkdir -p "$(xPLLib_srcdir)"
 @XPLLIB_ARCHIVE_TRUE@	@case "$<" in \
 @XPLLIB_ARCHIVE_TRUE@	*.tar.gz|*.tgz) GZIP=$(GZIP_ENV) gzip -dc "$<" | \
@@ -1519,7 +1549,31 @@ uninstall-man: uninstall-man1 uninstall-man5
 @XPLLIB_URL_TRUE@$(xPLLib_archive):
 @XPLLIB_URL_TRUE@	@$(AMWGET_O) '$@' '$(xPLLib_URL)'
 
-@POSTINST_TRUE@all-local: usergroup.tmp userhome.tmp
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@all-local: stamp-xPL_Hub usergroup.tmp userhome.tmp
+
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@stamp-xPL_Hub: $(nodist_xPL_Hub_SOURCES) Makefile
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	@if netstat -uln 2>/dev/null | grep -q ":3865 " ||\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@			type xPL_Hub$(EXEEXT) 2>/dev/null ||\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@			type xplhub.pl 2>/dev/null ||\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@			type xPLHub.jar 2>/dev/null; then \
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@		rm -f xPL_Hub$(EXEEXT);\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	elif $(MAKE) $(AM_MAKEFLAGS) xPL_Hub; then \
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "An xPL hub daemon, required for running Heyu built with xPL";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "suppport enabled, has been additionally compiled for you, and";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "will be installed along with the Heyu binary upon executing";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "'make install', unless a running xPL hub is detected by then.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "If this is not what you want, i.e., you have an xPL hub already";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "installed in your system and don't want to install another one,";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "please remove the xPL_Hub executable from the current directory";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "before proceeding with 'make install'.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "If removed, it can be rebuilt with 'make xPL_Hub'.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	fi
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	@touch $@
+@POSTINST_TRUE@@XPLLIB_SRCDIR_FALSE@all-local: usergroup.tmp userhome.tmp
 
 @POSTINST_TRUE@usergroup.tmp userhome.tmp: $(bin_PROGRAMS)
 @POSTINST_TRUE@	@echo `id` >usergroup.tmp
@@ -1531,6 +1585,41 @@ uninstall-man: uninstall-man1 uninstall-man5
 @POSTINST_TRUE@install-exec-hook:
 @POSTINST_TRUE@	@$(POST_INSTALL)
 @POSTINST_TRUE@	@POSTINST@
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	@if ! netstat -uln|grep -q ":3865 " && test -x xPL_Hub$(EXEEXT);then \
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@		$(MAKE) $(AM_MAKEFLAGS) bin_PROGRAMS=xPL_Hub$(EXEEXT) \
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@				install-binPROGRAMS; fi
+
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@install-data-hook:
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	@if netstat -uln|grep -q ":3865 " || test -x xPL_Hub$(EXEEXT); then :;\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	else \
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Heyu has been built with xPL support enabled, and it requires";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "an xPL hub daemon running before it can be used.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "If you have an xPL hub already installed in your system, please";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "start it up before running Heyu.  If you don't have one, please";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "see http://xplproject.org.uk/wiki/index.php?title=Core_Software";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "for possible options.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo;\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Please also set up the hub for being started on boot, before";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Heyu is run.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo;\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "You can also relay on Heyu starting the hub automatically for";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "you if you choose one of Heyu known xPL hubs, and its binary";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "can be found in your \$$PATH.  The xPL hubs known to Heyu are:";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "* xPL_Hub   - see http://www.xpl4java.org/xPL4Linux/,";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "* xplhub.pl - see http://johnb.xplproject.org.uk/info/perl/.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo;\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Another example of a hub that can be started automatically by";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Heyu, but only if your system is configured for directly";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "running Java executables found in your \$$PATH, is xPLHub.jar,";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "which can be downloaded from http://www.xpl4java.org/xPL4Java/.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "Finally, you can set up Heyu to start up any hub of your choice";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "by providing its command name and arguments in your x10config.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "See 'man x10config' for details.";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	echo "";\
+@POSTINST_TRUE@@XPLLIB_SRCDIR_TRUE@	fi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -294,6 +294,16 @@ is provided as an argument to the --with-xpl ./configure option.  If so,
 a working wget or curl utility, as well as a tool for unpacking the
 archive may be required in oredr to build Heyu successfully.
 
+In that case, an xPL_Hub daemon, required for the xPL enabled Heyu to
+work properly, can also be built, using 'make xPLHub', from sources
+found in the 'examples' subdirectory among those unpacked xPLLib source
+files.  Moreover, if the --enable-postinst option is provided to
+./configure, then the hub binary will be built automatically with
+'make', provided that no running xPL hub is detected nor known xPL hub
+executable found in the $PATH at build time, then automatically
+installed with 'make install' along with the Heyu executable unless a
+running hub is detected at install time.
+
 However, if an xPLLib package has already been installed in the target
 system or a staging area, but its header and library files sit in a
 non-standard directory structure, not examined from ./configure by
@@ -302,5 +312,6 @@ providing suitable include and lib subdirectory names within
 "CPPFLAGS=..." and "LDFLAGS=..." arguments respectively should suffice
 to successfully build and run xPL enabled Heyu, compiled with the
 preinstalled xPL.h header, and linked dynamically to the preinstalled
-libxPL.so library.
+libxPL.so library. Obviously, no xPL hub can be built nor installed
+automatically with this method.
 
