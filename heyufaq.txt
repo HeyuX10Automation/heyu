@@ -1,7 +1,7 @@
 Frequently Asked Questions
 
 This FAQ applies to Heyu Version 2.
-Last updated 09/24/2007
+Last updated 02/14/2011
 
 Q: What is Heyu?
 
@@ -20,7 +20,8 @@ A: The X-10 CM11A power-line communications interface connects to a
 
    Heyu can also receive and process X10 RF signals from a WGL
    W800RF32A, an X-10 MR26A, or RFXCOM RF receiver connected to a
-   second serial port.
+   second serial port, or form an RFXLAN RF receiver connected to a
+   local network.
 
 Q: Why the silly name?
 
@@ -157,12 +158,14 @@ Q: What is the Heyu Auxiliary process?
 
 A: This is a background process, heyu_aux, which will read and decode
    X10 RF signals from an RFXCOM, WGL W800RF32A, or X-10 MR26A RF receiver
-   connected to a second serial port.  The signals can be either transceived
+   connected to a second serial port, or from an RFXLAN RF receiver 
+   connected to a local network.  The signals can be either transceived 
    directly to the power line via the CM11A or are sent to the Heyu State
    Engine for further processing, such as launching scripts.  See the man page
    x10aux(5) for details.
 
-   If the auxiliary serial port and RF receiver type are specified in the
+   If the auxiliary serial port, or the network address in case of the
+   RFXLAN network receiver, and RF receiver type are specified in the
    configuration file with the TTY_AUX directive, this process can be
    started manually by entering 'heyu aux' at the command line, or will
    be started automatically along with Heyu's other background processes

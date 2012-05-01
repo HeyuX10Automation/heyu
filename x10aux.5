@@ -9,7 +9,8 @@ See  the \fIheyu\fP(1) man page for usage information.
 .PP
 This page contains information about the capability of Heyu to receive
 and process signals from RF remotes and sensors using a WGL W800RF32A, an
-X-10 MR26A, or an RFXCOM X10 RF receiver connected to a second serial port.
+X-10 MR26A, or an RFXCOM X10 RF receiver connected to a second serial port,
+or an RFXLAN network version of the RFXCOM connected to a local network.
 
 .SH HARDWARE
 The W800RF32A is manufactured by WGL & Associates (http://www.wgldesigns.com).
@@ -42,6 +43,10 @@ OS supports the FTDI chipset, as does Linux).
 .PP
 All of these devices are strictly RF receivers and have no transmitting
 capability.
+.PP
+The RFXLAN version of the RFXCOM receiver connects to a local network
+and is accessible over a TCP socket. Its optional transmitter part, if present,
+is not supported.
 
 .SH QUICK START
 Stop Heyu (if already running) with the command 'heyu stop'.
@@ -49,16 +54,19 @@ Plug a W800RF32A/AE or MR26A receiver into a serial port.  Or plug an RFXCOM
 receiver into a USB port and determine the serial device assigned by the
 OS. (Under Linux, the first USB device plugged in will normally be assigned
 to /dev/ttyUSB0, or possibly to /dev/usb/ttyUSB0, the second USB device to
-/dev/ttyUSB1, etc.)
+/dev/ttyUSB1, etc.). Or connect an RFXLAN receiver to your local network and
+configure of verify its network address and port it listens on.
 .PP
 Describe for Heyu the port and receiver being used with the following
 directive in the Heyu configuration file:
 .br
-  TTY_AUX  <serial port>  <receiver device>
+  TTY_AUX  <serial_port or network_address:port>  <receiver device>
 .br
-Example:
+Examples:
 .br
   TTY_AUX  /dev/ttyS1  W800RF32A
+.br
+  TTY_AUX  10.10.10.10:10000  RFXCOM
 .PP
 The configuration directives TRANSCEIVE and RFFORWARD determine whether signals
 from a Standard X10 transmitter (like the HR12A PalmPad) are directly transceived
@@ -184,15 +192,18 @@ in the SPECIAL DS90 SETUP section toward the bottom of this man page.
 In order to receive RF signals, Heyu relies on the heyu_aux
 daemon, which is started either manually with the \'heyu aux\'
 command or automatically in the startup sequence with the
-\'heyu start\' command.  The serial port and attached receiver
+\'heyu start\' command.  The serial port, or network address
+in case of the RFXLAN network receiver, and attached receiver
 device must be specified in the Heyu configuration file with
 the TTY_AUX directive. The syntax for this directive is:
 .br
-  TTY_AUX  <serial port>  <receiver device>
+  TTY_AUX  <serial_port or network_address:port>  <receiver device>
 .br
-where <receiver device> is W800RF32A, MR26A, or RFXCOM.  Example:
+where <receiver device> is W800RF32A, MR26A, or RFXCOM.  Examples:
 .br
   TTY_AUX  /dev/ttyS1  W800RF32A
+.br
+  TTY_AUX  10.10.10.10:10000  RFXCOM
 
 .PP
 RFXCOM defaults to the variable length packet mode model, RFXCOMVL.

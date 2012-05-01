@@ -2,22 +2,7 @@
  |                                                                            |
  |              State and Script functions for HEYU                           |
  |            Copyright 2004-2010 Charles W. Sullivan                         |
- |                      All Rights Reserved                                   |
  |                                                                            |
- |                                                                            |
- | This software is licensed free of charge for non-commercial distribution   |
- | and for personal and internal business use only.  Inclusion of this        |
- | software or any part thereof in a commercial product is prohibited         |
- | without the prior written permission of the author.  You may copy, use,    |
- | and distribute this software subject to the following restrictions:        |
- |                                                                            |
- |  1)	You may not charge money for it.                                      |
- |  2)	You may not remove or alter this license, copyright notice, or the    |
- |      included disclaimers.                                                 |
- |  3)	You may not claim you wrote it.                                       |
- |  4)	If you make improvements (or other changes), you are requested        |
- |	to send them to the Heyu maintainer so there's a focal point for      |
- |      distributing improved versions.                                       |
  |                                                                            |
  | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
  | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
@@ -29,22 +14,23 @@
  | Email ID: cwsulliv01                                                       |
  | Email domain: -at- heyu -dot- org                                          |
  |                                                                            |
- | Disclaimers:                                                               |
- | THERE IS NO ASSURANCE THAT THIS SOFTWARE IS FREE OF DEFECTS AND IT MUST    |
- | NOT BE USED IN ANY SITUATION WHERE THERE IS ANY CHANCE THAT ITS            |
- | PERFORMANCE OR FAILURE TO PERFORM AS EXPECTED COULD RESULT IN LOSS OF      |
- | LIFE, INJURY TO PERSONS OR PROPERTY, FINANCIAL LOSS, OR LEGAL LIABILITY.   |
- |                                                                            |
- | TO THE EXTENT ALLOWED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED "AS IS",|
- | WITH NO EXPRESS OR IMPLIED WARRANTY, INCLUDING, BUT NOT LIMITED TO, THE    |
- | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.|
- |                                                                            |
- | IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW WILL THE AUTHOR BE LIABLE    |
- | FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL   |
- | DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE EVEN IF   |
- | THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.            |
- |                                                                            |
  +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -4327,7 +4313,7 @@ int find_rfxjam_scripts ( void )
 /*---------------------------------------------------------------------+
  | Launch -lockup scripts which match the launch conditions.           |
  +---------------------------------------------------------------------*/
-int find_lockup_scripts ( unsigned char bootflag )
+int find_lockup_scripts(void)
 {
    LAUNCHER      *launcherp;
    int           j, launchp = -1;
@@ -5726,12 +5712,11 @@ int fetch_x10state_old ( void )
  | Identify the type of data read from the spoolfile which was written |
  | there by heyu, i.e., excluding data received from the interface.    |
  +---------------------------------------------------------------------*/
-int identify_sent ( unsigned char *buf, int len )
+int identify_sent ( unsigned char *buf, int len, unsigned char *chksum )
 {
    int type;
-   unsigned char chksum;
 
-   chksum = checksum(buf, len);
+   *chksum = checksum(buf, len);
    
    if ( buf[0] == 0 && len == 1 )
       type = SENT_WRMI;  /* WRMI */
@@ -5784,7 +5769,7 @@ int identify_sent ( unsigned char *buf, int len )
       type = SENT_STCMD;  /* Monitor/state control command */
    else if ( buf[0] == 0x0C && len == 2 && buf[1] == 0x56 )
       type = SENT_ADDR;  /* Address of G1 with 5a fix */
-   else if ( buf[0] == 0x0F && len == 5 && chksum == 0x62 )
+   else if ( buf[0] == 0x0F && len == 5 && *chksum == 0x62 )
       type = SENT_EXTFUNC;  /* Extended function with 5a fix */
    else if ( buf[0] == ST_COMMAND && buf[1] == ST_SETTIMER && len == 8 )
       type = SENT_SETTIMER; /* Set a countdown timer */
@@ -6678,20 +6663,19 @@ char *translate_rf_sent ( unsigned char *buf, int *launchp )
 /*---------------------------------------------------------------------+
  | Interpret byte string sent to CM11A.                                |
  +---------------------------------------------------------------------*/
-char *translate_other ( unsigned char *buf, int len )
+char *translate_other ( unsigned char *buf, int len, unsigned char *chksum )
 { 
    static char outbuf[80];
-   unsigned char chksum;
    unsigned int memloc;
 
    if ( buf[0] == 0 && len == 1 ) {
       return "";
    }
    else if ( buf[0] == 0xfb && len == 19 ) {
-      chksum = checksum(buf + 1, len - 1);
+      *chksum = checksum(buf + 1, len - 1);
       memloc = (buf[1] << 8) + buf[2];
       sprintf(outbuf, "Upload to EEPROM location %03x, checksum = %02x",
-          memloc, chksum);
+          memloc, *chksum);
       return outbuf;
    }
    else if ( buf[0] == 0x8b && len == 1 ) {
@@ -13255,7 +13239,7 @@ int show_state_dawndusk ( void )
    time_t      midnight;
 
    static char   *sunmodelabel[] = {"Sunrise/Sunset", "Civil Twilight",
-        "Nautical Twilight", "Astronomical Twilight"};
+        "Nautical Twilight", "Astronomical Twilight", "Sun angle offset = %d'", };
 
    if ( configp->loc_flag != (LONGITUDE | LATITUDE) ||
         x10global.dawndusk_enable == 0 ) {
@@ -13278,8 +13262,9 @@ int show_state_dawndusk ( void )
    printf("Dawn = %02d:%02d %s", tmp->tm_hour, tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
 
    tmp = localtime(&x10global.utc0_dusk);
-   printf("  Dusk = %02d:%02d %s", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
-   printf("  (%s)\n", sunmodelabel[configp->sunmode]);
+   printf("  Dusk = %02d:%02d %s  ", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
+   printf(sunmodelabel[configp->sunmode], configp->sunmode_offset);
+   printf("\n");
 
    return 0;
 }

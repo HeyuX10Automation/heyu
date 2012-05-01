@@ -7,6 +7,22 @@
  | Page 84.                                                                   |
  +----------------------------------------------------------------------------*/
 
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,15 +39,6 @@
 #define MSSR   1.0027379
 
 #define KS15   (15. * D2R * MSSR)
-
-/* Zenith angles for Sunrise/set and Twilights */
-#define ANG_RISESET  (90. + 50./60.)
-#define ANG_CIVILTWI (96.)
-#define ANG_NAUTITWI (102.)
-#define ANG_ASTROTWI (108.)
-
-static double zenangle[] = {
-  ANG_RISESET, ANG_CIVILTWI, ANG_NAUTITWI, ANG_ASTROTWI };
 
 /* Local functions */
 static void sun_position ( double, double *, double *);
@@ -61,7 +68,7 @@ static double local_sidereal_time (double, long int, double);
 
 int suntimes ( double latitude, double longitude, long int timezone,
                long int JulianDay,
-	       int sunmode,
+	       int sunmode, int offset,
                int *sunrise, int *sunset,
                double *azrise, double *azset)
 {
@@ -77,6 +84,16 @@ int suntimes ( double latitude, double longitude, long int timezone,
    double    a, b, a0, a2, d0, d1, d2, dela, deld, p,
              el0, el2, h0, h1, h2, v0, v1, v2,
              d, e, t3, h7, n7, d7, az;
+
+/* Zenith angles for Sunrise/set and Twilights */
+#define ANG_RISESET  (90. + 50./60.)
+#define ANG_CIVILTWI (96.)
+#define ANG_NAUTITWI (102.)
+#define ANG_ASTROTWI (108.)
+#define ANG_ANGOFFS  (90. + offset/60.)
+
+   double zenangle[] = {
+      ANG_RISESET, ANG_CIVILTWI, ANG_NAUTITWI, ANG_ASTROTWI, ANG_ANGOFFS, };
 
 
    *sunrise = *sunset = 0 ;
@@ -354,7 +371,7 @@ int local_dawndusk( time_t utc0, time_t *utc0_dawn, time_t *utc0_dusk )
    jd = utc2jd(lutc0);
 
    scode = suntimes(configp->latitude, configp->longitude, configp->tzone, jd,
-               configp->sunmode, &dawn, &dusk, NULL, NULL);
+               configp->sunmode, configp->sunmode_offset, &dawn, &dusk, NULL, NULL);
 
    /* Adjust for abnormal sun conditions */
    abnormal_sun_adjust(scode, &dawn, &dusk);
@@ -381,7 +398,7 @@ int local_dawndusk( time_t utc0, time_t *utc0_dawn, time_t *utc0_dusk )
  | font and landscape mode.                                    |
  +-------------------------------------------------------------*/
 int display_sun_table_wide ( FILE *fd_sun, int year, long timezone,
-    int sunmode, int timemode, int lat_d, int lat_m, int lon_d, int lon_m )
+    int sunmode, int offset, int timemode, int lat_d, int lat_m, int lon_d, int lon_m )
 {
    static struct tzones {
       char *name;
@@ -450,6 +467,9 @@ int display_sun_table_wide ( FILE *fd_sun, int year, long timezone,
       case AstroTwi :	   
          (void) fprintf(fd_sun, "%*sAstronomical Twilight for %d", 26, " ", year);
          break;
+      case AngleOffset :	   
+         (void) fprintf(fd_sun, "%*sSun centre at %d angle minutes below horizon for %d", 26, " ", offset, year);
+         break;
    };
    (void) fprintf(fd_sun, "%*sHEYU ver 2.0 \n\n", 39, " ");
 
@@ -487,8 +507,8 @@ int display_sun_table_wide ( FILE *fd_sun, int year, long timezone,
          }
          julianday = greg2jd( year, month, day );
 
-         retcode = suntimes(latitude, longitude, timezone,
-                 julianday, sunmode, &rise, &set, NULL, NULL );
+         retcode = suntimes(latitude, longitude, timezone, julianday,
+                 sunmode, offset, &rise, &set, NULL, NULL );
 
          yday = (int)(julianday - julianday0);
 
@@ -560,7 +580,7 @@ int display_sun_table_wide ( FILE *fd_sun, int year, long timezone,
  |   3  -> Astronomical Twilight                               |
  +-------------------------------------------------------------*/
 int display_sun_table ( FILE *fd_sun, int year, long timezone,
-    int sunmode, int timemode, int lat_d, int lat_m, int lon_d, int lon_m )
+    int sunmode, int offset, int timemode, int lat_d, int lat_m, int lon_d, int lon_m )
 {
    static struct tzones {
       char *name;
@@ -623,6 +643,9 @@ int display_sun_table ( FILE *fd_sun, int year, long timezone,
       case AstroTwi :	   
          sprintf(minibuf, "Astronomical Twilight for %d\n", year);
          break;
+      case AngleOffset :	   
+         sprintf(minibuf, "Sun centre at %d angle minutes below horizon for %d\n", offset, year);
+         break;
    };
    fprintf(fd_sun, "%*s%s", (80 - (int)strlen(minibuf))/2, " ", minibuf);
    (void) fprintf(fd_sun, "\nLocation: ");
@@ -676,8 +699,8 @@ int display_sun_table ( FILE *fd_sun, int year, long timezone,
 
             yday = (int)(julianday - julianday0);
 
-            retcode = suntimes(latitude, longitude, timezone,
-                    julianday, sunmode, &rise, &set, NULL, NULL );
+            retcode = suntimes(latitude, longitude, timezone, julianday,
+                    sunmode, offset, &rise, &set, NULL, NULL );
 
             if ( timemode == TIMEMODE_CIVIL ) {
                /* Adjust times for Daylight Time */

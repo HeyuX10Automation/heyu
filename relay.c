@@ -3,15 +3,21 @@
  * Pleasanton Ca. 94588 USA
  * E-MAIL dbs@tanj.com
  *
- * You may freely copy, use, and distribute this software,
- * in whole or in part, subject to the following restrictions:
+ */
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
  *
- *  1)  You may not charge money for it.
- *  2)  You may not remove or alter this copyright notice.
- *  3)  You may not claim you wrote it.
- *  4)  If you make improvements (or other changes), you are requested
- *      to send them to me, so there's a focal point for distributing
- *      improved versions.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -367,7 +373,7 @@ int start_relay ( char *tty_name )
 	    /* just write any unknown data */
 	    ignoret = write(outfd,ibuff, 1);
         }
-
+#if 0
 	if ( ibuff[0] == 0x5a && (count_5a == 0 || in_sync == 1 ) )  {
 	    /* write the first 0x5a that's seen */
 	    ignoret = write(outfd,ibuff, 1);
@@ -377,19 +383,19 @@ int start_relay ( char *tty_name )
 	     * let's try that next time that I'm deep into the code.
 	     */
 	}
-
+#endif
 	if ( ibuff[0] == 0x5a && count == 1)  {
 
             /* CM11A has a character to read */
 	    if ( ++count_5a > 1 || (count_5a == 1 && in_sync == 1) )  {
                 /* After a (configurable) short delay, tell the CM11A to send it */
                 millisleep(configp->cm11a_query_delay);
-		ibuff[0] = 0xC3;
+		ibuff[1] = 0xC3;
 
 		/* if( lock_for_write() == 0 ) */
 		{
 		    port_locked = 1;
-		    ignoret = write(tty,ibuff, 1);
+		    ignoret = write(tty,ibuff + 1, 1);
 		    munlock(writefilename);
                     port_locked = 0;
 		}
@@ -401,12 +407,12 @@ int start_relay ( char *tty_name )
 		 * Like power fail or hail request.
 		 */
 
-	         count = sxread(tty, ibuff, 1, 5);  	/* Get number of bytes which follow */
+	         count = sxread(tty, ibuff + 1, 1, 5); 	/* Get number of bytes which follow */
 	         				      
 	         if ( count == 1 ) {
                      /* so far so good */
 
-		     expected = ibuff[0];
+		     expected = ibuff[1];
 
                      if ( expected == 0x5a ) {
                         /* CM11A quirk - sometimes send 0xC3, get nothing */
@@ -417,25 +423,25 @@ int start_relay ( char *tty_name )
                      }
 
 		     if ( expected > 20 )  {
-                         ignoret = write(outfd,ibuff, 1);
+                         ignoret = write(outfd,ibuff, 2);
                          /* Too many. We must not be synced. */
 		         in_sync = 0;
 		         continue; /* go to outer while to grab this */
 		     }
 
-                     count = sxread(tty, ibuff + 1, expected, 5);
+                     count = sxread(tty, ibuff + 2, expected, 5);
 
 		     if ( count != expected )  {
 		         /* This should be too few. so we aren't in sync yet. */
-                         ibuff[0] = count;
-		         ignoret = write(outfd,ibuff, count + 1);
+                         ibuff[1] = count;
+		         ignoret = write(outfd,ibuff, count + 2);
 		         in_sync = 0;
 		         continue; /* go to outer while to grab this */
 		     }
 		     if ( count == expected )  {
 			count_5a = 0;
 			in_sync = 1;
-			ignoret = write(outfd,ibuff, count + 1);
+			ignoret = write(outfd,ibuff, count + 2);
                      }
 
 	         }

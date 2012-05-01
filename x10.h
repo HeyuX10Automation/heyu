@@ -2,22 +2,30 @@
  * Changes for use with CM11A copyright 1996, 1997 Daniel B. Suthers,
  * Pleasanton Ca, 94588 USA
  * E-mail dbs@tanj.com
- * Same permissions and restrictions as below.
+ *
  */
 /*
  * Copyright 1986 by Larry Campbell, 73 Concord Street, Maynard MA 01754 USA
- * (maynard!campbell).  You may freely copy, use, and distribute this software
- * subject to the following restrictions:
- *
- *  1)	You may not charge money for it.
- *  2)	You may not remove or alter this copyright notice.
- *  3)	You may not claim you wrote it.
- *  4)	If you make improvements (or other changes), you are requested
- *	to send them to me, so there's a focal point for distributing
- *	improved versions.
+ * (maynard!campbell).
  *
  * John Chmielewski (tesla!jlc until 9/1/86, then rogue!jlc) assisted
  * by doing the System V port and adding some nice features.  Thanks!
+ */
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 /*

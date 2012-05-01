@@ -29,11 +29,12 @@ familiarity with Heyu.
 .PP
 The Heyu configuration file should include the directive:
 .br
-  TTY_AUX  <serial_port> RFXCOM
+  TTY_AUX  <serial_port or network_address:port> RFXCOM
 .br
-where <serial_port> is the port where the RFXCOM receiver is connected.
+where <serial_port> is the port where the RFXCOM receiver is connected,
+or <network_address:port> is where the RFXLAN receiver is listening.
 The RFXCOM receiver connects to a USB port but includes a USB->Serial
-converter chip.
+converter chip, while the RFXLAN connects over a network.
 
 .PP
 Start Heyu with \'heyu start\', then open another xterm window and

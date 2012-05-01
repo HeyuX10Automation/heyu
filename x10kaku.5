@@ -28,12 +28,14 @@ familiarity with Heyu.
 .PP
 Include the following directive in the Heyu configuration file:
 .br
-  TTY_AUX  <serial_port>  RFXCOM
+  TTY_AUX  <serial_port or network_address:port>  RFXCOM
 .br
-where <serial_port> is the port where the RFXCOM receiver is connected.
+where <serial_port> is the port where the RFXCOM receiver is connected,
+or <network_address:port> is where the RFXLAN receiver is listening.
 The RFXCOM receiver connects to a USB port but includes a USB->Serial
 converter chip.  At least under Linux, the serial port will have the
 form /dev/ttyUSBn  where n = 0, 1, 2, etc.
+The RFXLAN connects over a network.
 
 .PP
 Configure your KaKu/HomeEasy receiver modules with the remotes

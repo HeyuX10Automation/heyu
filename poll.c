@@ -3,7 +3,6 @@
  |                    Enhanced HEYU Functionality                             |
  |                                                                            |
  |         Enhancements copyright 2004-2008 Charles W. Sullivan               |
- |                      All Rights Reserved                                   |
  |                                                                            |
  | Changes for use with CM11A copyright 1996, 1997 Daniel B. Suthers,         |
  | Pleasanton Ca, 94588 USA                                                   |
@@ -14,19 +13,6 @@
  | John Chmielewski (tesla!jlc until 9/1/86, then rogue!jlc) assisted         |
  | by doing the System V port and adding some nice features.  Thanks!         |
  |                                                                            |
- | This software is licensed free of charge for non-commercial distribution   |
- | and for personal and internal business use only.  Inclusion of this        |
- | software or any part thereof in a commercial product is prohibited         |
- | without the prior written permission of the author.  You may copy, use,    |
- | and distribute this software subject to the following restrictions:        |
- |                                                                            |
- |  1)	You may not charge money for it.                                      |
- |  2)	You may not remove or alter this license, copyright notice, or the    |
- |      included disclaimers.                                                 |
- |  3)	You may not claim you wrote it.                                       |
- |  4)	If you make improvements (or other changes), you are requested        |
- |	to send them to the Heyu maintainer so there's a focal point for      |
- |      distributing improved versions.                                       |
  |                                                                            |
  | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
  | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
@@ -38,22 +24,23 @@
  | Email ID: cwsulliv01                                                       |
  | Email domain: -at- heyu -dot- org                                          |
  |                                                                            |
- | Disclaimers:                                                               |
- | THERE IS NO ASSURANCE THAT THIS SOFTWARE IS FREE OF DEFECTS AND IT MUST    |
- | NOT BE USED IN ANY SITUATION WHERE THERE IS ANY CHANCE THAT ITS            |
- | PERFORMANCE OR FAILURE TO PERFORM AS EXPECTED COULD RESULT IN LOSS OF      |
- | LIFE, INJURY TO PERSONS OR PROPERTY, FINANCIAL LOSS, OR LEGAL LIABILITY.   |
- |                                                                            |
- | TO THE EXTENT ALLOWED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED "AS IS",|
- | WITH NO EXPRESS OR IMPLIED WARRANTY, INCLUDING, BUT NOT LIMITED TO, THE    |
- | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.|
- |                                                                            |
- | IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW WILL THE AUTHOR BE LIABLE    |
- | FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL   |
- | DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE EVEN IF   |
- | THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.            |
- |                                                                            |
  +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -169,8 +156,8 @@ int check4poll( int showdata, int timeout )
     extern int special_func;
     extern int display_expanded_macro();
     int ichksum;
-    int identify_sent(unsigned char *, int);
-    char *translate_other(unsigned char *, int);
+    int identify_sent(unsigned char *, int, unsigned char *);
+    char *translate_other(unsigned char *, int, unsigned char *);
     extern char *translate_sent(unsigned char *, int, int *);
     extern char *translate_rf_sent(unsigned char *, int *);
 #if 0
@@ -189,7 +176,7 @@ int check4poll( int showdata, int timeout )
     extern char *translate_rfxtype_message ( unsigned char * );
     extern char *translate_rfxsensor_ident ( unsigned char * );
     extern char *display_variable_aux_data ( unsigned char * );
-    extern int set_counter ( unsigned char, unsigned short, unsigned char );
+    extern int set_counter ( int, unsigned short, unsigned char );
     extern char *translate_counter_action ( unsigned char * );
     extern char *translate_kaku ( unsigned char *, unsigned char *, int * );
     extern char *translate_visonic ( unsigned char *, unsigned char *, int * );
@@ -201,7 +188,7 @@ int check4poll( int showdata, int timeout )
     unsigned int squelch;
     unsigned char hcode;
 
-    static int chksum_alert;
+    static int chksum_alert = -1;
     extern char *funclabel[18];
     static unsigned char newbuf[8], hexaddr = 0; 
     static char *send_prefix = "sndc";
@@ -219,9 +206,10 @@ int check4poll( int showdata, int timeout )
 
 
   
-    static char *rcs_status[10] = {
+    static char *rcs_status[] = {
        "System_mode = OFF", "System_mode = HEAT", "System_mode = COOL", "System_mode = AUTO",
-       "Fan = ON", "Fan = OFF", "Setback = ON", "Setback = OFF", "Temp Change", "Setpoint Change"
+       "Fan = ON", "Fan = OFF", "Setback = ON", "Setback = OFF", "Temp Change", "Setpoint Change",
+       "Outside Temp", "Heat Setpoint", "Cooling Setpoint",
     };
     static unsigned int source_type[] = {SNDC, SNDS, SNDP, SNDA, RCVA};
     static char *source_name[] = {"sndc", "snds", "sndp", "snda", "rcva"};
@@ -271,14 +259,26 @@ int check4poll( int showdata, int timeout )
 		if( n != 1 ) {
 		     return(0);
                 }
+                if ( buf[0] == 0xff && chksum_alert == 0xff ) {
+		   /*
+		    * We have received four 0xff bytes in a row,
+		    * looks like the first one was the checksum expected,
+		    * so drop one of them and loop one more time.
+		    */
+		   chksum_alert = -1;
+		   wasflag = 2;
+		   continue;
+		}
 		n = buf[0];
 
                 if ( n < 127 ) {
+		   unsigned char chksum;
+
                    n = xread(sptty, buf, n, timeout);
 
                    /* Identify the type of sent command from the leading */
                    /* byte and the length of the buffer.                 */
-                   sent_type = identify_sent(buf, n);
+                   sent_type = identify_sent(buf, n, &chksum);
 
                    if ( sent_type == SENT_STCMD ) {
                       /* A command for the monitor/state process */
@@ -386,6 +386,8 @@ int check4poll( int showdata, int timeout )
                       /* An address */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -394,6 +396,8 @@ int check4poll( int showdata, int timeout )
                       /* Standard function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
+                      if (signal_source != RCVA)
+                         chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -402,6 +406,7 @@ int check4poll( int showdata, int timeout )
                       /* Extended function */
                       if ( *(transp = translate_sent(buf, n, &launchp)) )
                          fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, transp);
+		      chksum_alert = chksum;
                       if ( launchp >= 0 && i_am_state) {
                          launch_scripts(&launchp);
                       }
@@ -546,8 +551,9 @@ int check4poll( int showdata, int timeout )
                    }
                    else if ( sent_type == SENT_OTHER ) {
                       /* Other command */
-                      if ( *(transp = translate_other(buf, n)) )
+                      if ( *(transp = translate_other(buf, n, &chksum)) )
                          fprintf(fdsout, "%s %s\n", datstrf(), transp);
+		      chksum_alert = chksum;
                       launchp = -1;
                    }
 
@@ -571,6 +577,11 @@ int check4poll( int showdata, int timeout )
 
 	/* print out the saved 0xff from the buffer */
 	if ( buf[0] != 0xff && wasflag > 0 )  {
+	    if (chksum_alert == 0xff) {
+	    	/* a single 0xff was apparently a checksum */
+		chksum_alert = -1;
+		wasflag--;
+	    }
 	    n = buf[0];
 	    for(i = 0; i < wasflag;i++)
 		buf[i] = 0xff;
@@ -579,6 +590,22 @@ int check4poll( int showdata, int timeout )
 	    wasflag = 0;
 	}
 	    
+        if ( buf[0] == chksum_alert ) {
+	    /* this is the checksum expected, just drop it */
+            chksum_alert = -1;
+	    return 0;
+        }
+
+	if (chksum_alert >= 0) {
+	    /* 
+	     * Instead of the checksum expected, we've received something else.
+	     * Don't expect that checksum to appear any longer. Either the
+	     * interface didn't respond with a checksum, busy with an incomming
+	     * transmission or a macro, or we are completely out of sync.
+	     */
+	    chksum_alert = -1;
+	}
+
 	macro_report = 0;
         if ( buf[0] == 0x5a )  {
             /* CM11A has polling info for me */
@@ -593,17 +620,9 @@ int check4poll( int showdata, int timeout )
                 /* We have a byte count */
 	        to_read = buf[0];	/* number of bytes to read */
 		if ( to_read == 0x5a ) {
-                    if ( chksum_alert ) {
-                       /* It's the checksum for a sent block of data with checksum = 0x5a */
-                       chksum_alert = 0;
-                       /* fclose(fdsout); */
-                       return 0;
-                    }
-                    else {	
-                       /* Darn.  Another polling indicator */
-		       timeout = 2;
-		       return ( check4poll(showdata, timeout) );
-                    }
+                    /* Darn.  Another polling indicator */
+		    timeout = 2;
+		    return ( check4poll(showdata, timeout) );
 		}
 		else if ( to_read == 0x5b )  { /* Macro report coming in */
 		    to_read = 2;
@@ -819,7 +838,7 @@ int check4poll( int showdata, int timeout )
                                           fprintf(fdsout, "%s %-22s : hu %c0  (%s)\n",
                                             datstrf(), minibuf, toupper((int)lasthc), lookup_label(lasthc, 0));
                                        }
-                                       else if ( lastunit == 6 && predim < 11 ) {
+                                       else if ( lastunit == 6 && predim < sizeof(rcs_status) / sizeof(*rcs_status) + 1 ) {
                                           fprintf(fdsout, "%s %-22s : hu %c0  (%s)\n",
                                             datstrf(), rcs_status[predim - 1], toupper((int)lasthc),
                                                                    lookup_label(lasthc, 0));
@@ -1125,9 +1144,6 @@ int check4poll( int showdata, int timeout )
 	else if ( buf[0] == ((configp->ring_ctrl == DISABLE) ? 0xdb : 0xeb) && waitflag ) {
 	   waitflag = 0;
 	}
-        else if ( buf[0] == chksum_alert && chksum_alert ) {
-            chksum_alert = 0;
-        }
 	else if ( !(buf[0] == 0x55 && n == 1) )  {
             /* There's some sort of timing problem with the 0x55 ("ready to  */
             /* receive") signal from the interface after a long bright/dim   */

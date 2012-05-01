@@ -3,22 +3,7 @@
  |                                                                            |
  |                    Enhanced HEYU Functionality                             |
  |             Copyright 2002-2008 Charles W. Sullivan                        |
- |                      All Rights Reserved                                   |
  |                                                                            |
- |                                                                            |
- | This software is licensed free of charge for non-commercial distribution   |
- | and for personal and internal business use only.  Inclusion of this        |
- | software or any part thereof in a commercial product is prohibited         |
- | without the prior written permission of the author.  You may copy, use,    |
- | and distribute this software subject to the following restrictions:        |
- |                                                                            |
- |  1)	You may not charge money for it.                                      |
- |  2)	You may not remove or alter this license, copyright notice, or the    |
- |      included disclaimers.                                                 |
- |  3)	You may not claim you wrote it.                                       |
- |  4)	If you make improvements (or other changes), you are requested        |
- |	to send them to the Heyu maintainer so there's a focal point for      |
- |      distributing improved versions.                                       |
  |                                                                            |
  | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
  | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
@@ -30,22 +15,23 @@
  | Email ID: cwsulliv01                                                       |
  | Email domain: -at- heyu -dot- org                                          |
  |                                                                            |
- | Disclaimers:                                                               |
- | THERE IS NO ASSURANCE THAT THIS SOFTWARE IS FREE OF DEFECTS AND IT MUST    |
- | NOT BE USED IN ANY SITUATION WHERE THERE IS ANY CHANCE THAT ITS            |
- | PERFORMANCE OR FAILURE TO PERFORM AS EXPECTED COULD RESULT IN LOSS OF      |
- | LIFE, INJURY TO PERSONS OR PROPERTY, FINANCIAL LOSS, OR LEGAL LIABILITY.   |
- |                                                                            |
- | TO THE EXTENT ALLOWED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED "AS IS",|
- | WITH NO EXPRESS OR IMPLIED WARRANTY, INCLUDING, BUT NOT LIMITED TO, THE    |
- | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.|
- |                                                                            |
- | IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW WILL THE AUTHOR BE LIABLE    |
- | FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL   |
- | DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE EVEN IF   |
- | THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.            |
- |                                                                            |
  +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,6 +49,7 @@
 #include <sys/time.h>
 #endif /* NSLEEP | ATTSVR4 */
 
+#include <syslog.h>
 #include <time.h>
 #include <sys/time.h>
 #include <limits.h>
@@ -85,7 +72,7 @@ extern int line_no;
 extern int sptty, i_am_relay, i_am_aux, i_am_state;
 extern int heyu_parent;
 extern int verbose;
-extern int xwrite(), exread(), sxread(), check4poll();
+extern int xwrite(), xread(), exread(), sxread(), check4poll();
 extern int is_modem_support(void);
 extern CONFIG  config;
 extern CONFIG  *configp;
@@ -1302,7 +1289,7 @@ int send_buffer ( unsigned char *buffer, int length,
 
    /* get a check sum in reply */
 
-   nread = exread(sptty, inbuff, 1, timeout);
+   nread = xread(sptty, inbuff, 1, 1);
 
    if ( chksum == inbuff[0] ) {
       /* Checksum is OK; tell interface to transmit the code. */
@@ -1316,6 +1303,12 @@ int send_buffer ( unsigned char *buffer, int length,
 
       (void) xwrite(tty, "\00" , 1);	/* WRMI (we really mean it) */
    }
+   else if (!nread) {
+      if ( verbose )
+         display_send_message("Checksum NOT confirmed, no response from interface");
+      syslog(LOG_WARNING, "Checksum NOT confirmed, no response from interface");
+      return 1;
+   }
    else  {
       if ( verbose ) {
          sprintf(msgbuff, "Checksum %02x NOT confirmed - should be %02x\n",
@@ -1325,7 +1318,7 @@ int send_buffer ( unsigned char *buffer, int length,
       return 1;
    }
 
-   if ( (nread = exread(sptty, inbuff, 1, timeout)) >= 1 ) {
+   if ( (nread = xread(sptty, inbuff, 1, timeout)) >= 1 ) {
       if( inbuff[0] == 0x55 ) {
          /* interface is ready again */
          if ( verbose )

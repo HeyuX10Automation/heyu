@@ -1,3 +1,36 @@
+/*----------------------------------------------------------------------------+
+ |                                                                            |
+ |      Enhanced HEYU Functionality for Uploaded Timers and Macros            |
+ |        Copyright 2002,2003,2004,2005,2006 Charles W. Sullivan              |
+ |                                                                            |
+ |                                                                            |
+ | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
+ | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
+ | The author is not affiliated with either entity.                           |
+ |                                                                            |
+ | Charles W. Sullivan                                                        |
+ | Co-author and Maintainer                                                   |
+ | Greensboro, North Carolina                                                 |
+ | Email ID: cwsulliv01                                                       |
+ | Email domain: -at- heyu -dot- org                                          |
+ |                                                                            |
+ +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -339,7 +372,7 @@ enum {SndC, SndM, SndP, SndS, SndT, RcvI, RcvT, SndA, RcvA, Xmtf};
 #define CRON_REPORT_FILE  "cronreport.txt"
 #define SUN_TABLE_FILE    "sun_%d.txt"
 
-enum {RiseSet, CivilTwi, NautTwi, AstroTwi};
+enum {RiseSet, CivilTwi, NautTwi, AstroTwi, AngleOffset, };
 enum {ArmLogicStrict, ArmLogicMedium, ArmLogicLoose};
 
 #define RFXCOM_ARCTECH   0x00000001
@@ -1169,6 +1202,7 @@ typedef struct {
   unsigned char dawn_option;      /* Use First, Average, Median, etc.*/
   unsigned char dusk_option;      /* Use First, Average, Median, etc.*/
   int           sunmode;          /* Definition of Dawn/Dusk */
+  int           sunmode_offset;   /* Custom Dawn/Dusk angle offset */
   int           dawn_substitute;  /* For days when there's no dawn */
   int           dusk_substitute;  /* For days when there's no dusk */
   int           min_dawn;         /* Lower bound on dawn */
@@ -1182,6 +1216,8 @@ typedef struct {
   char          tty[PATH_LEN + 1];   /* Serial port to use */
   char          suffix[PATH_LEN + 1]; /* Suffix for file locks */
   char          ttyaux[PATH_LEN + 1]; /* Auxiliary input serial port */
+  char          auxhost[NAME_LEN + 1]; /* Auxiliary input network host address or name */
+  char          auxport[NAME_LEN + 1]; /* Auxiliary input network port number or name */
   char          suffixaux[PATH_LEN + 1]; /* Suffix for aux file lock */
   char          ttyrfxmit[PATH_LEN + 1]; /* RFXmitter serial port */
   unsigned char rfxmit_freq;      /* RFXmitter frequency */
@@ -1616,7 +1652,7 @@ int compmac ( struct macindx *, struct macindx * );
 int write_macroxref ( char *, MACRO *, unsigned char *, int );
 int process_data ( int );
 int crontest ( void );
-int write_sun_table ( int, int, int, int );
+int write_sun_table ( int, int, int, int, int );
 int comp_events ( struct ev_s *, struct ev_s * );
 int display_events ( FILE *, TIMER *, TEVENT *, MACRO *, CALEND * );
 int display_timers ( FILE *, TIMER *, TEVENT *, MACRO * );

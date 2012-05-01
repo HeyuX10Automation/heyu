@@ -3,22 +3,7 @@
  |                                                                            |
  |      Enhanced HEYU Functionality for Uploaded Timers and Macros            |
  |        Copyright 2002,2003,2004,2005,2006 Charles W. Sullivan              |
- |                      All Rights Reserved                                   |
  |                                                                            |
- |                                                                            |
- | This software is licensed free of charge for non-commercial distribution   |
- | and for personal and internal business use only.  Inclusion of this        |
- | software or any part thereof in a commercial product is prohibited         |
- | without the prior written permission of the author.  You may copy, use,    |
- | and distribute this software subject to the following restrictions:        |
- |                                                                            |
- |  1)	You may not charge money for it.                                      |
- |  2)	You may not remove or alter this license, copyright notice, or the    |
- |      included disclaimers.                                                 |
- |  3)	You may not claim you wrote it.                                       |
- |  4)	If you make improvements (or other changes), you are requested        |
- |	to send them to the Heyu maintainer so there's a focal point for      |
- |      distributing improved versions.                                       |
  |                                                                            |
  | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
  | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
@@ -30,22 +15,23 @@
  | Email ID: cwsulliv01                                                       |
  | Email domain: -at- heyu -dot- org                                          |
  |                                                                            |
- | Disclaimers:                                                               |
- | THERE IS NO ASSURANCE THAT THIS SOFTWARE IS FREE OF DEFECTS AND IT MUST    |
- | NOT BE USED IN ANY SITUATION WHERE THERE IS ANY CHANCE THAT ITS            |
- | PERFORMANCE OR FAILURE TO PERFORM AS EXPECTED COULD RESULT IN LOSS OF      |
- | LIFE, INJURY TO PERSONS OR PROPERTY, FINANCIAL LOSS, OR LEGAL LIABILITY.   |
- |                                                                            |
- | TO THE EXTENT ALLOWED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED "AS IS",|
- | WITH NO EXPRESS OR IMPLIED WARRANTY, INCLUDING, BUT NOT LIMITED TO, THE    |
- | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.|
- |                                                                            |
- | IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW WILL THE AUTHOR BE LIABLE    |
- | FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL   |
- | DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE EVEN IF   |
- | THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.            |
- |                                                                            |
  +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -3429,8 +3415,8 @@ void resolve_dawndusk_options ( TEVENT **teventpp, CALEND *calendp )
    julianday = daycount2JD(calendp->today);
 
    for ( j = 0; j < 366; j++ ) {
-      scode[j] = suntimes( latitude, longitude, tzone,
-         julianday, configp->sunmode, &dawn[j], &dusk[j], NULL, NULL );
+      scode[j] = suntimes( latitude, longitude, tzone, julianday,
+         configp->sunmode, configp->sunmode_offset, &dawn[j], &dusk[j], NULL, NULL );
       julianday++ ;
    }
 
@@ -6449,8 +6435,8 @@ int resolve_sun_times( TIMER **timerpp, CALEND *calendp,
    julianday = daycount2JD(calendp->today);
 
    for ( j = 0; j < 366; j++ ) {
-      scode[j] = suntimes( latitude, longitude, tzone,
-         julianday, configp->sunmode, &dawn[j], &dusk[j], NULL, NULL );
+      scode[j] = suntimes( latitude, longitude, tzone, julianday,
+         configp->sunmode, configp->sunmode_offset, &dawn[j], &dusk[j], NULL, NULL );
       julianday++ ;
    }
 
@@ -8273,12 +8259,12 @@ int crontest ( void )
  | Write a table of daily sunrise/set or twilight to disk using        |
  | location and timezone parameters from the configuration file.       |
  +---------------------------------------------------------------------*/
-int write_sun_table ( int format, int year, int sunmode, int timemode )
+int write_sun_table ( int format, int year, int sunmode, int offset, int timemode )
 {
    FILE *fd_sun;
    char filename[256];
    static char *fname[] = {"SunRiseSet", "CivilTwilight",
-      "NautTwilight", "AstronTwilight"};
+      "NautTwilight", "AstronTwilight", "SunAngleOffset", };
 
    get_configuration(CONFIG_INIT);
 
@@ -8297,11 +8283,11 @@ int write_sun_table ( int format, int year, int sunmode, int timemode )
    if ( (fd_sun = fopen(filename, "w")) ) {
       printf("Writing file %s\n", filename);
       if ( format == FMT_PORTRAIT ) {
-         display_sun_table(fd_sun, year, configp->tzone, sunmode, timemode, 
+         display_sun_table(fd_sun, year, configp->tzone, sunmode, offset, timemode, 
              configp->lat_d, configp->lat_m, configp->lon_d, configp->lon_m);
       }
       else {
-         display_sun_table_wide(fd_sun, year, configp->tzone, sunmode, timemode, 
+         display_sun_table_wide(fd_sun, year, configp->tzone, sunmode, offset, timemode, 
              configp->lat_d, configp->lat_m, configp->lon_d, configp->lon_m);
       }
    }
@@ -9688,11 +9674,14 @@ int final_report ( char *pathname, CALEND *calendp, TIMER *timerp,
    else
      (void)fprintf( fd, "Configured for COMPATIBLE mode.\n\n");
 
-   (void)fprintf( fd, "Dawn/Dusk defined as %s\n\n",
-       ((configp->sunmode == RiseSet) ? "Sunrise/Sunset" :
-	(configp->sunmode == CivilTwi) ? "Civil Twilight" :
-	(configp->sunmode == NautTwi) ? "Nautical Twilight" :
-	(configp->sunmode == AstroTwi) ? "Astronomical Twilight" : "???"));
+   (void)fprintf( fd, "Dawn/Dusk defined as ");
+   (void)fprintf( fd, 
+       ((configp->sunmode == RiseSet) ? "Sunrise/Sunset\n\n" :
+	(configp->sunmode == CivilTwi) ? "Civil Twilight\n\n" :
+	(configp->sunmode == NautTwi) ? "Nautical Twilight\n\n" :
+	(configp->sunmode == AstroTwi) ? "Astronomical Twilight\n\n" :
+	(configp->sunmode == AngleOffset) ? "Sun centre at %d angle minutes below horizon\n\n" : "???"),
+	 configp->sunmode_offset);
 
    (void) fprintf( fd, "Actual Event Times (A.E.T.) include macro delay, if any.\n");
    (void) fprintf( fd, "Schedule Times and A.E.T. are Civil Time.\n");
@@ -10212,14 +10201,14 @@ int c_set_status ( int argc, char *argv[] )
  +---------------------------------------------------------------------*/
 int c_utility ( int argc, char *argv[] )
 {
-   int           j, sunmode, timemode, format, year;
+   int           j, sunmode, offset, timemode, format, year;
    time_t        utc0_dawn, utc0_dusk;
    time_t        now;
    struct tm     *tmp;
    char          *sp;
 
    static char   *sunmodelabel[] = {"Sunrise/Sunset", "Civil Twilight",
-        "Nautical Twilight", "Astronomical Twilight"};
+        "Nautical Twilight", "Astronomical Twilight", "Sun angle offset = %d'", };
 
    unsigned long loopcount;
    unsigned long loop_calibrate ( void );
@@ -10242,37 +10231,65 @@ int c_utility ( int argc, char *argv[] )
          now = time(NULL);
          year = localtime(&now)->tm_year + 1900;
          sunmode = configp->sunmode;
+         offset = configp->sunmode_offset;
          timemode = TIMEMODE_CIVIL;
          format = FMT_PORTRAIT;
 
-         if ( argc > 3 && *argv[argc - 1] != '-' ) {
-            year = (int)strtol(argv[argc - 1], &sp, 10);
-            if ( !strchr(" /t/n", *sp) || year < 1970 || year > 2099 ) {
-               fprintf(stderr, "Invalid year '%s'\n", argv[argc - 1]);
-               return 1;
-            }
-            argc--;
-         }
-
          for ( j = 3; j < argc; j++ ) {
-            if ( *argv[j] != '-' ||
-                 strlen(argv[j]) != 2  ||
-                 !(sp = strchr("rcnasw", *(argv[j] + 1)))  ) {
+            if ( *argv[j] == '-' ) {
+	       if ( strlen(argv[j]) >= 2 ) {
+                  sp = argv[j] + 1;
+                  if ( *sp == 'w' && strlen(argv[j]) == 2 ) {
+                     format = FMT_LANDSCAPE;
+		     continue;
+                  }
+                  else if ( *sp == 's' && strlen(argv[j]) == 2 ) {
+                     timemode = TIMEMODE_STANDARD;
+		     continue;
+                  }
+                  else if ( *sp == 'o' ) {
+                     sunmode = AngleOffset;
+	             if ( strlen(argv[j]) > 2 || ( argc > j + 1 && strlen(argv[j + 1]) > 0 ) ) {
+		        if ( strlen(argv[j]) > 2 )
+		           offset = strtol(argv[j] + 2, &sp, 10);
+		        else
+		           offset = strtol(argv[++j], &sp, 10);
+			if (*sp == '\0')
+		        	continue;
+		     }
+	          }
+	          else if ( strlen(argv[j]) == 2 ) {
+	             if ( *sp == 'r' ) {
+		        sunmode = RiseSet;
+                        continue;
+                     }
+                     else if ( *sp == 'c' ) {
+		        sunmode = CivilTwi;
+                        continue;
+                     }
+                     else if ( *sp == 'n' ) {
+		        sunmode = NautTwi;
+                        continue;
+                     }
+                     else if ( *sp == 'a' ) {
+		        sunmode = AstroTwi;
+                        continue;
+                     }
+                  }
+               }
                fprintf(stderr, "Invalid parameter '%s'\n", argv[j]);
                return 1;
             }
-            else if ( *sp == 'w' )
-               format = FMT_LANDSCAPE;
-            else if ( *sp == 's' )
-               timemode = TIMEMODE_STANDARD;
             else {
-               sunmode = ( *sp == 'r' ) ? RiseSet :
-                         ( *sp == 'c' ) ? CivilTwi :
-                         ( *sp == 'n' ) ? NautTwi : AstroTwi ;
+               year = (int)strtol(argv[j], &sp, 10);
+               if ( !strchr(" /t/n", *sp) || year < 1970 || year > 2099 ) {
+                  fprintf(stderr, "Invalid year '%s'\n", argv[argc - 1]);
+                  return 1;
+               }
             }
          }
 
-         return write_sun_table(format, year, sunmode, timemode);
+         return write_sun_table(format, year, sunmode, offset, timemode);
       }
       else if (strcmp("dawndusk", argv[2]) == 0 ) {
          get_configuration(CONFIG_INIT);
@@ -10288,8 +10305,9 @@ int c_utility ( int argc, char *argv[] )
          tmp = localtime(&utc0_dawn);
          printf("Dawn = %02d:%02d %s", tmp->tm_hour, tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
          tmp = localtime(&utc0_dusk);
-         printf("  Dusk = %02d:%02d %s", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
-         printf("  (%s)\n", sunmodelabel[configp->sunmode]);
+         printf("  Dusk = %02d:%02d %s  ", tmp->tm_hour,  tmp->tm_min, heyu_tzname[tmp->tm_isdst]);
+         printf(sunmodelabel[configp->sunmode], configp->sunmode_offset);
+         printf("\n");
          return 0;
       }
          

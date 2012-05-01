@@ -3,15 +3,21 @@
  * Pleasanton Ca. 94588 USA
  * E-MAIL dbs@tanj.com
  *
- * You may freely copy, use, and distribute this software,
- * in whole or in part, subject to the following restrictions:
+ */
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
  *
- *  1)  You may not charge money for it.
- *  2)  You may not remove or alter this copyright notice.
- *  3)  You may not claim you wrote it.
- *  4)  If you make improvements (or other changes), you are requested
- *      to send them to me, so there's a focal point for distributing
- *      improved versions.
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -86,18 +92,6 @@ int c_monitor( int argc, char *argv[] )
     char spoolfile[100];
     time_t time_now, time_prev;
 
-#ifdef HASSELECT
-    extern int tty;
-    int newfd;
-    int rtn;
-    fd_set rfds;
-    struct timeval tv;
-    if ( tty == TTY_DUMMY )
-       newfd = tty;
-    else
-       newfd=dup(tty);
-#endif
-
     sprintf( spoolfile, "%s/%s%s", SPOOLDIR, SPOOLFILE, configp->suffix);
     (void) signal(SIGCHLD, iquit);
     (void) signal(SIGINT, iquit);
@@ -132,20 +126,10 @@ int c_monitor( int argc, char *argv[] )
 	if( f_offset == lseek(sptty, 0, SEEK_END) )  {  /* find end of file */
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	        return(0); 
-#ifndef HASSELECT
+
 	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
 	    microsleep(configp->engine_poll);
-#else
-            if ( tty != TTY_DUMMY ) {
-	       FD_CLR(newfd, &rfds);
-	       FD_SET(newfd, &rfds);
-            }
-	    tv.tv_sec = 0;	/* This does it even better */
-	    tv.tv_usec = configp->engine_poll;
-	    if( (rtn = select(1 ,NULL, NULL, NULL, &tv)) < 0 )
-		perror("select failed\n");
-#endif
 	}
 	else {
 	    if ( fstat( sptty, &stat_buf ) < 0 )
@@ -176,18 +160,6 @@ int c_engine( int argc, char *argv[] )
     extern FILE *fdsout;
     extern FILE *fdserr;
     
-#ifdef HASSELECT
-    extern int tty;
-    int newfd;
-    int rtn;
-    fd_set rfds;
-    struct timeval tv;
-    if ( tty == TTY_DUMMY )
-       newfd = tty;
-    else
-       newfd=dup(tty);
-#endif
-
     sprintf( spoolfile, "%s/%s%s", SPOOLDIR, SPOOLFILE, configp->suffix);
 
     (void) signal(SIGINT, engine_quit /*iquit*/);
@@ -227,20 +199,10 @@ int c_engine( int argc, char *argv[] )
 	if ( f_offset == lseek(sptty, 0, SEEK_END) )  {  /* find end of file */
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	       engine_quit(SIGTERM) /* return(0) */; 
-#ifndef HASSELECT
+
 	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
 	    microsleep(configp->engine_poll);
-#else
-            if ( tty != TTY_DUMMY ) {
-	       FD_CLR(newfd, &rfds);
-	       FD_SET(newfd, &rfds);
-            }
-	    tv.tv_sec = 0;	/* This does it even better */
-	    tv.tv_usec = configp->engine_poll;
-	    if( (rtn = select(1 ,NULL, NULL, NULL, &tv)) < 0 )
-		perror("select failed\n");
-#endif /* HASSELECT */
 	}
 	else {
 	    if ( fstat( sptty, &stat_buf ) < 0)

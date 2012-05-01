@@ -2,22 +2,7 @@
  |                                                                            |
  |                       HEYU Configuration                                   |
  |       Copyright 2002,2003,2004-2008 Charles W. Sullivan                    |
- |                      All Rights Reserved                                   |
  |                                                                            |
- |                                                                            |
- | This software is licensed free of charge for non-commercial distribution   |
- | and for personal and internal business use only.  Inclusion of this        |
- | software or any part thereof in a commercial product is prohibited         |
- | without the prior written permission of the author.  You may copy, use,    |
- | and distribute this software subject to the following restrictions:        |
- |                                                                            |
- |  1)	You may not charge money for it.                                      |
- |  2)	You may not remove or alter this license, copyright notice, or the    |
- |      included disclaimers.                                                 |
- |  3)	You may not claim you wrote it.                                       |
- |  4)	If you make improvements (or other changes), you are requested        |
- |	to send them to the Heyu maintainer so there's a focal point for      |
- |      distributing improved versions.                                       |
  |                                                                            |
  | As used herein, HEYU is a trademark of Daniel B. Suthers.                  | 
  | X10, CM11A, and ActiveHome are trademarks of X-10 (USA) Inc.               |
@@ -29,22 +14,23 @@
  | Email ID: cwsulliv01                                                       |
  | Email domain: -at- heyu -dot- org                                          |
  |                                                                            |
- | Disclaimers:                                                               |
- | THERE IS NO ASSURANCE THAT THIS SOFTWARE IS FREE OF DEFECTS AND IT MUST    |
- | NOT BE USED IN ANY SITUATION WHERE THERE IS ANY CHANCE THAT ITS            |
- | PERFORMANCE OR FAILURE TO PERFORM AS EXPECTED COULD RESULT IN LOSS OF      |
- | LIFE, INJURY TO PERSONS OR PROPERTY, FINANCIAL LOSS, OR LEGAL LIABILITY.   |
- |                                                                            |
- | TO THE EXTENT ALLOWED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED "AS IS",|
- | WITH NO EXPRESS OR IMPLIED WARRANTY, INCLUDING, BUT NOT LIMITED TO, THE    |
- | IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.|
- |                                                                            |
- | IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW WILL THE AUTHOR BE LIABLE    |
- | FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL   |
- | DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE THIS SOFTWARE EVEN IF   |
- | THE AUTHOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.            |
- |                                                                            |
  +----------------------------------------------------------------------------*/
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -199,7 +185,7 @@ static struct conf {
    {"XREF_APPEND",          2, 2, 0, 1, COVR|CIGN, Ignored }, 
    {"MACTERM",              2, 2, 0, 1, COVR,    MacTerm }, /* WIP */
    {"RESOLVE_OVERLAP",      2, 2, 0, 1, COVR,    ResOverlap },
-   {"DAWNDUSK_DEF",         2, 2, 0, 1, COVR,    SunMode },
+   {"DAWNDUSK_DEF",         2, 3, 0, 1, COVR,    SunMode },
    {"SCRIPT_MODE",          2, 2, 0, 0, 0,       ScriptMode },
    {"SCRIPT_SHELL",         2, 2, 0, 0, 0,       ScriptShell },
    {"LAUNCH_SOURCE",        2, 6, 0, 0, 0,       LaunchSrc },
@@ -454,6 +440,8 @@ void initialize_config ( void )
    configp->max_dusk = DEF_MAX_DUSK;
    strncpy2(configp->tty, DEF_TTY, sizeof(config.tty) - 1);
    configp->ttyaux[0] = '\0';
+   configp->auxhost[0] = '\0';
+   configp->auxport[0] = '\0';
    configp->suffixaux[0] = '\0';
    configp->auxdev = 0;
    configp->newformat = 0;
@@ -1306,6 +1294,19 @@ int parse_config_tail ( char *buffer, unsigned char source )
                break;
 	    }
 
+	    if ( ( configp->auxdev == DEV_RFXCOM32 || configp->auxdev == DEV_RFXCOMVL ) && *configp->ttyaux != '/' ) {
+	       sp = strchr(tokv[0], ':');
+
+	       if ( sp ) {
+	          j = sp++ - tokv[0];
+                  if ( j > sizeof(config.auxhost) - 1 )
+	             j = sizeof(config.auxhost) - 1;
+
+                  (void) strncpy2(configp->auxhost, tokv[0], j);
+                  (void) strncpy2(configp->auxport, sp, sizeof(config.auxport) - 1);
+	       }
+	    }
+
             if ( configp->auxdev == DEV_RFXCOMVL && tokc > 2 ) {
                strupper(tokv[2]);
                if ( strcmp(tokv[2], "VISONIC") == 0 )
@@ -1872,18 +1873,35 @@ int parse_config_tail ( char *buffer, unsigned char source )
 
 	 case SunMode :
 	    strupper(tokv[0]);
-	    if ( strncmp(tokv[0], "RISESET", 1) == 0 )
-	       configp->sunmode = RiseSet;
-	    else if ( strncmp(tokv[0], "CIVILTWI", 1) == 0 )
-	       configp->sunmode = CivilTwi;
-	    else if ( strncmp(tokv[0], "NAUTTWI", 1) == 0 )
-	       configp->sunmode = NautTwi;
-	    else if ( strncmp(tokv[0], "ASTROTWI", 1) == 0 )
-	       configp->sunmode = AstroTwi;
-	    else {
-	       store_error_message("DAWNDUSK_DEF must be R, C, N, or A");
-	       errors++;
+            if ( tokc == 1 ) {
+	       if ( strncmp(tokv[0], "RISESET", 1) == 0 ) {
+	          configp->sunmode = RiseSet;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "CIVILTWI", 1) == 0 ) {
+	          configp->sunmode = CivilTwi;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "NAUTTWI", 1) == 0 ) {
+	          configp->sunmode = NautTwi;
+		  break;
+               }
+	       else if ( strncmp(tokv[0], "ASTROTWI", 1) == 0 ) {
+	          configp->sunmode = AstroTwi;
+		  break;
+               }
 	    }
+            else {
+	       sp = NULL;
+	       if ( strncmp(tokv[0], "OFFSET", 1) == 0 ) {
+	          configp->sunmode = AngleOffset;
+                  configp->sunmode_offset = (int)strtol(tokv[1], &sp, 10);
+               }
+               if ( sp && strchr(" \t\n", *sp) )
+	          break;
+            }
+	    store_error_message("DAWNDUSK_DEF must be R, C, N, A or O <int>");
+	    errors++;
 	    break;
 
          case Fix5A :

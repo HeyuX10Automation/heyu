@@ -4,32 +4,30 @@
  * Pleasanton Ca. 94588 USA
  * E-MAIL dbs@tanj.com
  *
- * You may freely copy, use, and distribute this software,
- * in whole or in part, subject to the following restrictions:
- *
- *  1)  You may not charge money for it.
- *  2)  You may not remove or alter this copyright notice.
- *  3)  You may not claim you wrote it.
- *  4)  If you make improvements (or other changes), you are requested
- *      to send them to me, so there's a focal point for distributing
- *      improved versions.
- *
  */
 
 /*
  * Copyright 1986 by Larry Campbell, 73 Concord Street, Maynard MA 01754 USA
- * (maynard!campbell).  You may freely copy, use, and distribute this software
- * subject to the following restrictions:
- *
- *  1)	You may not charge money for it.
- *  2)	You may not remove or alter this copyright notice.
- *  3)	You may not claim you wrote it.
- *  4)	If you make improvements (or other changes), you are requested
- *	to send them to me, so there's a focal point for distributing
- *	improved versions.
+ * (maynard!campbell).
  *
  * John Chmielewski (tesla!jlc until 9/1/86, then rogue!jlc) assisted
  * by doing the System V port and adding some nice features.  Thanks!
+ */
+
+/*
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 #ifdef        SCO
@@ -56,6 +54,9 @@
 /* msf - added for glibc/rh 5.0 */
 #include <pty.h>
 #endif
+
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include "x10.h"
 #include "process.h"
@@ -155,6 +156,51 @@ int setup_tty_aux( int auxbaud, int lockflag )
 #ifdef DEBUG
     syslog(LOG_ERR, "Opening tty_aux line.");
 #endif
+
+    if ( configp->auxhost[0] && configp->auxport[0] ) {
+       struct addrinfo hints;
+       struct addrinfo *result, *rp;
+       int sfd, s;
+
+       memset(&hints, 0, sizeof(struct addrinfo));
+       hints.ai_family = AF_UNSPEC;	/* Allow IPv4 or IPv6 */
+       hints.ai_socktype = SOCK_STREAM; /* Stream socket */
+       hints.ai_flags = 0;
+       hints.ai_protocol = 0;		/* Any protocol */
+
+       /* Obtain address(es) matching host/port */
+
+       s = getaddrinfo(configp->auxhost, configp->auxport, &hints, &result);
+       if (s != 0) {
+          syslog(LOG_ERR, "getaddrinfo: %s\n", gai_strerror(s));
+       } else {
+          /*
+	   * getaddrinfo() returns a list of address structures.
+	   * Try each address until we successfully connect(2).
+	   * If socket(2) (or connect(2)) fails, we (close the socket
+	   * and) try the next address.
+	   */
+          for (rp = result; rp != NULL; rp = rp->ai_next) {
+	     sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+	     if (sfd == -1)
+	        continue;
+
+             if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
+	        break;			/* Success */
+
+	     close(sfd);
+          }
+
+          freeaddrinfo(result);		/* No longer needed */
+
+          if (rp == NULL) {		/* No address succeeded */
+	     syslog(LOG_ERR, "Could not connect\n");
+          } else {
+             tty_aux = sfd;
+             return 0;
+	  }
+       }
+    }
 
 #ifdef O_NONBLOCK
     /* Open with non-blocking I/O, we'll fix after we set CLOCAL */

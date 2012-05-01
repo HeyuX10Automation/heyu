@@ -32,7 +32,8 @@ man page x10config(5).
 .PP
 Heyu supports an auxiliary input device on a second serial port for X10
 RF signals.  Supported devices are the WGL W800RF32A, the X-10 MR26A,
-and the RFXCOM X10 RF Receivers.
+and the RFXCOM X10 RF Receivers. A network version of the RFXCOM receiver,
+RFXLAN, is also supported.
 .PP
 The W800RF32A is manufactured by WGL & Associates (http://www.wgldesigns.com).
 It is available in both a 310 MHz version for operation in the USA and Canada
@@ -395,8 +396,9 @@ be relied on for critical applications.
 .IP \fBaux\fP
 Starts the auxiliary daemon heyu_aux, a background process which
 allows X10 commands to be input to Heyu via RF signals from a W800RF32A,
-MR26A, or RFXCOM serial receiver.  The serial port to which the receiver is
-connected and the receiver device type must be specified in the
+MR26A, or RFXCOM serial receiver, or from an RFXLAN network receiver. 
+The serial port to which the receiver is connected, or the network address
+in case of RFXLAN, and the receiver device type must be specified in the
 configuration file with the TTY_AUX directive.
 .br
 
@@ -459,16 +461,18 @@ configuration is what you think it ought to be.
 \'heyu utility dawndusk\' displays the times of Dawn and Dusk for today.
 .br
 
-\'heyu utility suntable [-r|-c|-n|-a -s -w] [yyyy]\' writes a file to the 
-hard drive containing a daily table of Dawn and Dusk as computed by Heyu for
-your Longitude, Latitude, and Timezone, for the current year or for year yyyy.
-By default, Dawn and Dusk are as defined by the DAWNDUSK_DEF directive in your
-configuration file, times displayed are Civil (i.e., wall-clock) times, and
-the table is 80 columns wide.
+\'heyu utility suntable [-r|-c|-n|-a|-o [-]\fInn\fP] [-s] [-w] [\fIyyyy\fP]\'
+writes a file to the hard drive containing a daily table of Dawn and Dusk as
+computed by Heyu for your Longitude, Latitude, and Timezone, for the current
+year or for year \fIyyyy\fP. By default, Dawn and Dusk are as defined by the
+DAWNDUSK_DEF directive in your configuration file, times displayed are Civil
+(i.e., wall-clock) times, and the table is 80 columns wide.
 .br
-Switches -r, -c, -n, -a direct Heyu to use the definition of Dawn and Dusk as
-Rise/set, or as Civil, Nautical, or Astronomical Twilight, respectively, and
-overriding the definition of Dawn and Dusk in your configuration file.
+Switches -r, -c, -n, -a or -o [-]\fInn\fP direct Heyu to use the definition of
+Dawn and Dusk as either Sunrise/Sunset, or Civil, Nautical or Astronomical
+Twilight, or a specified position of the Sun centre in angle minutes below the
+horizon (actually above the horizon if \fb-\fInn\fP), respectively, overriding
+the definition of Dawn and Dusk from your configuration file.
 .br
 Switch -s displays times as Standard Time throughout the year instead of
 Civil Time.
@@ -1523,11 +1527,18 @@ the following commands (for a thermostat configured for housecode A):
    heyu rcs_req preset A5 5  (setback mode)
 .br
    heyu rcs_req preset A5 6  (setback delta temperature)
+.br
+   heyu rcs_req preset A5 7  (outdoor temperature)
+.br
+   heyu rcs_req preset A5 8  (heat setpoint temperature)
+.br
+   heyu rcs_req preset A5 9  (cooling setpoint temperature)
 
 .PP
 Note: the temperature value stored at the unit 0
 address location will be the one most recently decoded, whether
-(room) temperature, setpoint temperature, or setback delta.
+(room) temperature, setpoint temperature, setback delta, outdoor,
+heat setpoint or cooling setpoint.
 
 .PP
 See the TX15-B or TXB16 protocol manual for complete details.
