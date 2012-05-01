@@ -1,0 +1,61 @@
+                     HEYU (version 1) Program overview
+
+This program operates an X10 module via a CM11A computer interface. It is
+based on the program X10 by Larry Cambell as modified by Paul Fox. All but a
+few functions have been changed enough that they no longer interwork with
+the original. I think this justifies issuing the program as 'heyu' instead
+of 'x10'.
+
+The program name comes from the old joke about having a 3rd person in the
+house. Ida No was the one frequently blamed when things went wrong. In my
+house it was the frequently heard yells of "Heyu! Turn off the lights!"
+A poor joke, but I like it.
+
+The program is strictly command line driven, and works well with crontab.
+Crontab can be used to schedule events. You can also upload timers and
+macros to the CM11's memory.
+
+The program comes complete with source code, sample config files, MAN pages
+an executable binary. The program has options to allow you to:
+
+   * Get the date and time from the interface
+   * Get information about current settings and module states
+   * Turn an X10 module on or off
+   * Dim or brighten an X10 module
+   * Monitor all data sent to or from the CM11A
+   * Get the status of intelligent X10 modules (rr501 for instance)
+   * Set the X10 clock from the computer's clock (time and date)
+   * Zero out the macro and event memory of the X10
+   * Upload macros and timers
+   * preset the dim level of advanced two way devices
+
+As of version 1.27, Heyu has the ability to send a schedule of events to the
+CM11A. This enables timers and macros.
+
+The people at X10 have informed me that there is no way to download (to the
+computer) the events stored in the CM11A. That being the case, I wrote
+programs that will load the events and macros from local data files. This
+will erase whatever has been stored there, but I guess that's the way it has
+to be.
+
+This should compile on any Linux system. It should also compile on any other
+BSDish or SYSV system. Just edit the #define in the make file. Make install
+will try to install the man page and the program. The makefile has defines
+for these locations.
+
+See the original README in Larry Campbell's program for some nice info on
+the cp290 and the history of the program. See the original for some really
+niffty uses using scheduling and macros.
+
+There are two demo programs included with heyu, monit and x10biff.
+
+   * The monit program will turn off your monitor based on idle time. It's
+     the ultimate screen saver.
+   * The x10biff program will flash a light to let you know that you have
+     E-mail.
+
+Daniel B. Suthers, CCP, CSP
+12-31-1996
+Updated 12-12-1999
+E-mail: dbs@tanj.com
+uucp: pacbell!daver!dansst!dbs

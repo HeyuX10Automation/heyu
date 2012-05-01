@@ -33,17 +33,34 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <signal.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#if    (defined(SCO) || defined (SOLARIS) || defined (ATTSVR4) || defined(OPENBSD))
+#endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#else
+#endif
+#ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
 #endif
 #include <ctype.h>
@@ -849,7 +866,7 @@ int rfxmeter_checksum ( unsigned char *buf )
 //   chksum &= 0x0fu;
    chksum = (chksum - 0x0fu) & 0x0fu;
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -870,7 +887,7 @@ int rfxsensor_checksum ( unsigned char *buf )
    chksum = ~chksum & 0x0fu;
 //   chksum &= 0x0fu;
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -917,7 +934,7 @@ unsigned char digimax_checksum ( unsigned char *buf )
             (buf[4] >> 4) + (buf[4] & 0x0fu) +
             (buf[5] >> 4) + (buf[5] & 0x0fu)) & 0x0fu;
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    return  (sum1 << 4) | sum2;
 #else
    return 0xffu;

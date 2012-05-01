@@ -22,11 +22,14 @@
  */
 
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <time.h>
 #include "x10.h"
-#include "version.h"
 #include "process.h"
 
 extern unsigned int x2unitmap();

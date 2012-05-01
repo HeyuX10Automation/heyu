@@ -34,13 +34,20 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <ctype.h>
 #include "process.h"
 #include "oregon.h"
@@ -311,7 +318,7 @@ struct modules_st {
   {"VIRT4",       MXLV, VSTD, VIRT4,      0, opt_onlevel, NULL  },  /* Virtual module, 4 function */
   {"VDATA",       MXLV, VSTD, VIRTUAL,    0, NULL, NULL  },  /* Virtual module data */
   {"PLCSENSOR",   MXLS, VSTD, PLCSEN,     0, opt_plcsensor, NULL  },  /* PLC Sensor target */
-#ifdef HASEXT0
+#ifdef HAVE_FEATURE_EXT0
   {"SHUTTER",     MXLS0, VNON, SHUT0, XSHUT0, NULL, NULL  },  /* Extended code Type 0 shutter */
   {"SW10",        MXLS0, VNON, SHUT0, XSHUT0, NULL, NULL  },  /* Marmitek SW10 shutter control */
 #endif
@@ -366,7 +373,7 @@ struct modules_st {
   {"MS16",        MXLS, VSTD, MOTION,     0, opt_x10std, NULL},
   {"MS16A",       MXLS, VSTD, MOTION,     0, opt_x10std, NULL},
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
   {"ORE_TH1",     MXLV, VORE,  VIRTUAL,   0, opt_oreTH1, NULL},
   {"THGR122NX",   MXLV, VORE,  VIRTUAL,   0, opt_oreTH1, NULL},
   {"THGN123N",    MXLV, VORE,  VIRTUAL,   0, opt_oreTH1, NULL},
@@ -416,28 +423,28 @@ struct modules_st {
   {"ORE_UV1",     MXLV, VORE,  VIRTUAL,   0, opt_oreUV1, NULL},
   {"ORE_UV2",     MXLV, VORE,  VIRTUAL,   0, opt_oreUV2, NULL},
   {"OWL_ELEC2",   MXLV, VORE,  VIRTUAL,   0, opt_owlElec2new, NULL},
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
   {"RFXSENSOR",   MXLV, VRFXS, VIRTUAL,   0, opt_rfxsensor, fn_rfxsensor},
-#endif /* HASRFXS */
+#endif /* HAVE_FEATURE_RFXS */
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
   {"RFXCOUNT",    MXLV, VRFXM, VIRTUAL,   0, opt_rfxcount, fn_rfxcount},
   {"RFXPOWER",    MXLV, VRFXM, VIRTUAL,   0, opt_rfxpower, fn_rfxpower},
   {"RFXWATER",    MXLV, VRFXM, VIRTUAL,   0, opt_rfxwater, fn_rfxwater},
   {"RFXGAS",      MXLV, VRFXM, VIRTUAL,   0, opt_rfxgas, fn_rfxgas},
   {"RFXPULSE",    MXLV, VRFXM, VIRTUAL,   0, opt_rfxpulse, fn_rfxpulse},
-#endif /* HASRFXM */
+#endif /* HAVE_FEATURE_RFXM */
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
   {"DIGIMAX",     MXLV, VDMX,  VIRTUAL,   0, opt_digimax, NULL},
-#endif /* HASDMX */
+#endif /* HAVE_FEATURE_DMX */
 
-#ifdef HASKAKU
+#ifdef HAVE_FEATURE_KAKU
   {"KAKU_S",      MXLK, VKAKU, KAM,       0, opt_kaku, NULL},
   {"KAKU_P",      MXLK, VKAKU, KLM,       0, opt_kaku, NULL},
-#endif /* HASKAKU */
+#endif /* HAVE_FEATURE_KAKU */
 
   {"VISGEN",     MXLV, VSEC, VIRTUAL,    0, opt_visonic, fn_visonic }, /* Generic Visonic */
 
@@ -1187,19 +1194,19 @@ void show_module_mask ( unsigned char hcode )
       "Sensor transmits X10 power line signals");
    printf("%*s (%s)  %s\n", lw, "Security", bmap2asc(vmodmask[VsecMask][hcode], chr),
       "X10 Security RF data");
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    printf("%*s (%s)  %s\n", lw, "RFXSensor", bmap2asc(vmodmask[VrfxsMask][hcode], chr),
       "RFXSensor RF data");
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    printf("%*s (%s)  %s\n", lw, "RFXMeter", bmap2asc(vmodmask[VrfxmMask][hcode], chr),
       "RFXMeter RF data");
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    printf("%*s (%s)  %s\n", lw, "Digimax", bmap2asc(vmodmask[VdmxMask][hcode], chr),
       "Digimax RF data");
 #endif
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    printf("%*s (%s)  %s\n", lw, "Oregon", bmap2asc(vmodmask[VoreMask][hcode], chr),
       "Oregon RF data");
 #endif
@@ -1644,7 +1651,7 @@ int opt_defer ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 }
 
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 /*---------------------------------------------------------------------+
  | General options for Oregon sensors                                  |
  +---------------------------------------------------------------------*/
