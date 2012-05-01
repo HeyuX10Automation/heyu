@@ -25,16 +25,24 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <time.h>
 #include "x10.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#ifdef SYSV
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
-#ifdef BEFORE
+#endif
+#ifdef HAVE_SYS_FILSYS_H
 #include <sys/filsys.h>
 #endif
 #include "x10.h"
@@ -77,7 +85,7 @@ int c_date( int argc, char *argv[] )
     expire = expire;  /* Keep compiler from complaining */
     
     today = dowX2U(Idays);
-#ifndef POSIX
+#ifndef _POSIX_VERSION
     while (tp->tm_wday % 7 != today)
 	tp->tm_wday++, tp->tm_mday++;
 #endif
