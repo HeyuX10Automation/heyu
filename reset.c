@@ -26,10 +26,16 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdio.h>
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include "x10.h"
 #include "process.h"
 

@@ -1,7 +1,7 @@
 Frequently Asked Questions
 
 This FAQ applies to Heyu Version 2.
-Last updated 02/14/2011
+Last updated 08/22/2011
 
 Q: What is Heyu?
 
@@ -89,9 +89,9 @@ A: The whole package is included in the file heyu-VERSION.tgz  This is a
    CD to the directory of your choice.  Copy the tarred file there and type:
    gunzip -c heyu-VERSION.tgz | tar xvf -
 
-   To compile the program, run the Configure program (./Configure) as an
-   ordinary user and then type 'make'.  The resulting executable program
-   is named simply 'heyu'.
+   To compile the program, run the Configure.sh program (./Configure.sh)
+   as an ordinary user and then type 'make'.  The resulting executable
+   program is named simply 'heyu'.
 
    To install the program and man pages, type 'make install' while logged
    in as root.  It will try to locate your existing configuration file

@@ -33,17 +33,26 @@
  *
  */
 
-
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include <ctype.h>
 #include <time.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 
@@ -122,7 +131,7 @@ unsigned int bcd2dec ( unsigned int bcd, int digits )
 
 int is_ore_ignored ( unsigned int saddr )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j = 0;
 
    while ( j < ore_ignore_size ) {
@@ -135,7 +144,7 @@ int is_ore_ignored ( unsigned int saddr )
    return 0;
 }
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 
 char *forecast_txt( int fcast )
 {
@@ -505,13 +514,13 @@ unsigned char channelval( char *chstr, unsigned char *buf, unsigned char mode )
 }
 
 
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
  
 unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned char *subtype,
                         unsigned char *trulen, unsigned long *addr, int *nseq )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j = 0;
 
    while ( j < orechk_size ) {
@@ -540,7 +549,7 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
    return 1;
 #else
    return 1;
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 }
 
 
@@ -552,7 +561,7 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
  +----------------------------------------------------------------------------*/
 char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    static char    outbuf[160];
    static char    intvstr[32];
    long           intv;
@@ -2056,7 +2065,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
    return outbuf;
 #else
    return "";
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 }   
 
 /*----------------------------------------------------------------------------+
@@ -2067,7 +2076,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
  +----------------------------------------------------------------------------*/
 char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    static char    outbuf[160];
    static char    intvstr[32];
    long           intv;
@@ -2375,11 +2384,11 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
    return outbuf;
 #else
    return "";
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 } 
 
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 /*---------------------------------------------------------------------+
  | Display stored data for Oregon, Electrisave, and OWL sensors        |
  +---------------------------------------------------------------------*/
@@ -2635,9 +2644,9 @@ int show_oregon ( void )
 
    return 0;
 }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
-#ifdef HASORE 
+#ifdef HAVE_FEATURE_ORE 
 /*---------------------------------------------------------------------+
  | Display an Oregon data value stored in the x10state structure.      |
  +---------------------------------------------------------------------*/
@@ -3063,12 +3072,12 @@ int c_ore_emu ( int argc, char *argv[] )
 }
 
 
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
                           
 int ore_maxmin_temp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double tvalue;
    int    tflag;
    char   tscale, tscale_init;
@@ -3128,7 +3137,7 @@ int ore_maxmin_temp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens
 
 int ore_maxmin_rh ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double rhvalue;
    int    rhflag;
    char   rhscale;
@@ -3173,7 +3182,7 @@ int ore_maxmin_rh ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 
 int ore_maxmin_bp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double bpvalue;
    int    bpflag;
    char   bpunits[NAME_LEN + 1];
@@ -3313,7 +3322,7 @@ int ore_maxmin_bp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
  +---------------------------------------------------------------------*/
 int set_elec1_nvar ( int nvar )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j;
 
    for ( j = 0; j < orechk_size; j++ ) {
