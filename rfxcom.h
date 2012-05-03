@@ -44,3 +44,9 @@
 #define FMT_RFXWATER  "%.0f"  /* Water meter */
 #define FMT_RFXGAS    "%.2f"  /* Gas meter */
 #define FMT_RFXPULSE  "%.0f"  /* General pulse meter */
+
+char *translate_kaku(unsigned char *, unsigned char *, int *);
+char *translate_visonic(unsigned char *, unsigned char *, int *);
+char *translate_rfxtype_message(unsigned char *);
+char *translate_rfxsensor_ident(unsigned char *);
+

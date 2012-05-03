@@ -77,6 +77,7 @@
 #endif
 #include "process.h"
 #include "x10state.h"
+#include "rfxcom.h"
 #include "oregon.h"
 
 /* msf - added for glibc/rh 5.0 */
@@ -149,12 +150,400 @@ extern FILE *fdserr;
 extern FILE *fprfxo;
 extern FILE *fprfxe;
 
+/*
+ * Helper tables for converiting heyu_parent compatible values
+ * to the state engine expected signal source values and labels.
+ */
+static const unsigned int source_type[] = {
+	[D_CMDLINE]	= SNDC,
+	[D_ENGINE]	= SNDS,
+	[D_RELAY]	= SNDP,
+	[D_AUXDEV]	= SNDA,
+	[D_AUXRCV]	= RCVA,
+};
+static const char *const source_name[] = {
+	[D_CMDLINE]	= "sndc",
+	[D_ENGINE]	= "snds",
+	[D_RELAY]	= "sndp",
+	[D_AUXDEV]	= "snda",
+	[D_AUXRCV]	= "rcva",
+};
+
+/*
+ * Decode and process Heyu state commands and other engine control directives
+ */
+void process_stcmd(const unsigned char *buf, int *chksum_alert,
+		   const char **send_prefix, unsigned char *waitflag)
+{
+	int j;
+
+	switch (buf[1]) {
+	    case ST_SOURCE:
+		signal_source = source_type[buf[2]];
+		*send_prefix = source_name[buf[2]];
+		break;
+	    case ST_TESTPOINT:
+	    	if (i_am_monitor)
+			fprintf(fdsout, "%s Testpoint %d\n", datstrf(), buf[2]);
+		break;
+	    case ST_LAUNCH:
+	    	if (!i_am_state)
+			break;
+		configp->script_ctrl = buf[2];
+		fprintf(fdsout, "%s Scripts %s\n", datstrf(),
+				buf[2] == ENABLE ? "enabled" : "disabled");
+		break;
+	    case ST_INIT_ALL:
+	    	if (!i_am_state)
+			break;
+		x10state_init_all();
+		write_x10state_file();
+		break;
+	    case ST_INIT:
+	    	if (!i_am_state)
+			break;
+		x10state_init_old(buf[2]);
+		write_x10state_file();
+		break;
+	    case ST_INIT_OTHERS:
+	    	if (!i_am_state)
+			break;
+		x10state_init_others();
+		write_x10state_file();
+		break;
+	    case ST_WRITE:
+	    	if (i_am_state)
+			write_x10state_file();
+		break;
+	    case ST_EXIT:
+	    	if (!i_am_state)
+			break;
+		write_x10state_file();
+		unlock_state_engine();
+		exit(0);
+	    case ST_RESETRF:
+	    	if (i_am_state || i_am_monitor)
+			fprintf(fdsout, "%s Reset CM17A\n", datstrf());
+		break;
+	    case ST_BUSYWAIT:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		*waitflag = buf[2];
+		if (configp->auto_wait != 0)
+			break;
+		if (*waitflag > 0)
+			fprintf(fdsout, "%s Wait macro completion.\n",
+		       			datstrf());
+		else
+			fprintf(fdsout, "%s Wait timeout.\n", datstrf());
+		break;
+	    case ST_CHKSUM:
+		*chksum_alert = buf[2];
+		break;
+	    case ST_REWIND:
+		for (j = 0; j < 10; j++) {
+			if (lseek(sptty, (off_t)0, SEEK_END) <=
+					    (off_t)(SPOOLFILE_ABSMIN/2))
+				break;
+			sleep(1);
+		}
+		fprintf(fdsout,
+			    "%s Spoolfile exceeded max size and was rewound.\n",
+			    datstrf());
+		break;
+	    case ST_SHOWBYTE:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s Byte value = 0x%02x\n", datstrf(), buf[2]);
+		break;
+	    case ST_RESTART:
+	    	if (!i_am_state && !i_am_monitor && !i_am_rfxmeter)
+			break;
+		reread_config();
+		if (i_am_state) {
+			syslog(LOG_ERR, "engine reconfiguration-\n");
+			engine_local_setup(E_RESTART);
+			fprintf(fdsout, "%s Engine reconfiguration\n",
+		    			datstrf());
+		} else if (i_am_rfxmeter) {
+			fprintf(fprfxo, "RFXMeter monitor reconfiguration\n");
+		} else {
+			fprintf(fdsout, "%s Monitor reconfiguration\n",
+					datstrf());
+		}
+		fflush(fdsout);
+		break;
+	    case ST_SECFLAGS:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		if ( buf[2] != 0 )
+			warn_zone_faults(fdsout, datstrf());
+		set_globsec_flags(buf[2]);
+		write_x10state_file();
+		fprintf(fdsout, "%s %s\n", datstrf(), display_armed_status());
+		fflush(fdsout);
+		break;
+	    case ST_CLRTIMERS:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		reset_user_timers();
+		write_x10state_file();
+		fprintf(fdsout, "%s Reset timers 1-16\n", datstrf());
+		fflush(fdsout);
+		break;
+	    case ST_CLRTAMPER:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		clear_tamper_flags();
+		write_x10state_file();
+		fprintf(fdsout, "%s Clear tamper flags\n", datstrf());
+		fflush(fdsout);
+	}
+}
+
+/*
+ * Decode and process Heyu state commands, engine control directives
+ * and signals other than those originating from a power line interface.
+ */
+void process_sent(unsigned char *buf, int len, int *chksum_alert,
+		  const char **send_prefix, unsigned char *waitflag)
+{
+	unsigned char chksum, snochange;
+	int launchp = -1;
+	char *sp, outbuf[256];
+
+	/*
+	 * Identify the type of sent command from the leading 
+	 * byte and the length of the buffer.
+	 */
+	switch (identify_sent(buf, len, &chksum)) {
+	    case SENT_STCMD:	/* A command for the monitor/state process */
+		process_stcmd(buf, chksum_alert, send_prefix, waitflag);
+	    case SENT_WRMI:	/* WRMI - Ignore */
+		break;
+	    case SENT_ADDR:	/* An address */
+	    case SENT_FUNC:	/* Standard function */
+		if (signal_source != RCVA)
+	    case SENT_EXTFUNC:	/* Extended function */
+	    		if (chksum_alert)
+				*chksum_alert = chksum;
+		sp = translate_sent(buf, len, &launchp);
+		if (*sp)
+			fprintf(fdsout, "%s %s %s\n",
+					datstrf(), *send_prefix, sp);
+		if (launchp >= 0 && i_am_state)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_RF:	/* CM17A command */
+		fprintf(fdsout, "%s %s %s\n", datstrf(),
+				"xmtf", translate_rf_sent(buf, &launchp));
+		if (launchp >= 0 && i_am_state)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_FLAGS:
+	    	if (!i_am_state)
+			break;
+		update_flags(buf);
+		write_x10state_file();
+		break;
+	    case SENT_FLAGS32:
+	    	if (!i_am_state)
+			break;
+		update_flags_32(buf);
+		write_x10state_file();
+		break;
+	    case SENT_VDATA:
+		strcpy(outbuf, translate_virtual(buf, 9, &snochange, &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0))
+			fprintf(fdsout, "%s %s %s\n",
+					datstrf(), *send_prefix, outbuf);
+		if (i_am_state && launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_GENLONG:
+		strcpy(outbuf, translate_gen_longdata(buf,
+						&snochange, &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0))
+			fprintf(fdsout, "%s %s %s\n",
+					datstrf(), *send_prefix, outbuf);
+		if (i_am_state && launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_ORE_EMU:
+		strcpy(outbuf, translate_ore_emu(buf, &snochange, &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0))
+			fprintf(fdsout, "%s %s %s\n",
+					datstrf(), *send_prefix, outbuf);
+		if (i_am_state && launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_KAKU:
+		strcpy(outbuf, translate_kaku(buf, &snochange, &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0))
+			fprintf(fdsout,"%s", outbuf);
+		if (i_am_state && launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_VISONIC:
+		strcpy(outbuf, translate_visonic(buf, &snochange, &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0))
+			fprintf(fdsout,"%s", outbuf);
+		if ( i_am_state && launchp >= 0 )
+			launch_scripts(&launchp);
+		break;
+	    case SENT_LONGVDATA:
+		if (i_am_rfxmeter) {
+			/*
+			 * This and only this data gets sent to the special
+			 * 'heyu monitor rfxmeter' window
+			 */
+			strcpy(outbuf, translate_long_virtual(buf, &snochange,
+							      &launchp));
+			sp = strchr(outbuf, '\n');
+			if (sp != NULL )
+				*sp = '\0';
+			fprintf(fprfxo, "%s\n", outbuf);
+			fflush(fprfxo);
+			break;
+		}
+		/*
+		 * This and all other data are not sent to the rfxmeter window
+		 */
+		strcpy(outbuf, translate_long_virtual(buf, &snochange,
+						      &launchp));
+		if (*outbuf && !(snochange &&
+				 config.hide_unchanged == YES && launchp < 0)) {
+			fprintf(fdsout, "%s %s %s\n",
+					datstrf(), *send_prefix, outbuf);
+			sp = strchr(outbuf, '\n');
+			if (sp != NULL) {
+				*sp = '\0';
+				fprintf(fdsout, "%s %s\n", datstrf(), sp + 1);
+			}
+		}
+		if (i_am_state && launchp >= 0)
+                            launch_scripts(&launchp);
+		break;
+	    case SENT_COUNTER:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		set_counter(buf[2] | (buf[3] << 8),
+			    buf[4] | (buf[5] << 8), buf[6]);
+		write_x10state_file();
+		fprintf(fdsout, "%s %s\n",
+				datstrf(), translate_counter_action(buf));
+		fflush(fdsout);
+		break;
+	    case SENT_CLRSTATUS:
+	    	if (!i_am_state)
+			break;
+		clear_statusflags(buf[2], (buf[3] << 8 | buf[4]));
+		write_x10state_file();
+		break;
+	    case SENT_MESSAGE:
+	    	if (i_am_monitor || i_am_state)
+			fprintf(fdsout, "%s %s\n", datstrf(), buf + 3);
+		break;
+	    case SENT_PFAIL:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		bootflag = buf[2];
+		if (bootflag & R_ATSTART) 
+			fprintf(fdsout,
+				"%s Powerfail signal received at startup.\n",
+				datstrf());
+		else
+			fprintf(fdsout,
+			 	"%s Powerfail signal received.\n", datstrf());
+		if (!i_am_state)
+			break;
+		launchp = find_powerfail_scripts(bootflag);
+		if (launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_RFFLOOD:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s RF_Flood signal received.\n", datstrf());
+		if (!i_am_state)
+			break;
+		launchp = find_rfflood_scripts();
+		if (launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_LOCKUP:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout,
+			"%s Interface lockup signal received, reason %02x.\n",
+			datstrf(), buf[2]);
+		if (!i_am_state)
+			break;
+		launchp = find_lockup_scripts();
+		if (launchp >= 0)
+			launch_scripts(&launchp);
+		break;
+	    case SENT_SETTIMER:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s %s\n",
+				datstrf(), translate_settimer_message(buf));
+		break;
+	    case SENT_RFXTYPE:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s %s %s\n", datstrf(),
+				*send_prefix, translate_rfxtype_message(buf));
+		break;
+	    case SENT_RFXSERIAL:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s %s %s\n", datstrf(),
+				*send_prefix, translate_rfxsensor_ident(buf));
+		break;
+	    case SENT_RFVARIABLE:
+	    	if (!i_am_state && !i_am_monitor)
+			break;
+		fprintf(fdsout, "%s %s %s\n", datstrf(),
+				*send_prefix, display_variable_aux_data(buf));
+		break;
+	    case SENT_SCRIPT:
+	    	if (i_am_state)
+			launch_script_cmd(buf);
+		break;
+	    case SENT_INITSTATE:
+	    	if (i_am_state)
+			x10state_init(buf[2], buf[3] | (buf[4] << 8));
+		break;
+	    case SENT_SHOWBUFFER:
+	    	if (i_am_monitor)
+			fprintf(fdsout, "%s %s\n",
+					datstrf(), display_binbuffer(buf + 2));
+		break;
+	    case SENT_OTHER:	/* Other command */
+		if (*(sp = translate_other(buf, len, &chksum)))
+			fprintf(fdsout, "%s %s\n", datstrf(), sp);
+		if (chksum_alert)
+			*chksum_alert = chksum;
+		launchp = -1;
+	}
+}
+
+/*
+ * Read and process power line and RF signals, Heyu state commands
+ * and engine control directives received over the Heyu spool file.
+ */
 int check4poll( int showdata, int timeout )
 {
     static int lastunit;
     static char lasthc = '_';
     int temperat, fdata;
-    int n, i, j;
+    int n, i;
     int to_read;
     char hc;
     unsigned char predim, xcmd, xtype, xdata, subunit;
@@ -164,41 +553,12 @@ int check4poll( int showdata, int timeout )
     int funcbits;
     static int wasflag = 0;
     unsigned char buf[128];
-    char outbuf[256];
-    unsigned char snochange;
     extern char *b2s();
     off_t f_offset;
     unsigned int mac_addr, bitmap;
     extern void acknowledge_hail();
     extern int special_func;
-    extern int display_expanded_macro();
     int ichksum;
-    int identify_sent(unsigned char *, int, unsigned char *);
-    char *translate_other(unsigned char *, int, unsigned char *);
-    extern char *translate_sent(unsigned char *, int, int *);
-    extern char *translate_rf_sent(unsigned char *, int *);
-#if 0
-    extern int find_powerfail_launcher( unsigned char );
-    extern int find_rfflood_launcher( void );
-    extern int find_lockup_launcher( void );
-#endif
-    extern int find_powerfail_scripts ( unsigned char );
-    extern int find_rfflood_scripts ( void );
-    extern int find_lockup_scripts ( void );
-
-    extern int set_globsec_flags( unsigned char );
-    extern char *display_armed_status ( void );
-    extern int clear_tamper_flags ( void );
-    extern int engine_local_setup ( int );
-    extern char *translate_rfxtype_message ( unsigned char * );
-    extern char *translate_rfxsensor_ident ( unsigned char * );
-    extern char *display_variable_aux_data ( unsigned char * );
-    extern int set_counter ( int, unsigned short, unsigned char );
-    extern char *translate_counter_action ( unsigned char * );
-    extern char *translate_kaku ( unsigned char *, unsigned char *, int * );
-    extern char *translate_visonic ( unsigned char *, unsigned char *, int * );
-    extern char *display_binbuffer ( unsigned char * );
-    int launch_script_cmd ( unsigned char * );
     int launchp = -1;
     char maclabel[MACRO_LEN + 1];
     int macfound;
@@ -208,18 +568,15 @@ int check4poll( int showdata, int timeout )
     static int chksum_alert = -1;
     extern char *funclabel[18];
     static unsigned char newbuf[8], hexaddr = 0; 
-    static char *send_prefix = "sndc";
+    static const char *send_prefix = "sndc";
     static unsigned char waitflag = 0;
 
-    int sent_type;
     unsigned char tag;
     int maxlen;
     unsigned char level;
     static unsigned char defer_dim;
     char minibuf[32];
-    char *transp;
     mode_t oldumask;
-    char *sp;
 
 
   
@@ -228,8 +585,6 @@ int check4poll( int showdata, int timeout )
        "Fan = ON", "Fan = OFF", "Setback = ON", "Setback = OFF", "Temp Change", "Setpoint Change",
        "Outside Temp", "Heat Setpoint", "Cooling Setpoint",
     };
-    static unsigned int source_type[] = {SNDC, SNDS, SNDP, SNDA, RCVA};
-    static char *source_name[] = {"sndc", "snds", "sndp", "snda", "rcva"};
 
     if ( i_am_state ) {
        /* Redirect output to the Heyu log file */
@@ -289,291 +644,8 @@ int check4poll( int showdata, int timeout )
 		n = buf[0];
 
                 if ( n < 127 ) {
-		   unsigned char chksum;
-
                    n = xread(sptty, buf, n, timeout);
-
-                   /* Identify the type of sent command from the leading */
-                   /* byte and the length of the buffer.                 */
-                   sent_type = identify_sent(buf, n, &chksum);
-
-                   if ( sent_type == SENT_STCMD ) {
-                      /* A command for the monitor/state process */
-		      if ( buf[1] == ST_SOURCE ) {
-                         signal_source = source_type[buf[2]];
-                         send_prefix = source_name[buf[2]];
-		      }
-                      else if ( buf[1] == ST_TESTPOINT && i_am_monitor ) {
-                         fprintf(fdsout, "%s Testpoint %d\n", datstrf(), buf[2]);
-                      } 
-                      else if ( buf[1] == ST_LAUNCH && i_am_state ) {
-                         configp->script_ctrl = buf[2];
-                         fprintf(fdsout, "%s Scripts %s\n", datstrf(), (buf[2] == ENABLE ? "enabled" : "disabled"));
-                      }
-                      else if ( buf[1] == ST_INIT_ALL && i_am_state ) {
-                         x10state_init_all();
-                         write_x10state_file();
-                      }
-                      else if ( buf[1] == ST_INIT && i_am_state ) {
-                         x10state_init_old(buf[2]);
-                         write_x10state_file();
-                      }
-                      else if ( buf[1] == ST_INIT_OTHERS && i_am_state ) {
-                         x10state_init_others();
-                         write_x10state_file();
-                      }
-                      else if ( buf[1] == ST_WRITE && i_am_state ) {
-                         write_x10state_file();
-                      }
-                      else if ( buf[1] == ST_EXIT && i_am_state ) {
-                         write_x10state_file();
-                         unlock_state_engine();
-                         exit(0);
-                      }
-                      else if ( buf[1] == ST_RESETRF && (i_am_state || i_am_monitor) ) {
-			 fprintf(fdsout, "%s Reset CM17A\n", datstrf());
-                      }
-		      else if ( buf[1] == ST_BUSYWAIT && (i_am_state || i_am_monitor) ) {
-			 waitflag = buf[2];
-                         if ( configp->auto_wait == 0 ) {
-			    if ( waitflag > 0 )
-			       fprintf(fdsout, "%s Wait macro completion.\n", datstrf());
-			    else
-			       fprintf(fdsout, "%s Wait timeout.\n", datstrf());
-                         }
-		      }
-                      else if ( buf[1] == ST_CHKSUM ) {
-                         chksum_alert = buf[2];
-                      }
-                      else if ( buf[1] == ST_REWIND ) {
-                         for ( j = 0; j < 10; j++ ) {
-                            if ( lseek(sptty, (off_t)0, SEEK_END) <= (off_t)(SPOOLFILE_ABSMIN/2) )
-                               break;
-                            sleep(1);
-                         }
-                         fprintf(fdsout, "%s Spoolfile exceeded max size and was rewound.\n", datstrf());
-                      }
-                      else if ( buf[1] == ST_SHOWBYTE && (i_am_state || i_am_monitor) ) {
-                         fprintf(fdsout, "%s Byte value = 0x%02x\n", datstrf(), buf[2]);
-                      }
-                      else if ( buf[1] == ST_RESTART && (i_am_state || i_am_monitor || i_am_rfxmeter) ) {
-                         reread_config();
-                         if ( i_am_state ) {
-                            syslog(LOG_ERR, "engine reconfiguration-\n");
-                            engine_local_setup(E_RESTART);
-                            fprintf(fdsout, "%s Engine reconfiguration\n", datstrf());
-                            fflush(fdsout);
-//                            syslog(LOG_ERR, "engine reconfiguration-\n");
-                         }
-                         else if ( i_am_rfxmeter ) {
-                            fprintf(fprfxo, "RFXMeter monitor reconfiguration\n");
-                            fflush(fprfxo);
-                         }
-                         else {
-                            fprintf(fdsout, "%s Monitor reconfiguration\n", datstrf());
-                            fflush(fdsout);
-                         }
-                      }
-                      else if ( buf[1] == ST_SECFLAGS && (i_am_state || i_am_monitor)) {
-                         if ( buf[2] != 0 ) {
-                            warn_zone_faults(fdsout, datstrf());
-                         }
-                         set_globsec_flags(buf[2]);
-                         write_x10state_file();
-                         fprintf(fdsout, "%s %s\n", datstrf(), display_armed_status());
-                         fflush(fdsout);
-                      }
-                      else if ( buf[1] == ST_CLRTIMERS && (i_am_state || i_am_monitor)) {
-                         reset_user_timers();
-                         write_x10state_file();
-                         fprintf(fdsout, "%s Reset timers 1-16\n", datstrf());
-                         fflush(fdsout);
-                      }
-                      else if ( buf[1] == ST_CLRTAMPER && (i_am_state || i_am_monitor)) {
-                         clear_tamper_flags();
-                         write_x10state_file();
-                         fprintf(fdsout, "%s Clear tamper flags\n", datstrf());
-                         fflush(fdsout);
-                      }
-                   } 
-                   else if ( sent_type == SENT_WRMI ) {
-                      /* WRMI - Ignore */
-                   }
-                   else if ( sent_type == SENT_ADDR ) {
-                      /* An address */
-                      if ( *(transp = translate_sent(buf, n, &launchp)) )
-                         fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-                      if (signal_source != RCVA)
-                         chksum_alert = chksum;
-                      if ( launchp >= 0 && i_am_state) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_FUNC ) {
-                      /* Standard function */
-                      if ( *(transp = translate_sent(buf, n, &launchp)) )
-                         fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, transp);
-                      if (signal_source != RCVA)
-                         chksum_alert = chksum;
-                      if ( launchp >= 0 && i_am_state) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_EXTFUNC ) {
-                      /* Extended function */
-                      if ( *(transp = translate_sent(buf, n, &launchp)) )
-                         fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, transp);
-		      chksum_alert = chksum;
-                      if ( launchp >= 0 && i_am_state) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_RF ) {
-                      /* CM17A command */
-                      fprintf(fdsout,"%s %s %s\n", datstrf(), "xmtf", translate_rf_sent(buf, &launchp));
-                      if ( launchp >= 0 && i_am_state ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_FLAGS && i_am_state ) {
-                      update_flags(buf);
-                      write_x10state_file();
-                   }
-                   else if ( sent_type == SENT_FLAGS32 && i_am_state ) {
-                      update_flags_32(buf);
-                      write_x10state_file();
-                   }
-                   else if ( sent_type == SENT_VDATA ) {
-                      strcpy(outbuf, translate_virtual(buf, 9 /*8*/, &snochange, &launchp));
-                      if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) )
-                         fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, outbuf);
-                      if ( i_am_state && launchp >= 0 ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_GENLONG ) {
-                      strcpy(outbuf, translate_gen_longdata(buf, &snochange, &launchp));
-                      if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) )
-                         fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, outbuf);
-                      if ( i_am_state && launchp >= 0 ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_ORE_EMU ) {
-                      strcpy(outbuf, translate_ore_emu(buf, &snochange, &launchp));
-                      if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) )
-                         fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, outbuf);
-                      if ( i_am_state && launchp >= 0 ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_KAKU ) {
-                      strcpy(outbuf, translate_kaku(buf, &snochange, &launchp));
-                      if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) )
-                         fprintf(fdsout,"%s", outbuf);
-                      if ( i_am_state && launchp >= 0 ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_VISONIC ) {
-                      strcpy(outbuf, translate_visonic(buf, &snochange, &launchp));
-                      if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) )
-                         fprintf(fdsout,"%s", outbuf);
-                      if ( i_am_state && launchp >= 0 ) {
-                         launch_scripts(&launchp);
-                      }
-                   }
-                   else if ( sent_type == SENT_LONGVDATA ) {
-                      if ( i_am_rfxmeter ) {
-                         /* This and only this data gets sent to the special */
-                         /* 'heyu monitor rfxmeter' window */
-                         strcpy(outbuf, translate_long_virtual(buf, &snochange, &launchp) );
-                         if ( (sp = strchr(outbuf, '\n')) != NULL )
-                            *sp = '\0';
-                         fprintf(fprfxo, "%s\n", outbuf);
-                         fflush(fprfxo);
-                      }
-                      else {
-                         /* This and all other data are not sent to the rfxmeter window */
-                         strcpy(outbuf, translate_long_virtual(buf, &snochange, &launchp) );
-                         if ( *outbuf && !(snochange && config.hide_unchanged == YES && launchp < 0) ) {
-                            if ( (sp = strchr(outbuf, '\n')) != NULL ) {
-                               *sp = '\0';
-                               fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, outbuf);
-                               fprintf(fdsout,"%s %s\n", datstrf(), sp + 1);
-                            }
-                            else {
-                               fprintf(fdsout,"%s %s %s\n", datstrf(), send_prefix, outbuf);
-                            }
-                         }
-                         if ( i_am_state && launchp >= 0 ) {
-                            launch_scripts(&launchp);
-                         }
-                      }
-                   }
-                   else if ( sent_type == SENT_COUNTER && (i_am_state || i_am_monitor)) {
-                      set_counter(buf[2] | (buf[3] << 8), buf[4] | (buf[5] << 8), buf[6]);
-                      write_x10state_file();
-                      fprintf(fdsout, "%s %s\n", datstrf(), translate_counter_action(buf));
-                      fflush(fdsout);
-                   }
-                   else if ( sent_type == SENT_CLRSTATUS && i_am_state ) {
-                      clear_statusflags(buf[2], (buf[3] << 8 | buf[4]));
-                      write_x10state_file();
-                   }
-		   else if ( sent_type == SENT_MESSAGE && (i_am_monitor || i_am_state) ) {
-		      fprintf(fdsout, "%s %s\n", datstrf(), buf + 3);
-	           }	      		   
-                   else if ( sent_type == SENT_PFAIL && (i_am_state || i_am_monitor) ) {
-                      bootflag = buf[2];
-                      if ( bootflag & R_ATSTART ) 
-                         fprintf(fdsout, "%s Powerfail signal received at startup.\n", datstrf());
-                      else
-                         fprintf(fdsout, "%s Powerfail signal received.\n", datstrf());
-                      if ( i_am_state && (launchp = find_powerfail_scripts(bootflag)) >= 0 )
-                         launch_scripts(&launchp);
-                   }
-                   else if ( sent_type == SENT_RFFLOOD && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s RF_Flood signal received.\n", datstrf());
-                      if ( i_am_state && (launchp = find_rfflood_scripts()) >= 0 )
-                         launch_scripts(&launchp);
-                   }
-                   else if ( sent_type == SENT_LOCKUP && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s Interface lockup signal received, reason %02x.\n", datstrf(), buf[2]);
-                      if ( i_am_state && (launchp = find_lockup_scripts()) >= 0 )
-                         launch_scripts(&launchp);
-                   }
-                   else if ( sent_type == SENT_SETTIMER && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s %s\n", datstrf(), translate_settimer_message(buf));
-//                      if ( i_am_state )
-//                         write_x10state_file();
-                   }
-                   else if ( sent_type == SENT_RFXTYPE && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, translate_rfxtype_message(buf));
-                   } 
-                   else if ( sent_type == SENT_RFXSERIAL && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, translate_rfxsensor_ident(buf));
-                   } 
-                   else if ( sent_type == SENT_RFVARIABLE && (i_am_state || i_am_monitor) ) {
-                      fprintf(fdsout, "%s %s %s\n", datstrf(), send_prefix, display_variable_aux_data(buf));
-                   }
-                   else if ( sent_type == SENT_SCRIPT && (i_am_state) ) {
-                       launch_script_cmd(buf);
-                   }
-                   else if ( sent_type == SENT_INITSTATE && (i_am_state) ) {
-                        x10state_init(buf[2], buf[3] | (buf[4] << 8));
-                   }
-                   else if ( sent_type == SENT_SHOWBUFFER && i_am_monitor ) {
-                      fprintf(fdsout, "%s %s\n", datstrf(), display_binbuffer(buf + 2));
-                   }
-                   else if ( sent_type == SENT_OTHER ) {
-                      /* Other command */
-                      if ( *(transp = translate_other(buf, n, &chksum)) )
-                         fprintf(fdsout, "%s %s\n", datstrf(), transp);
-		      chksum_alert = chksum;
-                      launchp = -1;
-                   }
-
+                   process_sent(buf, n, &chksum_alert, &send_prefix, &waitflag);
                 }
                 else {
                    n = xread(sptty, buf, n - 127, timeout);
