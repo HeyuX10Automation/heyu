@@ -25,8 +25,8 @@ Quickstart:
 Ubuntu Linux users should execute 'sudo make install' rather than
 the three commands 'su', 'make install', and 'exit'.
 
-Advanced users and package maintainers may also wish to refer to a
-dedicated section at the bottom of this file.
+Advanced users and package maintainers may also wish to refer to
+dedicated sections at the bottom of this file.
 
 *** Kindly report any compile errors or warnings to the author.***
 
@@ -153,6 +153,30 @@ is compiled into Heyu.  This support may be omitted by including the
 
    sh ./Configur.sh -norfxlan
 
+By default, support for the xPL protocol (an open protocol intended
+to permit the control and monitoring of home automation devices) is
+not compiled into Heyu.  This support may be enabled by including the
+'-xpl' switch with Configure.sh, i.e.,
+
+   sh ./Configur.sh -xpl
+
+The -xpl switch can take an argument, separated with a '=' sign,
+which can be used to specify a location of xPLLib files, required for
+building xPL enabled Heyu unless the xPLLib package has already been
+installed into a standard system location.  That argument can point
+to a non-standard directory where an xPLLib package files have been
+installed (like /opt/xPLLib, for example), or to a local directory
+where xPLLib sources have been unpacked, or to a local file containing
+a gzipped tarball or other supported archive of those sources, or to a
+network location where that archive can be downloaded from. If that
+argument is not provided, and no xPLLib files can be found in standard
+system locations, the ./Configure.sh script will provide the 'make'
+utility with a primary network location of the xPLLib sources, i.e.,
+http://www.xpl4java.org/xPL4Linux/downloads/xPLLib.tgz, to try to
+download the xPLLib tarball from and use it.  Then, a working wget or
+curl utility, as well as a tool for unpacking the archive may be
+required to build Heyu successfully.
+
 
 Notes for Mac OS X:
 -------------------
@@ -251,5 +275,32 @@ run by 'make install' unless instructed with --enable-postinst[=<path>].
 
 Other than that, you are free to select your own preferred or system
 dependent values for CC, CPP, CFLAGS, CPPFLAGS, LDFLAGS and LIBS, as
-well as your preferred --enable/--disable options and FLAGS / COUNTERS /
-TIMERS values (see ./configure --help for details).
+well as your preferred --enable/--disable or --with/--without options
+and FLAGS=n / COUNTERS=n / TIMERS=n arguments (see ./configure --help
+for details).
+
+
+Building with xPL support enabled
+---------------------------------
+When building Heyu with xPL suppport enabled (i.e., with the --with-xpl
+./configure option provided), the required xPLLib library can be built
+automatically, then linked statically into the Heyu binary, within a
+single 'make' invocation. This attempt will happen if either xPL.h or
+libxPL.so file cannot be found, neither in standard nor CPPFLAGS /
+LDFLAGS provided locations, and a directory name containing unpacked
+xPLLib sources, or a name of a file or URL location where xPLLib
+sources can be downloaded / unpacked from over the HTTP or FTP protocol,
+is provided as an argument to the --with-xpl ./configure option.  If so,
+a working wget or curl utility, as well as a tool for unpacking the
+archive may be required in oredr to build Heyu successfully.
+
+However, if an xPLLib package has already been installed in the target
+system or a staging area, but its header and library files sit in a
+non-standard directory structure, not examined from ./configure by
+default, but included in the runtime default LD_LIBRARY_PATH, then
+providing suitable include and lib subdirectory names within
+"CPPFLAGS=..." and "LDFLAGS=..." arguments respectively should suffice
+to successfully build and run xPL enabled Heyu, compiled with the
+preinstalled xPL.h header, and linked dynamically to the preinstalled
+libxPL.so library.
+

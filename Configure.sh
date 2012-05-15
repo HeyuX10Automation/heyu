@@ -22,6 +22,7 @@
 SYS=
 OPTIONS='--localstatedir=/var --mandir=$(prefix)/man'
 OPTIONS=$OPTIONS' --enable-postinst=$(srcdir)/post-install.sh'
+XPLLIB=no
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -43,6 +44,12 @@ while [ $# -ge 1 ] ; do
             echo " Switch -counters=n sets the number of counters (32 min, 1024 max)"
             echo " Switch -timers=n sets the number of timers (32 min, 1024 max)"
             echo " Above numbers are rounded up to the nearest multiple of 32"
+            echo " Switch -xpl[=<directory>|<file>|<url>] enables xPL support, optionally"
+            echo "  pointing to a non-standard directory where xPLLib has been installed"
+            echo "  (i.e., where include/xPL.h and lib/libxPL.so files can be found),"
+            echo "  or to a directory where xPLLib source package has been unpacked,"
+            echo "  or to a file containing a tarball of the xPLLib source package,"
+            echo "  or to a non-default URL where that tarball can be downloaded from."
 	    rm -f Makefile
 	    exit
 	    ;;
@@ -91,6 +98,14 @@ $1
 EoF
             OPTIONS="$OPTIONS TIMERS=$TIMERS"
 	    ;;
+        xpl|-xpl|xPL|-xPL|--with-xpl)
+            XPLLIB="http://www.xpl4java.org/xPL4Linux/downloads/xPLLib.tgz"
+            ;;
+        xpl=*|-xpl=*|xPL=*|-xPL=*|--with-xpl=*)
+            IFS="${IFS}=" read -r keyword XPLLIB <<EoF
+$1
+EoF
+            ;;
 	*)
 	    SYS="$1"
 	    ;;
@@ -177,11 +192,17 @@ case "$SYS" in
     	;;
 esac
 
+if test "x$XPLLIB" != x -a -f $XPLLIB/include/xPL.h -a \
+		-f $XPLLIB/lib/libxPL.so 2>/dev/null; then
+	CPPFLAGS="$CPPFLAGS -I$XPLLIB/include"
+	LDFLAGS="$LDFLAGS -L$XPLLIB/lib"
+	XPLLIB=yes
+fi
 
 srcdir=`dirname $0`
 (	set -x
 	"$srcdir/configure" $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS" \
-			LIBS="$LIBS"
+			LIBS="$LIBS" --with-xpl="$XPLLIB"
 ) || {
 	rm -f Makefile
 	exit

@@ -26,6 +26,17 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 	tty_aux.c relay_aux.c x10aux.c rfxcom.c digimax.c oregon.c \
 	x10.h eeprom.h process.h sun.h x10state.h \
 	rfxcom.h digimax.h oregon.h
+if XPLLIB_SRCDIR
+heyu_CPPFLAGS = -I$(xPLLib_srcdir) $(xPL_isrc)
+heyu_DEPENDENCIES = libxPL.a
+heyu_LDADD = libxPL.a
+noinst_LIBRARIES = libxPL.a
+nodist_libxPL_a_SOURCES = $(xPLLib_srcdir)/xPL-config.c $(xPLLib_srcdir)/xPL.h \
+	$(xPLLib_srcdir)/xPL-hub.c $(xPLLib_srcdir)/xPL-io.c \
+	$(xPLLib_srcdir)/xPL-listeners.c $(xPLLib_srcdir)/xPL-message.c \
+	$(xPLLib_srcdir)/xPL_priv.h $(xPLLib_srcdir)/xPL-service.c \
+	$(xPLLib_srcdir)/xPL-store.c $(xPLLib_srcdir)/xPL-utils.c
+endif
 dist_man_MANS = heyu.1 x10config.5 x10sched.5 x10scripts.5 x10cm17a.5 x10aux.5 \
 	x10rfxsensors.5 x10rfxmeters.5 x10digimax.5 x10oregon.5 x10kaku.5
 dist_doc_DATA = README README1 README2 protocol.txt history.txt heyufaq.txt \
@@ -37,6 +48,33 @@ EXTRA_DIST = Configure.sh post-install.sh
 @MAN5DIR@
 
 *.o: Makefile
+
+if XPLLIB_ARCHIVE
+$(nodist_libxPL_a_SOURCES): $(xPLLib_archive)
+	@mkdir -p "$(xPLLib_srcdir)"
+	@case "$<" in \
+	*.tar.gz|*.tgz) GZIP=$(GZIP_ENV) gzip -dc "$<" | \
+				$(am__untar) -mC "$(xPLLib_srcdir)/.." ;;\
+	*.tar.bz2) bzip2 -dc "$<" | $(am__untar) -mC "$(xPLLib_srcdir)/.." ;;\
+	*.tar.lzma) lzma -dc "$<" | $(am__untar) -mC "$(xPLLib_srcdir)/.." ;;\
+	*.tar.xz) xz -dc "$<" | $(am__untar) -mC "$(xPLLib_srcdir)/.." ;;\
+	*.tar.Z) uncompress -c "$<" | $(am__untar) -mC "$(xPLLib_srcdir)/.." ;;\
+	*.shar.gz) unshar "$<" -d "$(xPLLib_srcdir)/.." ;;\
+	*.zip) unzip "$<" -D -d "$(xPLLib_srcdir)/.." ;;\
+	esac
+
+distclean-local:
+	-rm -rf $(xPLLib_srcdir)
+endif
+
+if XPLLIB_URL
+DISTCLEANFILES = $(xPLLib_archive)
+
+AMWGET_O = $(SHELL) "$(srcdir)/missing" --run $(WGET_O)
+
+$(xPLLib_archive):
+	@$(AMWGET_O) '$@' '$(xPLLib_URL)'
+endif
 
 if POSTINST
 all-local: usergroup.tmp userhome.tmp

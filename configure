@@ -610,6 +610,18 @@ ac_func_list=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+XPLLIB_URL_FALSE
+XPLLIB_URL_TRUE
+XPLLIB_ARCHIVE_FALSE
+XPLLIB_ARCHIVE_TRUE
+XPLLIB_SRCDIR_FALSE
+XPLLIB_SRCDIR_TRUE
+RANLIB
+WGET_O
+xPL_isrc
+xPLLib_srcdir
+xPLLib_archive
+xPLLib_URL
 POW_LIB
 LIBOBJS
 EGREP
@@ -723,6 +735,7 @@ enable_rfxdual
 enable_postinst
 enable_dependency_tracking
 enable_rfxlan
+with_xpl
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1371,6 +1384,12 @@ Optional Features:
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --disable-rfxlan        omit support for RFXLAN receiver
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-xpl              build with xPL support; ARG may point to a location
+                          where xPLLib sources can be found
 
 Some influential environment variables:
   FLAGS       set number of user flags (1 < n < 1024) [32]
@@ -6168,6 +6187,447 @@ $as_echo "#define HAVE_FEATURE_RFXLAN 1" >>confdefs.h
 
 fi
 
+# xPL checks and setup
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to build with xPL support library" >&5
+$as_echo_n "checking whether to build with xPL support library... " >&6; }
+
+# Check whether --with-xpl was given.
+if test "${with_xpl+set}" = set; then :
+  withval=$with_xpl;
+else
+  with_xpl=no
+fi
+
+if test "x$with_xpl" = xno; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $with_xpl" >&5
+$as_echo "$with_xpl" >&6; }
+else
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+	for ac_header in xPL.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "xPL.h" "ac_cv_header_xPL_h" "$ac_includes_default"
+if test "x$ac_cv_header_xPL_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_XPL_H 1
+_ACEOF
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for xPL_initialize in -lxPL" >&5
+$as_echo_n "checking for xPL_initialize in -lxPL... " >&6; }
+if ${ac_cv_lib_xPL_xPL_initialize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxPL  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char xPL_initialize ();
+int
+main ()
+{
+return xPL_initialize ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_xPL_xPL_initialize=yes
+else
+  ac_cv_lib_xPL_xPL_initialize=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_xPL_xPL_initialize" >&5
+$as_echo "$ac_cv_lib_xPL_xPL_initialize" >&6; }
+if test "x$ac_cv_lib_xPL_xPL_initialize" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXPL 1
+_ACEOF
+
+  LIBS="-lxPL $LIBS"
+
+fi
+
+fi
+
+done
+
+fi
+if test "x$with_xpl" != xno -a "x$ac_cv_lib_xPL_xPL_initialize" != xyes; then :
+
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for a location to build xPLLib from" >&5
+$as_echo_n "checking for a location to build xPLLib from... " >&6; }
+	if test "x$with_xpl" = xyes; then :
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: not specified" >&5
+$as_echo "not specified" >&6; }
+		{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "Please specify xPLLib location to be used
+See \`config.log' for more details" "$LINENO" 5; }
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $with_xpl" >&5
+$as_echo "$with_xpl" >&6; }
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $with_xpl looks like a valid xPLLib location" >&5
+$as_echo_n "checking whether $with_xpl looks like a valid xPLLib location... " >&6; }
+		case $with_xpl in #(
+  http://*|ftp://*) :
+
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+			xPLLib_URL=$with_xpl
+ ;; #(
+  *) :
+
+			read xPLLib <<EOF
+$with_xpl
+EOF
+			if test -f "$xPLLib" -o -f "$srcdir/$xPLLib"; then :
+
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+				xPLLib_archive=$with_xpl
+
+
+else
+
+				if test -d "$xPLLib" \
+						-o -d "$srcdir/$xPLLib"; then :
+
+					{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+					xPLLib_srcdir=$with_xpl
+
+
+else
+
+					{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+					{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "Please provide a valid xPLLib location
+
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+				if test -d "$srcdir/$xPLLib"; then :
+
+					xPL_isrc=-I$srcdir/$with_xpl
+
+fi
+fi ;;
+esac
+fi
+	if test "x$xPLLib_srcdir" = x; then :
+
+		xPLLib_srcdir=xPLLib
+
+		if test "x$xPLLib_archive" = x; then :
+
+			xPLLib_archive=xPLLib.tgz
+
+fi
+fi
+	if test "x$xPLLib_URL" != x; then :
+
+		# Extract the first word of "wget", so it can be a program name with args.
+set dummy wget; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_WGET_O+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$WGET_O"; then
+  ac_cv_prog_WGET_O="$WGET_O" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_WGET_O="wget -O"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+WGET_O=$ac_cv_prog_WGET_O
+if test -n "$WGET_O"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $WGET_O" >&5
+$as_echo "$WGET_O" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+		if test "x$WGET_O" = x; then :
+
+			# Extract the first word of "curl", so it can be a program name with args.
+set dummy curl; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_WGET_O+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$WGET_O"; then
+  ac_cv_prog_WGET_O="$WGET_O" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_WGET_O="curl -o"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+WGET_O=$ac_cv_prog_WGET_O
+if test -n "$WGET_O"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $WGET_O" >&5
+$as_echo "$WGET_O" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+		if test "x$WGET_O" = x; then :
+
+			{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "wget missing, please provide local xPLLib copy
+
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+fi
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}ranlib", so it can be a program name with args.
+set dummy ${ac_tool_prefix}ranlib; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_RANLIB+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$RANLIB"; then
+  ac_cv_prog_RANLIB="$RANLIB" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_RANLIB="${ac_tool_prefix}ranlib"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+RANLIB=$ac_cv_prog_RANLIB
+if test -n "$RANLIB"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $RANLIB" >&5
+$as_echo "$RANLIB" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+fi
+if test -z "$ac_cv_prog_RANLIB"; then
+  ac_ct_RANLIB=$RANLIB
+  # Extract the first word of "ranlib", so it can be a program name with args.
+set dummy ranlib; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_ac_ct_RANLIB+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$ac_ct_RANLIB"; then
+  ac_cv_prog_ac_ct_RANLIB="$ac_ct_RANLIB" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_ac_ct_RANLIB="ranlib"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+ac_ct_RANLIB=$ac_cv_prog_ac_ct_RANLIB
+if test -n "$ac_ct_RANLIB"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_ct_RANLIB" >&5
+$as_echo "$ac_ct_RANLIB" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+  if test "x$ac_ct_RANLIB" = x; then
+    RANLIB=":"
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+$as_echo "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    RANLIB=$ac_ct_RANLIB
+  fi
+else
+  RANLIB="$ac_cv_prog_RANLIB"
+fi
+
+	if test "x$ac_cv_header_fcntl_h" = xyes -a \
+			"x$ac_cv_header_netdb_h" = xyes -a \
+			"x$ac_cv_header_stdlib_h" = xyes -a \
+			"x$ac_cv_header_string_h" = xyes -a \
+			"x$ac_cv_header_sys_ioctl_h" = xyes -a \
+			"x$ac_cv_header_sys_socket_h" = xyes -a \
+			"x$ac_cv_header_sys_time_h" = xyes -a \
+			"x$ac_cv_header_termios_h" = xyes -a \
+			"x$ac_cv_header_unistd_h" = xyes -a \
+			"x$ac_cv_func_malloc_0_nonnull" = xyes -a \
+			"x$ac_cv_func_realloc_0_nonnull" = xyes -a \
+			"x$ac_cv_func_gettimeofday" = xyes -a \
+			"x$ac_cv_func_socket" = xyes -a \
+			"x$ac_cv_func_strerror" = xyes -a \
+			"x$ac_cv_func_strstr" = xyes -a \
+			"x$ac_cv_func_strtol" = xyes -a \
+			"x$ac_cv_type_pid_t" = xyes; then :
+
+			ac_fn_c_check_header_mongrel "$LINENO" "arpa/inet.h" "ac_cv_header_arpa_inet_h" "$ac_includes_default"
+if test "x$ac_cv_header_arpa_inet_h" = xyes; then :
+
+			ac_fn_c_check_header_mongrel "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
+if test "x$ac_cv_header_netinet_in_h" = xyes; then :
+
+			ac_fn_c_check_func "$LINENO" "bzero" "ac_cv_func_bzero"
+if test "x$ac_cv_func_bzero" = xyes; then :
+
+			ac_fn_c_check_func "$LINENO" "inet_ntoa" "ac_cv_func_inet_ntoa"
+if test "x$ac_cv_func_inet_ntoa" = xyes; then :
+
+			ac_fn_c_check_type "$LINENO" "uint32_t" "ac_cv_type_uint32_t" "$ac_includes_default"
+if test "x$ac_cv_type_uint32_t" = xyes; then :
+
+		{ $as_echo "$as_me:${as_lineno-$LINENO}: will try to build libxPL.a from $with_xpl" >&5
+$as_echo "$as_me: will try to build libxPL.a from $with_xpl" >&6;}
+
+$as_echo "#define HAVE_XPL_H 1" >>confdefs.h
+
+
+$as_echo "#define HAVE_LIBXPL 1" >>confdefs.h
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required unit32_t type missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required unit32_t type missing" >&2;}
+fi
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required inet_ntoa function missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required inet_ntoa function missing" >&2;}
+fi
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required bzero function missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required bzero function missing" >&2;}
+fi
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required netinet/in.h header missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required netinet/in.h header missing" >&2;}
+fi
+
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required arpa/inet.h header missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required arpa/inet.h header missing" >&2;}
+fi
+
+
+
+else
+  	{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: xPLLib required header/function/type missing" >&5
+$as_echo "$as_me: WARNING: xPLLib required header/function/type missing" >&2;}
+fi
+	if test "x$ac_cv_type_uint32_t" != xyes ; then :
+  { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "Please try building and installing xPLLib apart,
+			or reconfigure Heyu without xPL support selected
+See \`config.log' for more details" "$LINENO" 5; }
+fi
+fi
+ if test "x$xPLLib_srcdir" != x; then
+  XPLLIB_SRCDIR_TRUE=
+  XPLLIB_SRCDIR_FALSE='#'
+else
+  XPLLIB_SRCDIR_TRUE='#'
+  XPLLIB_SRCDIR_FALSE=
+fi
+
+ if test "x$xPLLib_archive" != x; then
+  XPLLIB_ARCHIVE_TRUE=
+  XPLLIB_ARCHIVE_FALSE='#'
+else
+  XPLLIB_ARCHIVE_TRUE='#'
+  XPLLIB_ARCHIVE_FALSE=
+fi
+
+ if test "x$xPLLib_URL" != x; then
+  XPLLIB_URL_TRUE=
+  XPLLIB_URL_FALSE='#'
+else
+  XPLLIB_URL_TRUE='#'
+  XPLLIB_URL_FALSE=
+fi
+
+
 ac_config_files="$ac_config_files Makefile"
 
 cat >confcache <<\_ACEOF
@@ -6297,6 +6757,18 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XPLLIB_SRCDIR_TRUE}" && test -z "${XPLLIB_SRCDIR_FALSE}"; then
+  as_fn_error $? "conditional \"XPLLIB_SRCDIR\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XPLLIB_ARCHIVE_TRUE}" && test -z "${XPLLIB_ARCHIVE_FALSE}"; then
+  as_fn_error $? "conditional \"XPLLIB_ARCHIVE\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XPLLIB_URL_TRUE}" && test -z "${XPLLIB_URL_FALSE}"; then
+  as_fn_error $? "conditional \"XPLLIB_URL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

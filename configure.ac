@@ -260,5 +260,98 @@ AC_MSG_CHECKING(whether to enable RFXLAN receiver support)
 		[AC_DEFINE([HAVE_FEATURE_RFXLAN], [1],
 		[Define if you have RFXLAN receiver])], [])
 
+# xPL checks and setup
+AC_MSG_CHECKING([whether to build with xPL support library])
+	AC_ARG_WITH([xpl], [AS_HELP_STRING([--with-xpl],
+		       [build with xPL support; ARG may point to a location]
+		       [where xPLLib sources can be found])], [], [with_xpl=no])
+AS_IF([test "x$with_xpl" = xno], [AC_MSG_RESULT([$with_xpl])], [
+	AC_MSG_RESULT([yes])
+	AC_CHECK_HEADERS([xPL.h], [AC_CHECK_LIB([xPL], [xPL_initialize])])])
+AS_IF([test "x$with_xpl" != xno -a "x$ac_cv_lib_xPL_xPL_initialize" != xyes], [
+	AC_MSG_CHECKING([for a location to build xPLLib from])
+	AS_IF([test "x$with_xpl" = xyes], [
+		AC_MSG_RESULT([not specified])
+		AC_MSG_FAILURE([Please specify xPLLib location to be used])
+	], [	AC_MSG_RESULT([$with_xpl])
+		AC_MSG_CHECKING(
+			 [whether $with_xpl looks like a valid xPLLib location])
+		AS_CASE([$with_xpl],
+		[http://*|ftp://*], [
+			AC_MSG_RESULT([yes])
+			AC_SUBST([xPLLib_URL], [$with_xpl])],
+		[
+			read xPLLib <<EOF
+$with_xpl
+EOF
+			AS_IF([test -f "$xPLLib" -o -f "$srcdir/$xPLLib"], [
+				AC_MSG_RESULT([yes])
+				AC_SUBST([xPLLib_archive], [$with_xpl])
+			], [
+				AS_IF([test -d "$xPLLib" \
+						-o -d "$srcdir/$xPLLib"], [
+					AC_MSG_RESULT([yes])
+					AC_SUBST([xPLLib_srcdir], [$with_xpl])
+				], [
+					AC_MSG_RESULT([no])
+					AC_MSG_FAILURE(
+					[Please provide a valid xPLLib location]
+					)])
+				AS_IF([test -d "$srcdir/$xPLLib"], [
+					AC_SUBST([xPL_isrc],
+						  [-I$srcdir/$with_xpl])])])])])
+	AS_IF([test "x$xPLLib_srcdir" = x], [
+		AC_SUBST([xPLLib_srcdir], [xPLLib])
+		AS_IF([test "x$xPLLib_archive" = x], [
+			AC_SUBST([xPLLib_archive], [xPLLib.tgz])])])
+	AS_IF([test "x$xPLLib_URL" != x], [
+		AC_CHECK_PROG([WGET_O], [wget], [wget -O])
+		AS_IF([test "x$WGET_O" = x], [
+			AC_CHECK_PROG([WGET_O], [curl], [curl -o])])
+		AS_IF([test "x$WGET_O" = x], [
+			AC_MSG_FAILURE(
+				[wget missing, please provide local xPLLib copy]
+			)])])
+	AC_PROG_RANLIB
+	AS_IF([test "x$ac_cv_header_fcntl_h" = xyes -a \
+			"x$ac_cv_header_netdb_h" = xyes -a \
+			"x$ac_cv_header_stdlib_h" = xyes -a \
+			"x$ac_cv_header_string_h" = xyes -a \
+			"x$ac_cv_header_sys_ioctl_h" = xyes -a \
+			"x$ac_cv_header_sys_socket_h" = xyes -a \
+			"x$ac_cv_header_sys_time_h" = xyes -a \
+			"x$ac_cv_header_termios_h" = xyes -a \
+			"x$ac_cv_header_unistd_h" = xyes -a \
+			"x$ac_cv_func_malloc_0_nonnull" = xyes -a \
+			"x$ac_cv_func_realloc_0_nonnull" = xyes -a \
+			"x$ac_cv_func_gettimeofday" = xyes -a \
+			"x$ac_cv_func_socket" = xyes -a \
+			"x$ac_cv_func_strerror" = xyes -a \
+			"x$ac_cv_func_strstr" = xyes -a \
+			"x$ac_cv_func_strtol" = xyes -a \
+			"x$ac_cv_type_pid_t" = xyes], [
+			AC_CHECK_HEADER([arpa/inet.h], [
+			AC_CHECK_HEADER([netinet/in.h], [
+			AC_CHECK_FUNC([bzero], [
+			AC_CHECK_FUNC([inet_ntoa], [
+			AC_CHECK_TYPE([uint32_t], [
+		AC_MSG_NOTICE([will try to build libxPL.a from $with_xpl])
+		AC_DEFINE([HAVE_XPL_H], [1],
+			     [Define to 1 if you have the <xPL.h> header file.])
+		AC_DEFINE([HAVE_LIBXPL], [1],
+				[Define to 1 if you have the xPL library.])
+	], [	AC_MSG_WARN([xPLLib required unit32_t type missing])])
+	], [	AC_MSG_WARN([xPLLib required inet_ntoa function missing])])
+	], [	AC_MSG_WARN([xPLLib required bzero function missing])])
+	], [	AC_MSG_WARN([xPLLib required netinet/in.h header missing])])
+	], [	AC_MSG_WARN([xPLLib required arpa/inet.h header missing])])
+	], [	AC_MSG_WARN([xPLLib required header/function/type missing])])
+	AS_IF([test "x$ac_cv_type_uint32_t" != xyes ], [AC_MSG_FAILURE(
+			[Please try building and installing xPLLib apart,
+			or reconfigure Heyu without xPL support selected])])])
+AM_CONDITIONAL([XPLLIB_SRCDIR], [test "x$xPLLib_srcdir" != x])
+AM_CONDITIONAL([XPLLIB_ARCHIVE], [test "x$xPLLib_archive" != x])
+AM_CONDITIONAL([XPLLIB_URL], [test "x$xPLLib_URL" != x])
+
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
