@@ -33,17 +33,34 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include <signal.h>
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#if    (defined(SCO) || defined (SOLARIS) || defined (ATTSVR4) || defined(OPENBSD))
+#endif
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#else
+#endif
+#ifdef HAVE_SYS_ERRNO_H
 #include <sys/errno.h>
 #endif
 #include <ctype.h>
@@ -57,8 +74,6 @@
 #else
 #define PID_T long
 #endif
-
-//#define RFXCOM_DUAL
 
 #define W800_LEN 4
 #define PACKET_LEN  4
@@ -849,7 +864,7 @@ int rfxmeter_checksum ( unsigned char *buf )
 //   chksum &= 0x0fu;
    chksum = (chksum - 0x0fu) & 0x0fu;
 
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -870,7 +885,7 @@ int rfxsensor_checksum ( unsigned char *buf )
    chksum = ~chksum & 0x0fu;
 //   chksum &= 0x0fu;
 
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
    return (int)chksum;
 #else
    return (int)0xffu;
@@ -917,7 +932,7 @@ unsigned char digimax_checksum ( unsigned char *buf )
             (buf[4] >> 4) + (buf[4] & 0x0fu) +
             (buf[5] >> 4) + (buf[5] & 0x0fu)) & 0x0fu;
 
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
    return  (sum1 << 4) | sum2;
 #else
    return 0xffu;
@@ -1659,7 +1674,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], *type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ((*bufflen == *lastlen ||
+      else if (((*type == RF_OREGON && subtype == OreDT1 &&
+                         *lastlen >= *trulen - 1 && (*lastlen = *trulen - 1)) ||
+              *bufflen == *lastlen ||
               (*type == RF_STD && (*lastlen == 4 || (*lastlen = *bufflen) == 4))
                                   ) && memcmp(buff, lastbuff, *lastlen) == 0 ) {
          /* Repeat of previous burst */
@@ -2113,7 +2130,9 @@ int aux_rfxcomvl ( void )
             send_virtual_aux_data(0, buff[0], type, buff[1], 0, buff[2], buff[3]);
          }
       }
-      else if ((bufflen == lastlen ||
+      else if (((type == RF_OREGON && subtype == OreDT1 &&
+                             lastlen >= trulen - 1 && (lastlen = trulen - 1)) ||
+                bufflen == lastlen ||
                 (type == RF_STD && (lastlen == 4 || (lastlen = bufflen) == 4))
                                     ) && memcmp(buff, lastbuff, lastlen) == 0) {
          /* Repeat of previous burst */

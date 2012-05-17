@@ -33,17 +33,26 @@
  *
  */
 
-
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include <ctype.h>
 #include <time.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 
@@ -122,7 +131,7 @@ unsigned int bcd2dec ( unsigned int bcd, int digits )
 
 int is_ore_ignored ( unsigned int saddr )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j = 0;
 
    while ( j < ore_ignore_size ) {
@@ -135,7 +144,7 @@ int is_ore_ignored ( unsigned int saddr )
    return 0;
 }
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 
 char *forecast_txt( int fcast )
 {
@@ -421,13 +430,13 @@ static struct oregon_st {
    {108, 11, 0xff, 0x00, 0x1a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x2a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
    {108, 11, 0xff, 0x00, 0x3a, 0x00, 2, CM3, BM0, 0, 0,   1, 0xff, 3, "OWL_ELEC2", OreElec2,   cs12  },
+   {96,  11, 0xff, 0xff, 0x8a, 0xec, 1, CM2, BM1, 1, 0,   1, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
 
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 1, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_TEMU",   OreTemu,   csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 2, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THEMU",  OreTHemu,  csFail}, /* Dummy */
    {88,  11, 0xff, 0xff, 0xf0, 0xf0, 3, CM0, BM0, 0, 0,   2, 0xff, 4, "ORE_THBEMU", OreTHBemu, csFail}, /* Dummy */
 
    /* Unsupported Oregon sensors */
-   {96,  12, 0xff, 0xff, 0x8a, 0xec, 2, CM2, BM2, 0, 0,   0, 0xff, 4, "ORE_DT1",   OreDT1,     cs11  },
    {64,   8, 0x0f, 0x00, 0x03, 0x00, 2, CM0, BM0, 0, 0,   0, 0xf0, 2, "ORE_WGT2",  OreWeight2, csNull},    /* OreGR101 */
 
 };
@@ -505,13 +514,13 @@ unsigned char channelval( char *chstr, unsigned char *buf, unsigned char mode )
 }
 
 
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
  
 unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned char *subtype,
                         unsigned char *trulen, unsigned long *addr, int *nseq )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j = 0;
 
    while ( j < orechk_size ) {
@@ -540,8 +549,84 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
    return 1;
 #else
    return 1;
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 }
+
+
+#ifdef HAVE_FEATURE_ORE
+static void tm_to_dtstring(struct tm *tm, char *buf, unsigned len)
+{
+	char *s = NULL;
+	int result;
+	
+	if (tm)
+		s = asctime(tm);
+	if (!s)
+		s = "----";
+
+	result = snprintf(buf, len, "DT %s", s);
+	if (result > 0) {
+		s = strchr(buf, '\n');
+		if (s)
+			*s = '\0';
+	}	
+}
+
+static char *show_oredt(unsigned long *data_storage)
+{
+	time_t time;
+	struct tm *tm = NULL;
+	static char buf[32];
+
+	if (*data_storage & ORE_VALID) {
+		time = c_oredt(data_storage);
+		tm = localtime(&time);
+	}
+
+	tm_to_dtstring(tm, buf, sizeof(buf));
+
+	return buf;
+}
+
+static void oredt1_to_tm(unsigned char *vdatap, struct tm *tm)
+{
+	tm->tm_sec   = (vdatap[4] >> 4) + 10 * (vdatap[ 5] & 0xf);
+	tm->tm_min   = (vdatap[5] >> 4) + 10 * (vdatap[ 6] & 0xf);
+	tm->tm_hour  = (vdatap[6] >> 4) + 10 * (vdatap[ 7] & 0xf);
+	tm->tm_mday  = (vdatap[7] >> 4) + 10 * (vdatap[ 8] & 0xf);
+	tm->tm_mon   = (vdatap[8] >> 4)				  - 1;
+	tm->tm_wday  =		 	       (vdatap[ 9] & 0x7);
+	tm->tm_year  = (vdatap[9] >> 4) + 10 * (vdatap[10] & 0xf) + 100;
+}
+
+static int translate_oredt(unsigned char *vdatap, unsigned char subtype,
+                           unsigned long *data_storage, char *buf, unsigned len)
+{
+	struct tm tm = {
+		.tm_isdst = -1,
+	};
+	time_t *valp = (time_t *)(data_storage + 1), *lastchvalp = valp + 1;
+	time_t delta;
+	int unchanged;
+
+	switch(subtype) {
+	    case OreDT1:
+	    	oredt1_to_tm(vdatap, &tm);
+		break;
+	}
+
+	*valp = mktime(&tm);
+	tm_to_dtstring(&tm, buf, len);
+
+	delta = abs(*valp - *lastchvalp);
+	unchanged = delta / 60 < configp->ore_chgbits_dt ? 1 : 0;
+
+	if (!unchanged)
+		*lastchvalp = *valp;
+
+	return unchanged;
+}
+#endif
 
 
 /*----------------------------------------------------------------------------+
@@ -552,7 +637,7 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
  +----------------------------------------------------------------------------*/
 char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    static char    outbuf[160];
    static char    intvstr[32];
    long           intv;
@@ -1274,6 +1359,50 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 
          break;       
          
+
+      case OreDT1 :
+         /* Process radio clock data */
+         vflags_mask = SEC_LOBAT;
+         loc = aliasp[index].storage_index;
+         status = 0;
+
+         longvdata = (unsigned long)(channel & 0x0fu) << ORE_CHANSHFT;
+
+         status = ORE_VALID | batstatus;
+         longvdata |= status | ((unsigned long)blevel << ORE_BATSHFT);
+
+         prevvalp = &x10global.data_storage[loc];
+
+         batchange = (batstatus ^ (unsigned char)(*prevvalp)) & ORE_LOBAT;
+
+         func = aliasp[index].funclist[0];
+         trig = OreDTTrig;
+         vflags |= (status & ORE_LOBAT) ? SEC_LOBAT : 0;
+
+         create_flagslist (vtype, vflags, flagslist);
+
+         *prevvalp = longvdata;
+
+         unchanged = translate_oredt(vdatap, subtype, prevvalp,
+                                     minibuf, sizeof(minibuf));
+
+         sprintf(outbuf, "func %12s : hu %c%-2d %s%s%s %s%s(%s)",  
+            funclabel[func], hc, unit, chstr, minibuf, rawstring, batstr,
+            flagslist, aliasp[index].label);
+
+         x10state[hcode].longdata = *prevvalp;
+
+         x10global.longvdata = *prevvalp;
+         x10global.longvdata2 = *(++prevvalp);
+         x10global.longvdata3 = *(++prevvalp);
+
+         if ( unchanged == 0 )
+            changestate |= bitmap;
+         else
+            changestate &= ~bitmap;
+
+         break;       
+
 
       case OreTH1 :
       case OreTH2 :
@@ -2056,7 +2185,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
    return outbuf;
 #else
    return "";
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 }   
 
 /*----------------------------------------------------------------------------+
@@ -2067,7 +2196,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
  +----------------------------------------------------------------------------*/
 char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    static char    outbuf[160];
    static char    intvstr[32];
    long           intv;
@@ -2375,11 +2504,11 @@ char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *lau
    return outbuf;
 #else
    return "";
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 } 
 
 
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
 /*---------------------------------------------------------------------+
  | Display stored data for Oregon, Electrisave, and OWL sensors        |
  +---------------------------------------------------------------------*/
@@ -2589,6 +2718,10 @@ int show_oregon ( void )
 
                break;
 
+            case OreDTFunc :
+               printf("%s ", show_oredt(&x10global.data_storage[loc]));
+               break;
+
             case OwlPowerFunc :
                longvdata = x10global.data_storage[loc + statusoffset];
                status = longvdata & 0xff;
@@ -2635,9 +2768,9 @@ int show_oregon ( void )
 
    return 0;
 }
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
-#ifdef HASORE 
+#ifdef HAVE_FEATURE_ORE 
 /*---------------------------------------------------------------------+
  | Display an Oregon data value stored in the x10state structure.      |
  +---------------------------------------------------------------------*/
@@ -2665,6 +2798,7 @@ int c_orecmds ( int argc, char *argv[] )
       {"orerh",       OreHumidFunc    },
       {"orebp",       OreBaroFunc     },
       {"orewgt",      OreWeightFunc   },
+      {"oredt",       OreDTFunc       },
       {"elscurr",     ElsCurrFunc     },
       {"orewindsp",   OreWindSpFunc   },
       {"orewindavsp", OreWindAvSpFunc },
@@ -2795,6 +2929,10 @@ int c_orecmds ( int argc, char *argv[] )
         rain = x10global.data_storage[loc + 1];
         printf(FMT_ORERTOT"\n", (double)rain / 1000.0 * configp->ore_raintotscale);
         break;
+
+     case OreDTFunc :
+         printf("%llu\n", c_oredt(&x10global.data_storage[loc]));
+         break;
 
      case OreUVFunc :
          uvfactor = (longvdata & ORE_DATAMSK) >> ORE_DATASHFT;
@@ -3063,12 +3201,12 @@ int c_ore_emu ( int argc, char *argv[] )
 }
 
 
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
 
                           
 int ore_maxmin_temp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double tvalue;
    int    tflag;
    char   tscale, tscale_init;
@@ -3128,7 +3266,7 @@ int ore_maxmin_temp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens
 
 int ore_maxmin_rh ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double rhvalue;
    int    rhflag;
    char   rhscale;
@@ -3173,7 +3311,7 @@ int ore_maxmin_rh ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 
 int ore_maxmin_bp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    double bpvalue;
    int    bpflag;
    char   bpunits[NAME_LEN + 1];
@@ -3313,7 +3451,7 @@ int ore_maxmin_bp ( ALIAS *aliasp, int aliasindex, char **tokens, int *ntokens )
  +---------------------------------------------------------------------*/
 int set_elec1_nvar ( int nvar )
 {
-#ifdef HASORE
+#ifdef HAVE_FEATURE_ORE
    int j;
 
    for ( j = 0; j < orechk_size; j++ ) {

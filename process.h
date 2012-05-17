@@ -32,8 +32,16 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
 #include <time.h>
 
 /* Some array length limits */
@@ -521,6 +529,7 @@ enum {ArmLogicStrict, ArmLogicMedium, ArmLogicLoose};
 #define DEF_ORE_CHGBITS_RH         1
 #define DEF_ORE_CHGBITS_BP         1
 #define DEF_ORE_CHGBITS_WGT        1
+#define DEF_ORE_CHGBITS_DT         1
 #define DEF_ORE_CHGBITS_WSP        1
 #define DEF_ORE_CHGBITS_WAVSP      1
 #define DEF_ORE_CHGBITS_WDIR       1
@@ -993,7 +1002,8 @@ enum {
    OreTempTrig, OreHumidTrig, OreBaroTrig, OreWeightTrig,
    OreWindSpTrig, OreWindAvSpTrig, OreWindDirTrig,
    OreRainRateTrig, OreRainTotTrig, ElsCurrTrig, OreUVTrig,
-   OwlPowerTrig, OwlEnergyTrig, NumOreTriggers
+   OwlPowerTrig, OwlEnergyTrig, OreDTTrig,
+   NumOreTriggers
 };
 
 /* KaKu trigger types */
@@ -1021,7 +1031,8 @@ enum {
    OreRainRateFunc, OreRainTotFunc,  ElsCurrFunc, OreUVFunc,
    KakuOffFunc, KakuOnFunc, KakuGrpOffFunc, KakuGrpOnFunc, KakuUnkFunc,
    KakuPreFunc, KakuGrpPreFunc, KakuUnkPreFunc,
-   OwlPowerFunc, OwlEnergyFunc, InactiveFunc, InvalidFunc
+   OwlPowerFunc, OwlEnergyFunc, InactiveFunc, OreDTFunc,
+   InvalidFunc
 };
 
 #if 0
@@ -1216,8 +1227,10 @@ typedef struct {
   char          tty[PATH_LEN + 1];   /* Serial port to use */
   char          suffix[PATH_LEN + 1]; /* Suffix for file locks */
   char          ttyaux[PATH_LEN + 1]; /* Auxiliary input serial port */
+#ifdef HAVE_FEATURE_RFXLAN
   char          auxhost[NAME_LEN + 1]; /* Auxiliary input network host address or name */
   char          auxport[NAME_LEN + 1]; /* Auxiliary input network port number or name */
+#endif
   char          suffixaux[PATH_LEN + 1]; /* Suffix for aux file lock */
   char          ttyrfxmit[PATH_LEN + 1]; /* RFXmitter serial port */
   unsigned char rfxmit_freq;      /* RFXmitter frequency */
@@ -1357,6 +1370,7 @@ typedef struct {
   unsigned char ore_chgbits_rh;   /* Change in least bits for humidity changed state */
   unsigned char ore_chgbits_bp;   /* Change in least bits for baro pressure changed state */
   unsigned char ore_chgbits_wgt;  /* Change in least bits for weight changed state */
+  unsigned int  ore_chgbits_dt;   /* Change in least bits for date/time changed state */
   unsigned int  ore_chgbits_wsp;  /* Change in least bits for wind speed changed state */
   unsigned int  ore_chgbits_wavsp; /* Change in least bits for wind avg speed changed state */
   unsigned int  ore_chgbits_wdir;  /* Change in least bits for wind direction changed state */

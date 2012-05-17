@@ -28,25 +28,37 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdio.h>
+#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
+#endif
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <ctype.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#if defined(SYSV) || defined(FREEBSD) || defined(OPENBSD)
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
-#else
+#endif
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #include <time.h>
 #include <signal.h>
 #include "x10.h"
-#include "version.h"
+#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
 #include "process.h" 
 
-#ifdef __GLIBC__
 /* msf - added for glibc/rh 5.0 */
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 
@@ -226,7 +238,7 @@ struct cmdentry {
     {"nightstate", c_sunstate, 1, 1},
     {"darkstate", c_sunstate, 1, 1},
     {"restore_groups", c_restore_groups, 1, 0},
-#ifdef HASRFXS
+#ifdef HAVE_FEATURE_RFXS
     {"rfxflag_state", c_x10state, 1, 1},
     {"rfxtemp", c_rfxcmds, 1, 1},
     {"rfxrh", c_rfxcmds, 1, 1},
@@ -238,7 +250,7 @@ struct cmdentry {
     {"rfxtemp2", c_rfxcmds, 1, 1},
     {"rfxlobat", c_rfxcmds, 1, 1},
 #endif
-#ifdef HASRFXM
+#ifdef HAVE_FEATURE_RFXM
     {"rfxflag_state", c_x10state, 1, 1},
     {"rfxpower", c_rfxcmds, 1, 1},
     {"rfxwater", c_rfxcmds, 1, 1},
@@ -247,19 +259,20 @@ struct cmdentry {
     {"rfxcount", c_rfxcmds, 1, 1},
     {"rfxpanel", c_rfxcmds, 1, 1},
 #endif
-#ifdef HASDMX
+#ifdef HAVE_FEATURE_DMX
     {"dmxflag_state", c_x10state, 1, 1},
     {"dmxtemp", c_dmxcmds, 1, 1},
     {"dmxsetpoint", c_dmxcmds, 1, 1},
     {"dmxstatus", c_dmxcmds, 1, 1},
     {"dmxmode", c_dmxcmds, 1, 1},
-#endif /* HASDMX */
-#ifdef HASORE
+#endif /* HAVE_FEATURE_DMX */
+#ifdef HAVE_FEATURE_ORE
     {"oreflag_state", c_x10state, 1, 1},
     {"oretemp", c_orecmds, 1, 1},
     {"orerh", c_orecmds, 1, 1},
     {"orebp", c_orecmds, 1, 1},
     {"orewgt", c_orecmds, 1, 1},
+    {"oredt", c_orecmds, 1, 1},
     {"elscurr", c_orecmds, 1, 1},
     {"orewindsp", c_orecmds, 1, 1},
     {"orewindavsp", c_orecmds, 1, 1},
@@ -270,7 +283,7 @@ struct cmdentry {
     {"owlpower", c_orecmds, 1, 1},
     {"owlenergy", c_orecmds, 1, 1},
     {"ore_emu", c_ore_emu, 1, 1},
-#endif /* HASORE */
+#endif /* HAVE_FEATURE_ORE */
     {"timer_times", c_timer_times, 1, 1},
     {"webhook", c_webhook, 1, 1},
     {"counter", c_counter, 1, 1},
@@ -677,7 +690,11 @@ int reread_config ( void )
 int check_dir_rw ( char *pathspec, char *label )
 {
    struct stat statb;
+#ifdef GETGROUPS_T
+   GETGROUPS_T grps[100];
+#else
    gid_t       grps[100];
+#endif
    int         ngrps, j;
    char        errmsg[256];
    int         msgl = sizeof(errmsg) - 1;
@@ -690,7 +707,7 @@ int check_dir_rw ( char *pathspec, char *label )
       return 1;
    }
 
-#ifdef POSIX
+#ifdef S_ISDIR
    if ( S_ISDIR(statb.st_mode) == 0 ) {
 #else
    if ( (statb.st_mode & S_IFDIR) != S_IFDIR ) {
@@ -709,7 +726,7 @@ int check_dir_rw ( char *pathspec, char *label )
    }
 
    if ( (statb.st_mode & S_IRWXG) == S_IRWXG ) {
-      if ( (ngrps = getgroups((sizeof(grps)/sizeof(gid_t)) - 1, grps)) < 0 ) {
+      if ( (ngrps = getgroups((sizeof(grps)/sizeof(typeof(*grps))) - 1, grps)) < 0 ) {
          snprintf(errmsg, msgl, "Internal error - getgroups()");
          store_error_message(errmsg);
          return 1;

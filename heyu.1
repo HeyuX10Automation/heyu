@@ -60,7 +60,7 @@ As far as can be determined there is no version of the CM17A which
 transmits at an RF frequency other than the 310 MHz used for X10
 transceivers in North America.  A compile option is provided to
 compile Heyu without CM17A support for users outside North America or those
-who simply have no interest in this device. (See the file "INSTALL" included
+who simply have no interest in this device. (See the file "README" included
 in the Heyu distribution directory.)
 .PP
 Heyu depends on a configuration file to tell it on what serial port
@@ -869,14 +869,16 @@ DigiMax 210 Thermostat.  See man page x10digimax(5) for details.
 
 .PP
 The following state commands retrieve data received from Oregon
-Temperature/Relative Humidity/Barometric Pressure sensors or from
-Wind or Rain sensors.  See man page x10oregon(5) for details.
+Temperature/Relative Humidity/Barometric Pressure sensors, Wind or Rain
+sensors, or Radio Clocks.  See man page x10oregon(5) for details.
 .PP
    oretemp      Hu  Stored temperature reading.
 .br
    orerh        Hu  Stored Relative Humidity.
 .br
    orebp        Hu  Stored Barometric Pressure.
+.br
+   oredt        Hu  Stored Date and Time.
 .br
    orewindavsp  Hu  Stored Wind Average Speed.
 .br

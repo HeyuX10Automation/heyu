@@ -9,7 +9,8 @@ See man page \fIheyu\fP(1) for usage information.
 .PP
 .I Oregon
 sensors transmit encoded RF signals for Temperature, Relative
-Humidity, Barometric Pressure, Wind speed, Rainfall, and other variables.
+Humidity, Barometric Pressure, Date and Time, Wind speed, Rainfall,
+and other variables.
 When equipped with a compatible RF receiver, Heyu can receive and
 decode this information.  Also included in the same category are two
 miscellaneous sensors, the Electrisave CM113 and the OWL CM119, which
@@ -24,7 +25,7 @@ RFXCOM receiver.
 
 .SH COMPILER OPTION
 Support for Oregon sensors is compiled into Heyu by default.  A compiler
-option can be used to omit this support.  See the file INSTALL
+option can be used to omit this support.  See the file README
 included in the Heyu distribution source directory for details.
 
 .SH CONFIGURATION
@@ -95,6 +96,8 @@ Examples:
   heyu orerh      Hu    - Relative Humidity
 .br
   heyu orebp      Hu    - Barometric Pressure
+.br
+  heyu oredt      Hu    - Date and Time
 
 .PP
 The command \'heyu show oregon\' will display stored data
@@ -186,6 +189,10 @@ Temperature / Humidity / Barometric Pressure sensors:
 Weight sensors
 .br
   ORE_WGT1 : BWR101 BWR102
+.PP
+Radio clocks
+.br
+  ORE_DT1 : RTGR328N
 .PP
 Wind sensors
 .br
@@ -332,6 +339,8 @@ alias (note lower case x10_) mapped to each Oregon unit.
 .br
   X10_Hu_oreWgt      x10_<Hu_alias>_oreWgt
 .br
+  X10_Hu_oreDT       x10_<Hu_alias>_oreDT
+.br
   X10_Hu_oreWindSp   x10_<Hu_alias>_oreWindSp
 .br
   X10_Hu_oreWindAvSp x10_<Hu_alias>_oreWindAvSp
@@ -356,12 +365,12 @@ For sensor models which transmit this information:
 .br
   X10_Hu_oreForecast x10_<Hu_alias>_oreForecast 
 .PP
-If a Heyu script is launched by one of the functions "oretemp",
-"orerh", "orebp", "orewgt", "orewindsp", "orewindavsp", "orewinddir",
+If a Heyu script is launched by one of the signals "oretemp", "orerh",
+"orebp", "orewgt", "oredt", "orewindsp", "orewindavsp", "orewinddir",
 "orerainrate", "oreraintot", "elscurr", "owlpower", or "owlenergy",
 the environment will additionally include variables for values
 and flags without the "Hu" identification, e.g., X10_oreTemp,
-X10_oreWgt, X10_elsCurr.
+X10_oreWgt, X10_oreDT, X10_elsCurr.
 .PP
 No variable is created for data which is invalid or "not ready".
 
@@ -389,6 +398,8 @@ data in question, which correspond to:
   ORE_CHGBITS_BP  Barometric Pressure  1hPa
 .br
   ORE_CHGBITS_WGT Weight  0.1kg
+.br
+  ORE_CHGBITS_DT  Date and time  1min
 .br
   ORE_CHGBITS_WINDSP Wind Speed  0.1meters/second
 .br
@@ -428,6 +439,37 @@ in Oregon native units (Celsius for Temperature, percent for RH, or
 hectoPascals for BP) or in the scaled units defined by directives ORE_TSCALE
 and ORE_BPSCALE.  This also applies to TMIN and TMAX setpoint temperatures
 when the entered temperature does not have a temperature scale suffix.
+
+.SH RADIO CLOCKS
+The only model supported so far is RTGR328N, ie. combined Temperature/
+Humidity and Radio clock device. The clock part transmits its own
+signals, independent of Temerature/Humidity reports, hence it has been
+implemented as a separate module type and should be configured with a
+separate ALIAS directive, consuming one extra Hu address.  Since both
+subdevices share the same transmitter with the same ID, an artificial
+ID, incremented by 1, is presented and used internally for the clock
+part.
+.PP
+The last received time value in the UNIX time format, i.e. as a number
+of seconds since 1970-01-01 00:00:00 +0000 (the UNIX Epoch), is made
+available to Heyu scripts through X10_oreDT environment variable
+('oredt' signal only), as well as stored and then made available to any
+script over X10_Hu_oreDT and x10_<Hu_alias>_oreDT variables.
+This number can be further processed by user scripts, possibly with the
+\'date -d @<value> +<FORMAT>' command, which can be used to convert it
+to other formats.
+.PP
+As one might expect, the date/time value, in a human readable form
+(English, local timezone dependent), is reported to the Heyu engine log
+or monitor output on every clock signal received.
+The same format is used when reporting by means of 'heyu show oregon'
+command.
+.PP
+A more interesting option than examinig the last received time value
+could be launching scripts on time reports received.
+Using the 'changed' launch flag, combined with a tuned ORE_CHGBITS_DT
+value, a user can implement a single cron like (though not very
+accurate) job, actually using a Heyu script, not a cron entry, for this.
 
 .SH CURRENT SENSORS
 Heyu supports decoding of signals from the Electrisave CM113 and the
@@ -973,7 +1015,10 @@ expand this table.)
   BTHR968    THB2   38
 .br
   BTHR918N   THB2   38
-
+.PP
+Radio clocks:
+.br
+  RTGR328N   DT1   318  354  366  402  426   (samples, to be verified)
 .PP
 Rebranded Units: 
 .br
