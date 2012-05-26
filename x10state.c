@@ -14270,6 +14270,88 @@ static struct local_flags_st {
   {"",        0}
 };
 
+/*
+ * Synthesize an X10 Security RF signal data from command/message arguments,
+ * using a translation function provided, and pass the result to the engine.
+ */
+int sec_encode(int argc, char *argv[], struct xlate_vdata_st *xlate_vdata,
+		int (*xlate_func)(struct xlate_vdata_st *), int modtype)
+{
+	int j, k, func = 0, found;
+	unsigned long vflags = 0;
+	unsigned char vdata;
+	unsigned long ident = xlate_vdata->ident;
+	char buf[50];
+
+	clear_error_message();
+
+	if (argc < 4) {
+		store_error_message("Not enough arguments.");
+		return 1;
+	}
+
+	for (j = 0; *sec_func_type[j].label != '\0'; j++)
+		if (strcmp(argv[3], sec_func_type[j].label) == 0) {
+			func = sec_func_type[j].func;
+			break;
+		}
+	if (!func) {
+		snprintf(buf, sizeof(buf), "Invalid security function '%s'.",
+				argv[3]);
+		store_error_message(buf);
+		return 1;
+	}
+
+	for (k = 4; k < argc; k++) {
+		strlower(argv[k]);
+		found = 0;
+		for (j = 0; *local_flags[j].label != '\0'; j++) {
+			if (strcmp(argv[k], local_flags[j].label) == 0 ) {
+				vflags |= local_flags[j].flag;
+				found = 1;
+				break;
+			}
+		}
+		if ( !found ) {
+			snprintf(buf, sizeof(buf), "Invalid flag '%s'.",
+					argv[k]);
+			store_error_message(buf);
+			return 1;
+		}
+	}
+
+	xlate_vdata->ident = xlate_vdata->identp[vflags & SEC_AUX &&
+						xlate_vdata->nident > 1];
+	found = 0;
+	for (j = 0; j <= 0xff; j++) {
+		xlate_vdata->vdata = j;
+		xlate_vdata->vflags = 0;
+		if (xlate_func(xlate_vdata) != 0) {
+			store_error_message("Function error.");
+			return 1;
+		}
+		if (func == xlate_vdata->func &&
+				vflags == (xlate_vdata->vflags & ~SEC_FAULT)) {
+			vdata = j;
+			found = 1;
+			break;
+		}
+	}
+	if (!found) {
+		snprintf(buf, sizeof(buf),
+			"Function and/or Flag mismatch for module type %s.",
+			lookup_module_name(modtype));
+		store_error_message(buf);
+		return 1;
+	}
+
+	ident = xlate_vdata->ident;
+	send_virtual_cmd_data(0, vdata, RF_SEC,
+			ident & 0xffu, (ident & 0xff00u) >> 8, 0, 0);
+
+	return 0;
+}
+
 /*---------------------------------------------------------------------+
  | Emulate an X10 Security transmission from the command line.         |
  +---------------------------------------------------------------------*/
@@ -14278,11 +14360,7 @@ int c_sec_emu ( int argc, char *argv[] )
    ALIAS        *aliasp;
    char         hc;
    unsigned int bitmap;
-   int          j, k, index, found;
-   int          func;
-   unsigned char vdata;
-   unsigned long ident;
-   unsigned long vflags;
+   int          index, ret;
    unsigned int  aflags;
    struct xlate_vdata_st xlate_vdata;
 
@@ -14309,72 +14387,18 @@ int c_sec_emu ( int argc, char *argv[] )
       return 1;
    }
 
-   j = 0; found = 0;
-   while ( *sec_func_type[j].label ) {
-      if ( strcmp(argv[3], sec_func_type[j].label) == 0 ) {
-         func = sec_func_type[j].func;
-         found = 1;
-         break;
-      }
-      j++;
-   }
-   if ( !found ) {
-      fprintf(stderr, "Invalid security function '%s'.\n", argv[3]);
-      return 1;
-   }
-
-   vflags = 0;
-   for ( k = 4; k < argc; k++ ) {
-      strlower(argv[k]);
-      j = 0; found = 0;
-      while ( *local_flags[j].label ) {
-         if ( strcmp(argv[k], local_flags[j].label) == 0 ) {
-            vflags |= local_flags[j].flag;
-            found = 1;
-            break;
-         }
-         j++;
-      }
-      if ( !found ) {
-         fprintf(stderr, "Invalid flag '%s'.\n", argv[k]);
-         return 1;
-      }
-   }
-
-
    xlate_vdata.optflags = aliasp[index].optflags & ~(MOPT_MAIN | MOPT_AUX);
    xlate_vdata.optflags2 = aliasp[index].optflags2;
    xlate_vdata.nident = aliasp[index].nident;
    xlate_vdata.identp = aliasp[index].ident;
 
-   if ( (vflags & SEC_AUX) && (aliasp[index].nident > 1) ) 
-      xlate_vdata.ident = xlate_vdata.identp[1] = ident = aliasp[index].ident[1];
-   else
-      xlate_vdata.ident = xlate_vdata.identp[0] = ident = aliasp[index].ident[0];
+   ret = sec_encode(argc, argv, &xlate_vdata,
+   		aliasp[index].xlate_func, aliasp[index].modtype);
 
-   found = 0; vdata = 0xff;
-   for ( j = 0; j <= 0xff; j++ ) {
-      xlate_vdata.vdata = j;
-      xlate_vdata.vflags = 0;
-      if ( aliasp[index].xlate_func(&xlate_vdata) != 0 ) {
-         fprintf(stderr, "Function error.\n");
-         return 1;
-      }
-      if ( func == xlate_vdata.func && vflags == (xlate_vdata.vflags & ~SEC_FAULT) ) {
-         vdata = j;
-         found = 1;
-         break;
-      }
-   }
-   if ( !found ) {
-      fprintf(stderr, "Function and/or Flag mismatch for module type %s.\n",
-         lookup_module_name(aliasp[index].modtype));
-      return 1;
-   }
+   if (ret != 0)
+     fprintf(stderr, "%s\n", error_message());
 
-   send_virtual_cmd_data(0, vdata, RF_SEC, (ident & 0xffu), ((ident & 0xff00u) >> 8), 0, 0);
-
-   return 0;
+   return ret;
 }
 
 /*---------------------------------------------------------------------+
