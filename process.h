@@ -1881,6 +1881,7 @@ void setup_countdown_timers ( void );
 int update_activity_states ( unsigned char, unsigned int, unsigned char );
 int proc_type_std(unsigned char hcode, unsigned char ucode,
 		  unsigned char fcode);
+char *datstrf(void);
 
 /*
  * Process signals received from sources other than the Heyu spool file.

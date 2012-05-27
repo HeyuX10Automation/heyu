@@ -37,6 +37,28 @@
 #endif
 
 #include "x10.h"
+#include "process.h"
+
+static void xpl_log_basic(xPL_ServicePtr service, String type, String text)
+{
+	static xPL_MessagePtr message;
+
+	if (!message) {
+		message = xPL_createBroadcastMessage(service,
+						     xPL_MESSAGE_TRIGGER);
+		xPL_setSchema(message, "log", "basic");
+	} else {
+		xPL_clearMessageNamedValues(message);
+	}
+
+	fprintf(stderr, "%s %s log.basic %s: %s\n", datstrf(),
+			xPL_getServiceDeviceID(service), type, text);
+	fflush(stderr);
+
+	xPL_addMessageNamedValue(message, "type", type);
+	xPL_addMessageNamedValue(message, "text", text);
+	xPL_sendServiceMessage(service, message);
+}
 
 static xPL_ObjectPtr xpl_select_msg_handler(String class, String type)
 {
