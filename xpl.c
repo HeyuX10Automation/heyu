@@ -103,6 +103,13 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 		goto bad;
 	}
 
+	/*
+	 * Exception: handle RFXCOM receiver provided 24-bit IDs
+	 * Note that we are not able to detect 24-bit 0x00hhhh values
+	 */
+	if (ident & 0xff0000)
+		ident = ((ident & 0xff0000) >> 16) | ((ident & 0xffff) << 8);
+
 	/* adaptation of x10.security commands / flags to Heyu sec_emu syntax */
 	if (tamper) {
 		command = sectamper;
