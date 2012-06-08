@@ -333,6 +333,8 @@ struct modules_st {
   {"DS18-1",      MXLV, VSEC, VIRTUAL,    0, opt_ds90, fn_ds90 },   /* ElekHomica D/W sensor */
 
   {"MS10A",       MXLV, VSEC, VIRTUAL,    0, opt_sensor, fn_ms10a },
+  {"MS10",        MXLV, VSEC, VIRTUAL,    0, opt_sensor, fn_ms10a },
+  {"MS20",        MXLV, VSEC, VIRTUAL,    0, opt_sensor, fn_ms10a },
   {"MS90",        MXLV, VSEC, VIRTUAL,    0, opt_sensor, fn_ms90 }, /* Marmitek Motion sensor */
   {"MS18E",       MXLV, VSEC, VIRTUAL,    0, opt_sensor, fn_ms90 }, /* BMB Home Solutions Motion sensor */
   {"SD10",        MXLV, VSEC, VIRTUAL,    0, opt_sd10, fn_sd10 },
@@ -348,6 +350,7 @@ struct modules_st {
   {"KR18",        MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr18 }, /* Keyfob remotes */
   {"KR18E",       MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr18 },
   {"KR10A",       MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr10a },
+  {"KR10",        MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr10a },
   {"KR21",        MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr10a },
   {"PKR02",       MXLV, VSEC, VIRTUAL,    0, opt_kremote, fn_kr10a },
   {"KR15A",       MXLV, VSEC, VIRTUAL,    0, opt_sremote, fn_kr15a }, /* Big Red Button */

@@ -1623,6 +1623,10 @@ struct ev_s {
 #define abs( a )   ((a) < 0 ? -(a) : (a))
 #endif
 
+extern CONFIG *configp;
+extern const unsigned int source_type[];
+extern const char *const source_name[];
+
 int code2unit ( unsigned char );
 int bmap2wday ( unsigned char );
 int isleapyear ( int ); 
@@ -1817,6 +1821,7 @@ void send_sptty_x10state_command ( int, unsigned char, unsigned char );
 void send_x10state_command ( unsigned char, unsigned char );
 void set_module_masks ( ALIAS * );
 int lookup_module_type ( char * );
+int (*module_xlate_func(int))();
 void finalize_launch ( void );
 char *lookup_module_name ( int );
 int absdims( int );
@@ -1882,6 +1887,8 @@ int update_activity_states ( unsigned char, unsigned int, unsigned char );
 int proc_type_std(unsigned char hcode, unsigned char ucode,
 		  unsigned char fcode);
 char *datstrf(void);
+void configure_rf_tables(void);
+int direct_command(int, char **, int);
 
 /*
  * Process signals received from sources other than the Heyu spool file.

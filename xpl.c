@@ -38,6 +38,7 @@
 
 #include "x10.h"
 #include "process.h"
+#include "x10state.h"
 
 static void xpl_log_basic(xPL_ServicePtr service, String type, String text)
 {
@@ -60,11 +61,178 @@ static void xpl_log_basic(xPL_ServicePtr service, String type, String text)
 	xPL_sendServiceMessage(service, message);
 }
 
+/*
+ * xpl_x10_security(): translate name=value pairs of an xPL message of type
+ *		       x10.security into a list of heyu sec_emu command line
+ *		       arguments and pass them to the sec_encode() function
+ *		       as if originated from signal_src.
+ */
+static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
+			  xPL_ObjectPtr user_value)
+{
+	String command	    = xPL_getMessageNamedValue(message, "command");
+	String device	    = xPL_getMessageNamedValue(message, "device");
+	String type	    = xPL_getMessageNamedValue(message, "type");
+	String tamper	    = xPL_getMessageNamedValue(message, "tamper");
+	String delay	    = xPL_getMessageNamedValue(message, "delay");
+	String low_battery  = xPL_getMessageNamedValue(message, "low-battery");
+	/*
+	 * Fixed strings declared below will be strlower()ized unconditionally
+	 * when passed to sec_encode(), so store them as statics, not constants.
+	 */
+	static char lobat[] = "lobat", sectamper[] = "sectamper", arm[] = "arm";
+	static char alert[] = "alert", clear[] = "clear";
+	static char sdawn[] = "sdawn", sdusk[] = "sdusk";
+
+	int argc = 3, typec, i, modtype = -1, err = 0;
+	unsigned int *signal_src = user_value;
+	struct xlate_vdata_st xlate_vdata;
+	String tmpptr, argv[6], *typev;
+	unsigned long ident;
+	char buf[80];
+
+	if (!command || !device || !type) {
+		store_error_message("missing mandatory name=value data");
+		goto bad;
+	}
+
+	ident = strtol(device, &tmpptr, 0);
+	if (*tmpptr != '\0') {
+		snprintf(buf, sizeof(buf), "invalid device ID '%s'", device);
+		store_error_message(buf);
+		goto bad;
+	}
+
+	/* adaptation of x10.security commands / flags to Heyu sec_emu syntax */
+	if (tamper) {
+		command = sectamper;
+	} else if (xPL_strcmpIgnoreCase(command, "normal") == 0) {
+		command = clear;
+	} else if (xPL_strcmpIgnoreCase(command, "motion") == 0) {
+		command = alert;
+	} else if (xPL_strncmpIgnoreCase(command, "arm-", 4) == 0) {
+		argv[argc++] = arm;
+		command += 2;
+		memcpy(command, "sw", 2);
+	} else if (xPL_strncmpIgnoreCase(command, "lights-", 7) == 0) {
+		memcpy(command, "slights", 7);
+	} else if (xPL_strcmpIgnoreCase(command, "light") == 0) {
+		command = sdawn;
+	} else if (xPL_strcmpIgnoreCase(command, "dark") == 0) {
+		command = sdusk;
+	}
+	argv[argc++] = command;
+
+	if (low_battery && xPL_strcmpIgnoreCase(low_battery, "true") == 0)
+		argv[argc++] = lobat;
+	if (delay) {
+		snprintf(buf, sizeof(buf), "sw%s", delay);
+		argv[argc++] = buf;
+	}
+
+	modtype = lookup_module_type(type);
+	if (modtype >= 0) {
+		memset(&xlate_vdata, '\0', sizeof(struct xlate_vdata_st));
+		xlate_vdata.identp = &ident;
+
+		err = alt_parent_call(sec_encode, signal_src - source_type,
+				argc, argv, &xlate_vdata,
+				module_xlate_func(modtype), modtype);
+	} else {
+		snprintf(buf, sizeof(buf), "unsupported module type '%s'",
+				type);
+		store_error_message(buf);
+		err = 1;
+	}
+
+	if (err) {
+bad:
+		add_error_prefix("x10.security: ");
+		xpl_log_basic(service, "inf", error_message());
+	}
+}
+
+/*
+ * xpl_x10_basic(): translate name=value pairs of an xPL message of type
+ *		    x10.basic into a list of heyu command line arguments
+ *		    and pass them to the direct_command() function as if
+ *		    originated from signal_src.
+ */
+static void xpl_x10_basic(xPL_ServicePtr service, xPL_MessagePtr message,
+			  xPL_ObjectPtr user_value)
+{
+	String command = xPL_getMessageNamedValue(message, "command");
+	String device  = xPL_getMessageNamedValue(message, "device");
+	String house   = xPL_getMessageNamedValue(message, "house");
+	String level   = xPL_getMessageNamedValue(message, "level");
+	String data1   = xPL_getMessageNamedValue(message, "data1");
+	String data2   = xPL_getMessageNamedValue(message, "data2");
+
+	unsigned int *signal_src = user_value;
+	int argc = 0, dimlevel, err;
+	static char _h[3] = "-a";
+	String argv[5];
+
+	if ((!command && !device) || (!device && !house) || (device && house) ||
+			(data1 && !data2) || (!data1 && data2) ||
+			(level && data1) || (!command && (level || data1))) {
+		store_error_message("missing or conflicting name=value data");
+		goto bad;
+	}
+
+	/* RFXCOM missing unit code workaround */
+	if (device && strlen(device) == 1 && *signal_src == RCVA) {
+		_h[1] = device[0];
+		device = _h;
+	}
+
+	if (command)
+		argv[argc++] = command;
+	else
+		argv[argc++] = "address";
+
+	if (data2)
+		argv[argc++] = data2;
+
+	if (device)
+		argv[argc++] = device;
+	else
+		argv[argc++] = house;
+
+	if (level) {
+		if (!xPL_strToInt(level, &dimlevel))
+			goto bad;
+		dimlevel = dimlevel * 21 / 100 + 1;
+		argv[argc++] = xPL_intToStr(dimlevel);
+	} else if (data1) {
+		argv[argc++] = data1;
+	} else if (*signal_src == RCVA && command &&
+			(xPL_strcmpIgnoreCase(command, "dim") == 0 ||
+			 xPL_strcmpIgnoreCase(command, "bright") == 0)) {
+		/* RFXCOM missing dim/bright level workaround */
+		argv[argc++] = "1";
+	}
+
+	err = alt_parent_call(direct_command, signal_src - source_type, argc,
+			      argv, CMD_RUN);
+	if (err) {
+bad:
+		add_error_prefix("x10.basic: ");
+		xpl_log_basic(service, "inf", error_message());
+	}
+}
+
 static xPL_ObjectPtr xpl_select_msg_handler(String class, String type)
 {
 	xPL_ObjectPtr handler = NULL;
 
 	/* Schema based message handler selection logic */
+	if (xPL_strcmpIgnoreCase(class, "x10") == 0) {
+		if (xPL_strcmpIgnoreCase(type, "basic") == 0)
+			handler = xpl_x10_basic;
+		else if (xPL_strcmpIgnoreCase(type, "security") == 0)
+			handler = xpl_x10_security;
+	}
 	/* End of message handler selection logic */
 
 	return handler;
@@ -145,6 +313,7 @@ static xPL_ObjectPtr xpl_setup_subservice(xPL_ServicePtr service,
 {
 	if (!xPL_isServiceConfigured(service)) {
 		xPL_ServiceFilterPtr fp = malloc(sizeof(xPL_ServiceFilter));
+		unsigned int *signal_src = *user_value;
 
 		if (fp) {
 			service->messageFilterList = fp;
@@ -153,6 +322,24 @@ static xPL_ObjectPtr xpl_setup_subservice(xPL_ServicePtr service,
 		}
 
 		xpl_add_configurable_array(service, "listener");
+
+		switch (*signal_src) {
+		case RCVA:
+			xPL_addServiceConfigValue(service, "listener",
+						  "xpl-trig.x10.security");
+			xPL_addServiceConfigValue(service, "listener",
+						  "xpl-trig.x10.basic");
+
+			if (fp) {
+				xPL_addServiceConfigValue(service, "filter",
+						"xpl-trig.rfxcom.lan.*.*.*");
+				fp->matchOnMessageType = xPL_MESSAGE_TRIGGER;
+				fp->matchOnVendor = strdup("rfxcom");
+				fp->matchOnDeviceID = strdup("lan");
+				service->filterCount = 1;
+			}
+			break;
+		}
 	}
 
 	return xpl_reconf_listeners;
@@ -247,8 +434,19 @@ static xPL_ObjectPtr xpl_signal_src(String name)
 			continue;
 
 		switch (i) {
+			static int err = -1;
+
+		case D_AUXRCV:
+			if (!(i_am_state || i_am_monitor))
+				goto err;
+			configure_rf_tables();
+			break;
 		default:
 			return NULL;
+		err:
+			fprintf(stderr, "xpl_signal_src(): signal source %s not valid for this Heyu daemon, skipping\n",
+					name);
+			return &err;
 		}
 
 		return (xPL_ObjectPtr) &source_type[i];
@@ -296,7 +494,7 @@ static void xpl_reconf_subservices(xPL_ServicePtr service,
 		if (signal_src == NULL)
 			fprintf(stderr, "xpl_reconf_subservices(): service name %s not supported, skipping\n",
 					name);
-		else
+		else if (*((int *)signal_src) >= 0)
 			xpl_setup_service(name, instance, subservice,
 					  signal_src);
 	}
@@ -312,6 +510,11 @@ static xPL_ObjectPtr xpl_setup_metaservice(xPL_ServicePtr service,
 
 	if (!xPL_isServiceConfigured(service)) {
 		xpl_add_configurable_array(service, "subService");
+
+		if ((i_am_state || i_am_monitor) && !configp->auxdev) {
+			xPL_addServiceConfigValue(service, "subService",
+						(String) source_name[D_AUXRCV]);
+		}
 	}
 
 	return xpl_reconf_subservices;
@@ -327,6 +530,11 @@ Bool xpl_init(void)
 	xPL_ObjectPtr setup_io = NULL;
 
 	/* Primary xPL service name and io_setup selection logic goes here */
+	if (i_am_state) {
+		name = "engine";
+	} else if (i_am_monitor) {
+		name = "monitor";
+	}
 	/* End of primary xPL service name and io_setup selection logic */
 
 	if (!name) {

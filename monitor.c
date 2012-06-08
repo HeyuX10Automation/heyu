@@ -80,6 +80,10 @@
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_LIBXPL
+#include "x10xpl.h"
+#endif
+
 extern int timeout;
 extern int sptty;
 extern int i_am_monitor, i_am_state, i_am_relay, i_am_rfxmeter;
@@ -99,6 +103,9 @@ jmp_buf mjb;
 
 void iquit( int signo )
 {
+#ifdef HAVE_LIBXPL
+    xPL_shutdown();
+#endif
     longjmp(mjb, 1);
 }
 
@@ -107,6 +114,9 @@ void engine_quit ( int signo )
    char buffer[PATH_LEN + 1];
    signal(SIGTERM, engine_quit);
    syslog(LOG_ERR, "interrupt received\n");
+#ifdef HAVE_LIBXPL
+   xPL_shutdown();
+#endif
    write_x10state_file();
    sprintf(buffer, "%s/LCK..%s%s", LOCKDIR, STATE_LOCKFILE, configp->suffix);
    unlink(buffer);
@@ -120,6 +130,10 @@ int c_monitor( int argc, char *argv[] )
     struct stat stat_buf;
     char spoolfile[100];
     time_t time_now, time_prev;
+#ifdef HAVE_LIBXPL
+    long xpl_poll = configp->engine_poll / 1000;
+    Bool xpl_ready = FALSE;
+#endif
 
     sprintf( spoolfile, "%s/%s%s", SPOOLDIR, SPOOLFILE, configp->suffix);
     (void) signal(SIGCHLD, iquit);
@@ -142,6 +156,13 @@ int c_monitor( int argc, char *argv[] )
        fprfxe = stderr;
     }
     else {
+#ifdef HAVE_LIBXPL
+       /* xPLLib bug? */
+       if (xpl_poll == 1000)
+           xpl_poll = 999;
+
+       xpl_ready = xpl_init();
+#endif
        fprintf(stdout, "%s Monitor started\n", datstrf());
        fflush(stdout);
     }
@@ -156,6 +177,11 @@ int c_monitor( int argc, char *argv[] )
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	        return(0); 
 
+#ifdef HAVE_LIBXPL
+            if (i_am_monitor && xpl_ready)
+	        xPL_processMessages(xpl_poll);
+            else
+#endif
 	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
 	    microsleep(configp->engine_poll);
@@ -188,6 +214,10 @@ int c_engine( int argc, char *argv[] )
     mode_t oldumask;
     extern FILE *fdsout;
     extern FILE *fdserr;
+#ifdef HAVE_LIBXPL
+    long xpl_poll = configp->engine_poll / 1000;
+    Bool xpl_ready = FALSE;
+#endif
     
     sprintf( spoolfile, "%s/%s%s", SPOOLDIR, SPOOLFILE, configp->suffix);
 
@@ -221,6 +251,14 @@ int c_engine( int argc, char *argv[] )
     fdserr = freopen(configp->logfile, "a", stderr);
     umask(oldumask);
 
+#ifdef HAVE_LIBXPL
+    /* xPLLib bug? */
+    if (xpl_poll == 1000)
+        xpl_poll = 999;
+
+    xpl_ready = xpl_init();
+#endif
+
     fprintf(fdsout, "%s Engine started\n", datstrf());
     fflush(fdsout);
 
@@ -229,6 +267,11 @@ int c_engine( int argc, char *argv[] )
 	    if( stat( spoolfile, &stat_buf ) < 0)
 	       engine_quit(SIGTERM) /* return(0) */; 
 
+#ifdef HAVE_LIBXPL
+            if (xpl_ready)
+		xPL_processMessages(xpl_poll);
+            else
+#endif
 	    /* this imposes a delay between the start of new output*/
 	    /* It keeps the disk from being thrashed. */
 	    microsleep(configp->engine_poll);

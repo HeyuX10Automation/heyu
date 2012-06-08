@@ -1759,6 +1759,10 @@ where <receiver device> is W800RF32A, MR26A, or RFXCOM.  Examples:
 
 There is no default for this directive.
 
+Note: Specifying this directive for xPL enabled Heyu disables the Heyu
+default ability of receiving RF signals from RFXLAN devices over xPL.
+See x10xpl(7) and x10aux(5) for more information on xPL support in Heyu.
+
 .SH SUPPRESS_RFXJAM directive
 Older firmware versions of the RFXCOM receiver sent a special "jamming"
 signal when they detected RF jamming, but the system was prone to many
@@ -2232,4 +2236,5 @@ for uploaded timers and macros and for scripts by Charles W. Sullivan
 .SH SEE ALSO
 http://www.heyu.org
 .br
-date(1),  heyu(1), x10sched(5), x10scripts(5), x10cm17a(5), x10aux(5)
+date(1),  heyu(1), x10sched(5), x10scripts(5), x10cm17a(5), x10aux(5),
+x10xpl(7)

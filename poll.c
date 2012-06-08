@@ -154,14 +154,14 @@ extern FILE *fprfxe;
  * Helper tables for converiting heyu_parent compatible values
  * to the state engine expected signal source values and labels.
  */
-static const unsigned int source_type[] = {
+const unsigned int source_type[] = {
 	[D_CMDLINE]	= SNDC,
 	[D_ENGINE]	= SNDS,
 	[D_RELAY]	= SNDP,
 	[D_AUXDEV]	= SNDA,
 	[D_AUXRCV]	= RCVA,
 };
-static const char *const source_name[] = {
+const char *const source_name[] = {
 	[D_CMDLINE]	= "sndc",
 	[D_ENGINE]	= "snds",
 	[D_RELAY]	= "sndp",

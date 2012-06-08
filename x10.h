@@ -233,5 +233,6 @@ extern void display();
 
 extern int i_am_state, i_am_monitor;
 extern int heyu_parent;
+extern struct opt_st *optptr;
 
 #endif	/* _x10_header */
