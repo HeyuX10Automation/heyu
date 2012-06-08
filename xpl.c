@@ -91,8 +91,8 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 	unsigned long ident;
 	char buf[80];
 
-	if (!command || !device || !type) {
-		store_error_message("missing mandatory name=value data");
+	if (!command || !device) {
+		store_error_message("missing mandatory \"command\" or \"device\" argument");
 		goto bad;
 	}
 
@@ -135,6 +135,38 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 	if (delay) {
 		snprintf(buf, sizeof(buf), "sw%s", delay);
 		argv[argc++] = buf;
+	}
+
+	if (!type) {
+		/* use module ID to retreive its type if known to Heyu */
+		unsigned char ucode;
+		int index = id2index(RF_SEC, ident, &ucode);
+
+		if (index >= 0) {
+			ALIAS *aliasp = &configp->aliasp[index];
+
+			modtype = aliasp->modtype;
+
+			if (modtype >= 0) {
+				memset(&xlate_vdata, '\0',
+						sizeof(struct xlate_vdata_st));
+				xlate_vdata.identp = &ident;
+
+				err = alt_parent_call(sec_encode,
+						signal_src - source_type,
+						argc, argv, &xlate_vdata,
+						aliasp->xlate_func, modtype);
+				if (err)
+					goto bad;
+				return;
+			}
+		}
+
+		snprintf(buf, sizeof(buf),
+			"alias for module ID '%s' not found, couldn't determine module type",
+			device);
+		store_error_message(buf);
+		goto bad;
 	}
 
 	/* Handle RFXCOM receiver provided multi-value "type" arguments */
