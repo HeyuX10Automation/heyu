@@ -130,20 +130,45 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 		argv[argc++] = buf;
 	}
 
-	modtype = lookup_module_type(type);
-	if (modtype >= 0) {
+	/* Handle RFXCOM receiver provided multi-value "type" arguments */
+	tokenize(strdup(type), ",", &typec, &typev);
+
+	for (i = 0; i < typec; i++) {
+
+		if (*typev[i] == '\0')
+			continue;
+
+		modtype = lookup_module_type(typev[i]);
+		if (modtype < 0)
+			continue;
+
 		memset(&xlate_vdata, '\0', sizeof(struct xlate_vdata_st));
 		xlate_vdata.identp = &ident;
 
 		err = alt_parent_call(sec_encode, signal_src - source_type,
 				argc, argv, &xlate_vdata,
 				module_xlate_func(modtype), modtype);
-	} else {
+		if (!err)
+			goto done;
+	}
+
+	if (!err) {
 		snprintf(buf, sizeof(buf), "unsupported module type '%s'",
 				type);
 		store_error_message(buf);
 		err = 1;
 	}
+done:
+	if (!err && typec > 1) {
+		fprintf(stderr,
+			"%s %s x10.security: module type \"%s\" selected out of '%s'\n",
+			datstrf(), xPL_getServiceDeviceID(service),
+			typev[i], type);
+		fflush(stderr);
+	}
+
+	free(typev[0]);
+	free(typev);
 
 	if (err) {
 bad:
