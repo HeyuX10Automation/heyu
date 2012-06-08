@@ -145,6 +145,15 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 		if (*typev[i] == '\0')
 			continue;
 
+		/*
+		 * Work around RFXCOM optional type SD90 false
+		 * selection caused by a missing delay flag
+		 */
+		if (!delay && typec > 1 && strcmp(typev[i], "sd90") == 0) {
+			err = 1;
+			continue;
+		}
+
 		modtype = lookup_module_type(typev[i]);
 		if (modtype < 0)
 			continue;
@@ -164,6 +173,60 @@ static void xpl_x10_security(xPL_ServicePtr service, xPL_MessagePtr message,
 				type);
 		store_error_message(buf);
 		err = 1;
+		goto done;
+	}
+	if (delay)
+		goto done;
+
+	/* Guess potentially RFXCOM missing delay flag and retry for not SD90 */
+	tmpptr = strstr(type, "sd90");
+	if (!tmpptr)
+		strncpy(buf, "swmax", sizeof(buf));
+	else if (typec > 1)
+		strncpy(buf, "swmin", sizeof(buf));
+	else
+		goto done;
+	argv[argc++] = buf;
+
+	for (i = 0; i < typec; i++) {
+		if (*typev[i] == '\0')
+			continue;
+
+		if (strcmp(typev[i], "sd90") == 0)
+			continue;
+
+		modtype = lookup_module_type(typev[i]);
+		if (modtype < 0)
+			continue;
+
+		memset(&xlate_vdata, '\0', sizeof(struct xlate_vdata_st));
+		xlate_vdata.identp = &ident;
+
+		err = alt_parent_call(sec_encode, signal_src - source_type,
+				argc, argv, &xlate_vdata,
+				module_xlate_func(modtype), modtype);
+		if (!err)
+			goto done;
+	}
+
+	/*
+	 * If the workaround failed, drop the guessed
+	 * delay argument and try the SD90 if suggested
+	 */
+	if (tmpptr) {
+		argc--;
+		for (i = 0; i < typec; i++)
+			if (strcmp(typev[i], "sd90") == 0)
+				break;
+
+		modtype = lookup_module_type(typev[i]);
+
+		memset(&xlate_vdata, '\0', sizeof(struct xlate_vdata_st));
+		xlate_vdata.identp = &ident;
+
+		err = alt_parent_call(sec_encode, signal_src - source_type,
+				argc, argv, &xlate_vdata,
+				module_xlate_func(modtype), modtype);
 	}
 done:
 	if (!err && typec > 1) {
