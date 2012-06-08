@@ -5895,8 +5895,7 @@ char *translate_virtual ( unsigned char *buf, int len, unsigned char *sunchanged
    char hc;
    int  j, k, found, index = -1;
    unsigned char hcode, ucode, unit, func, vdata, vtype, /*vident,*/ byte2, byte3;
-//   unsigned short vident, idmask;
-   unsigned long vident, idmask;
+   unsigned long vident;
    unsigned int bitmap;
    unsigned long vflags = 0;
    /* unsigned long flood; */
@@ -6032,27 +6031,12 @@ else {
    
 //   if ( vtype == RF_SEC || vtype == RF_ENT ) {
    if ( vtype == RF_SEC || vtype == RF_ENT || vtype == RF_VISONIC ) {
-      idmask = (vtype == RF_SEC) ? configp->securid_mask : 0xffffu;
       hcode = ucode = 0;
-      found = 0;
-      j = 0;
-      /* Look up the alias, if any */
-      while ( !found && aliasp && aliasp[j].line_no > 0 ) {
-         if ( aliasp[j].vtype == vtype && 
-              (bitmap = aliasp[j].unitbmap) > 0 &&
-              (ucode = single_bmap_unit(bitmap)) != 0xff ) {
-            for ( k = 0; k < aliasp[j].nident; k++ ) {
-               if ( (aliasp[j].ident[k] & idmask) == (vident & idmask) ) {
-                  index = j;
-                  found = 1;
-                  break;
-               }
-            }
-         }
-         j++;
-      }
 
-      if ( !found || !aliasp ) {
+      /* Look up the alias, if any */
+      index = id2index(vtype, vident, &ucode);
+
+      if (index < 0) {
          sprintf(outbuf, "func %12s : Type %s ID 0x%02lX Data 0x%02X",
            "RFdata", typename[vtype], vident, vdata);
          return outbuf;

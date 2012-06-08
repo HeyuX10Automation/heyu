@@ -1914,3 +1914,9 @@ int process_received(unsigned char *buf, int len, int src);
 	ret;					 \
 })
 
+/*
+ * Find a single unit alias matching the module type and ID.
+ * Returns an index to the alias table entry, or -1 if not found.
+ * Additionally, stores the retrieved alias unit code under ucodep.
+ */
+int id2index(unsigned char type, unsigned long id, unsigned char *ucodep);
