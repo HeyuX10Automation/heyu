@@ -510,12 +510,6 @@ int forward_variable_aux_data ( unsigned char vl_type, unsigned char *buff, unsi
     0xff,0xff,0xff,3,ST_COMMAND,ST_SOURCE,D_AUXRCV,
     0xff,0xff,0xff,0,ST_COMMAND,ST_VARIABLE_LEN,0,0};
 
-   sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
-
-   if ( lock_for_write() < 0 ) {
-      syslog(LOG_ERR, "aux unable to lock writefile\n");
-      return 1;
-   }
    template[10] = length + 4;
    template[13] = vl_type;
    template[14] = length;
@@ -523,6 +517,15 @@ int forward_variable_aux_data ( unsigned char vl_type, unsigned char *buff, unsi
    memcpy(sendbuf, template, sizeof(template));
    memcpy(sendbuf + sizeof(template), buff, length);
 
+   if (i_am_state || i_am_monitor)
+      return process_received(&sendbuf[11], sendbuf[10], heyu_parent);
+
+   sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
+
+   if ( lock_for_write() < 0 ) {
+      syslog(LOG_ERR, "aux unable to lock writefile\n");
+      return 1;
+   }
    ignoret = write(sptty, sendbuf, sizeof(template) + length);
 
 #if 0
@@ -552,14 +555,18 @@ int forward_standard_aux_data ( unsigned char byte1, unsigned char byte2 )
     0xff,0xff,0xff,3,ST_COMMAND,ST_SOURCE,D_AUXRCV,
     0xff,0xff,0xff,2,0,0};
 
+   template[11] = byte1;
+   template[12] = byte2;
+
+   if (i_am_state || i_am_monitor)
+      return process_received(&template[11], 2, heyu_parent);
+
    sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
 
    if ( lock_for_write() < 0 ) {
       syslog(LOG_ERR, "aux unable to lock writefile\n");
       return 1;
    }
-   template[11] = byte1;
-   template[12] = byte2;
 
    ignoret = write(sptty, template, 13);
 
@@ -632,6 +639,11 @@ int send_virtual_cmd_data ( unsigned char address, unsigned char vdata,
    template[18] = byte2;
    template[19] = byte3;
 
+   if (i_am_state || i_am_monitor) {
+      process_received(&template[11], 9, source);
+      return 0;
+   }
+
    ignoret = write(sptty, template, 20);
 
    return 0;
@@ -653,13 +665,6 @@ int forward_aux_longdata ( unsigned char vtype, unsigned char seq, unsigned char
     0xff,0xff,0xff,3,ST_COMMAND,ST_SOURCE,D_AUXRCV,
     0xff,0xff,0xff,0,ST_COMMAND,ST_LONGVDATA,0, 0,0,0,0};
 
-   sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
-
-   if ( lock_for_write() < 0 ) {
-      syslog(LOG_ERR, "aux unable to lock writefile\n");
-      return 1;
-   }
- 
    template[10] = nbytes + 7;
    template[13] = vtype;
    template[14] = seq;
@@ -670,6 +675,16 @@ int forward_aux_longdata ( unsigned char vtype, unsigned char seq, unsigned char
    memcpy(sendbuf, template, sizeof(template));
    memcpy(sendbuf + sizeof(template), buff, nbytes);
 
+   if (i_am_state || i_am_monitor)
+      return process_received(&sendbuf[11], sendbuf[10], heyu_parent);
+
+   sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
+
+   if ( lock_for_write() < 0 ) {
+      syslog(LOG_ERR, "aux unable to lock writefile\n");
+      return 1;
+   }
+ 
    ignoret = write(sptty, sendbuf, sizeof(template) + nbytes);
 
    munlock(writefilename);
@@ -691,7 +706,7 @@ int forward_gen_longdata ( unsigned char vtype, unsigned char subtype, int nseq,
    unsigned char outbuf[128];
    int  j;
 
-   int ignoret;
+   int ignoret = 0;
 
    static unsigned char template[19] = {
     0xff,0xff,0xff,3,ST_COMMAND,ST_SOURCE,D_AUXRCV,
@@ -702,13 +717,6 @@ int forward_gen_longdata ( unsigned char vtype, unsigned char subtype, int nseq,
       return 1;
    }
 
-   sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
-
-   if ( lock_for_write() < 0 ) {
-      syslog(LOG_ERR, "aux unable to lock writefile\n");
-      return 1;
-   }
-
    template[10] = nbytes + 8;
    template[13] = vtype;
    template[14] = subtype;
@@ -716,16 +724,35 @@ int forward_gen_longdata ( unsigned char vtype, unsigned char subtype, int nseq,
    template[16] = id_low;
    template[18] = nbytes;
    
-   for ( j = 0; j < nseq; j++ ) {
-      template[17] = (unsigned char)(j + 1);
-      memcpy(outbuf, template, (sizeof(template)));
-      memcpy(outbuf + (sizeof(template)), buff, nbytes);
-      ignoret = write(sptty, (char *)outbuf, (sizeof(template)) + nbytes);
+   memcpy(outbuf, template, (sizeof(template)));
+   memcpy(outbuf + (sizeof(template)), buff, nbytes);
+
+   if (!i_am_state && !i_am_monitor) {
+      sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
+
+      if ( lock_for_write() < 0 ) {
+         syslog(LOG_ERR, "aux unable to lock writefile\n");
+         return 1;
+      }
    }
 
-   munlock(writefilename);
+   for ( j = 0; j < nseq; j++ ) {
+      outbuf[17] = (unsigned char)(j + 1);
+      if (!i_am_state && !i_am_monitor) {
+         ignoret = write(sptty, (char *)outbuf, (sizeof(template)) + nbytes);
+      } else {
+         ignoret = process_received(&outbuf[11], outbuf[10], heyu_parent);
+         if (ignoret != 0)
+            break;
+      }
+   }
 
-   return 0;
+   if (!i_am_state && !i_am_monitor) {
+      munlock(writefilename);
+      return 0;
+   } else {
+      return ignoret;
+   }
 }
 
 
@@ -786,6 +813,9 @@ int transceive_std( unsigned char hcode, unsigned char ucode,
 {
    unsigned char cmdbuf[16];
    char writefilename[PATH_LEN + 1];
+
+   if (i_am_state || i_am_monitor)
+      return 0;
 
    if ( configp->device_type & DEV_DUMMY ) {
       display_x10state_message("Unable to transceive to TTY dummy");

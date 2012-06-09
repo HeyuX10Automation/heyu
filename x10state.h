@@ -99,4 +99,31 @@ struct x10global_st {
    unsigned int   hailstate;
 };
 
+int set_globsec_flags(unsigned char);
+char *display_armed_status(void);
+int clear_tamper_flags(void);
+int identify_sent(unsigned char *, int, unsigned char *);
+char *translate_rf_sent(unsigned char *, int *);
+int set_counter(int, unsigned short, unsigned char);
+char *translate_counter_action(unsigned char *);
+int find_powerfail_scripts(unsigned char);
+int find_rfflood_scripts(void);
+int find_lockup_scripts(void);
+char *display_variable_aux_data(unsigned char *);
+int launch_script_cmd(unsigned char *);
+char *display_binbuffer(unsigned char *);
+char *translate_other(unsigned char *, int, unsigned char *);
 
+/*
+ * Synthesize an X10 Security RF signal data from command/message arguments,
+ * using a translation function provided, and pass the result to the engine.
+ * argc:	number of arguments,
+ * argv:	array of argument pointers,
+ * xlate_vdata:	provides a module ID and other attributes if applicable, used
+ *		directly for passing data to/from a translate function,
+ * xlate_func:	module type specific translation function,
+ * modtype:	module type, used for error reporting,
+ * return value: 0: success, !0: failure.
+ */
+int sec_encode(int argc, char *argv[], struct xlate_vdata_st *xlate_vdata,
+		int (*xlate_func)(struct xlate_vdata_st *), int modtype);

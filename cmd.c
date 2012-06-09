@@ -2266,6 +2266,33 @@ void cmd_usage ( FILE *fd, int index )
         x10command[index].label, helparg[x10command[index].argtype]);
 }
 
+/*
+ * Process standard X10 signals received directly by the engine.
+ * bitmap:  bitmap representation of housecode addressed X10 units,
+ * hcode:   X10 housecode,
+ * cmdcode: X10 function,
+ * source:  signal source, can take any valid heyu_parent value,
+ * return value: 0: success, !0: failure.
+ */
+int process_std(unsigned int bitmap, unsigned char hcode,
+		 unsigned char cmdcode, int source)
+{
+	int unit, ret = 0;
+
+	switch (source) {
+	   case D_AUXRCV:
+		if (!bitmap) {
+			ret = proc_type_std(hcode, 0, cmdcode);
+		} else for_each_unit(bitmap, unit) {
+			ret = proc_type_std(hcode, unit, cmdcode);
+			if (ret)
+				break;
+		}
+		break;
+	}
+	return ret;
+}
+
 /*---------------------------------------------------------------+
  | Send to the CM11A or merely verify the syntax of the command  |
  | represented by the argc tokens in list argv[] according to    |
@@ -2423,12 +2450,6 @@ unsigned long flagbank[NUM_FLAG_BANKS];
        return 1;
     }
 
-    if ( (configp->device_type & DEV_DUMMY) && !(flags & (F_INT | F_DUM)) ) {
-       sprintf(errmsg, "Command '%s' is not valid for TTY dummy", label);
-       store_error_message(errmsg);
-       return 1;
-    }
-           
 #ifndef HAVE_FEATURE_CM17A 
     /* CM17A support not included */
     if ( flags & F_FIR ) {
@@ -2582,6 +2603,11 @@ unsigned long flagbank[NUM_FLAG_BANKS];
 
           hcode = hc2code(hc);
 
+	  switch (heyu_parent) {
+	  case D_AUXRCV:
+	     return process_std(bitmap, hcode, cmdcode, heyu_parent);
+	  }
+
           cmdbuf[0] = 0x06;
           cmdbuf[1] = (hcode << 4) | cmdcode;
 
@@ -2668,6 +2694,11 @@ unsigned long flagbank[NUM_FLAG_BANKS];
              break;
 
           hcode = hc2code(hc);
+
+	  switch (heyu_parent) {
+	  case D_AUXRCV:
+	     return process_std(bitmap, hcode, cmdcode, heyu_parent);
+	  }
 
 	  fullbright = configp->full_bright;
 

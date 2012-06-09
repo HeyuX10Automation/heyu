@@ -224,4 +224,8 @@ struct nstruct
 
 extern char *E_2MANY, *E_INVCN, *E_WNA, *E_NMA, *E_NOCMD;
 extern void display();
+
+extern int i_am_state, i_am_monitor;
+extern int heyu_parent;
+
 #endif	/* _x10_header */

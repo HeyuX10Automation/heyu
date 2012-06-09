@@ -1879,4 +1879,18 @@ double hilo2dbl ( unsigned long, unsigned long );
 int is_unmatched_flags ( LAUNCHER * );
 void setup_countdown_timers ( void );
 int update_activity_states ( unsigned char, unsigned int, unsigned char );
+int proc_type_std(unsigned char hcode, unsigned char ucode,
+		  unsigned char fcode);
+
+/*
+ * Process signals received from sources other than the Heyu spool file.
+ * buf: a buffer with a signal in the Heyu internal (spool file) format,
+ * len: length, in bytes, of the signal representation in the buffer,
+ * src: source of the signal, can be any value that heyu_parent can take.
+ */
+int process_received(unsigned char *buf, int len, int src);
+
+#define for_each_unit(bitmap, unit) \
+		for (unit = 0; unit < 16; unit++) \
+			if ((bitmap) & (1 << unit))
 
