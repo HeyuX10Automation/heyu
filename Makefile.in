@@ -104,7 +104,7 @@ am_heyu_OBJECTS = heyu-date.$(OBJEXT) heyu-erase.$(OBJEXT) \
 	heyu-cm10a.$(OBJEXT) heyu-tty_aux.$(OBJEXT) \
 	heyu-relay_aux.$(OBJEXT) heyu-x10aux.$(OBJEXT) \
 	heyu-rfxcom.$(OBJEXT) heyu-digimax.$(OBJEXT) \
-	heyu-oregon.$(OBJEXT)
+	heyu-oregon.$(OBJEXT) heyu-xpl.$(OBJEXT)
 heyu_OBJECTS = $(am_heyu_OBJECTS)
 @XPLLIB_SRCDIR_TRUE@nodist_xPL_Hub_OBJECTS = xPL_Hub.$(OBJEXT)
 xPL_Hub_OBJECTS = $(nodist_xPL_Hub_OBJECTS)
@@ -269,7 +269,7 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 	eeprom.c process.c sun.c cmd.c config.c x10state.c \
 	poll.c modules.c cm17a.c xsync.c timing.c cm10a.c \
 	tty_aux.c relay_aux.c x10aux.c rfxcom.c digimax.c oregon.c \
-	x10.h eeprom.h process.h sun.h x10state.h \
+	x10.h eeprom.h process.h sun.h x10state.h xpl.c x10xpl.h \
 	rfxcom.h digimax.h oregon.h
 
 @XPLLIB_SRCDIR_TRUE@heyu_CPPFLAGS = -I$(xPLLib_srcdir) $(xPL_isrc)
@@ -439,6 +439,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-x10.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-x10aux.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-x10state.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-xpl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-xread.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-xsync.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/heyu-xwrite.Po@am__quote@
@@ -1039,6 +1040,20 @@ heyu-oregon.obj: oregon.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='oregon.c' object='heyu-oregon.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o heyu-oregon.obj `if test -f 'oregon.c'; then $(CYGPATH_W) 'oregon.c'; else $(CYGPATH_W) '$(srcdir)/oregon.c'; fi`
+
+heyu-xpl.o: xpl.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT heyu-xpl.o -MD -MP -MF $(DEPDIR)/heyu-xpl.Tpo -c -o heyu-xpl.o `test -f 'xpl.c' || echo '$(srcdir)/'`xpl.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/heyu-xpl.Tpo $(DEPDIR)/heyu-xpl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xpl.c' object='heyu-xpl.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o heyu-xpl.o `test -f 'xpl.c' || echo '$(srcdir)/'`xpl.c
+
+heyu-xpl.obj: xpl.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT heyu-xpl.obj -MD -MP -MF $(DEPDIR)/heyu-xpl.Tpo -c -o heyu-xpl.obj `if test -f 'xpl.c'; then $(CYGPATH_W) 'xpl.c'; else $(CYGPATH_W) '$(srcdir)/xpl.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/heyu-xpl.Tpo $(DEPDIR)/heyu-xpl.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xpl.c' object='heyu-xpl.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(heyu_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o heyu-xpl.obj `if test -f 'xpl.c'; then $(CYGPATH_W) 'xpl.c'; else $(CYGPATH_W) '$(srcdir)/xpl.c'; fi`
 
 xPL_Hub.o: $(xPLLib_srcdir)/examples/xPL_Hub.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xPL_Hub.o -MD -MP -MF $(DEPDIR)/xPL_Hub.Tpo -c -o xPL_Hub.o `test -f '$(xPLLib_srcdir)/examples/xPL_Hub.c' || echo '$(srcdir)/'`$(xPLLib_srcdir)/examples/xPL_Hub.c

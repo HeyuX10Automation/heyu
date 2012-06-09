@@ -1894,3 +1894,15 @@ int process_received(unsigned char *buf, int len, int src);
 		for (unit = 0; unit < 16; unit++) \
 			if ((bitmap) & (1 << unit))
 
+#define alt_parent_call(function, parent, ...)	(\
+{						 \
+	int save_parent = heyu_parent;		 \
+	int ret;				 \
+						 \
+	heyu_parent = parent;			 \
+	ret = function(__VA_ARGS__);		 \
+	heyu_parent = save_parent;		 \
+						 \
+	ret;					 \
+})
+

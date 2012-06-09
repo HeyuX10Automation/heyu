@@ -24,7 +24,7 @@ heyu_SOURCES = date.c erase.c info.c  message.c relay.c \
 	eeprom.c process.c sun.c cmd.c config.c x10state.c \
 	poll.c modules.c cm17a.c xsync.c timing.c cm10a.c \
 	tty_aux.c relay_aux.c x10aux.c rfxcom.c digimax.c oregon.c \
-	x10.h eeprom.h process.h sun.h x10state.h \
+	x10.h eeprom.h process.h sun.h x10state.h xpl.c x10xpl.h \
 	rfxcom.h digimax.h oregon.h
 if XPLLIB_SRCDIR
 heyu_CPPFLAGS = -I$(xPLLib_srcdir) $(xPL_isrc)
