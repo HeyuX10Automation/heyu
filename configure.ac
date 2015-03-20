@@ -1,7 +1,7 @@
 #
 # configure.ac - Autoconf source file for Heyu
 #
-# Copyright (C) 2011, 2012 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+# Copyright (C) 2011, 2012, 2015 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
 #
 # Derived from an initial version genereted automatically by the
 # autoscan application.
@@ -24,11 +24,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([Heyu], [2.11-rc1],
+AC_INIT([Heyu], [2.11-rc2],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
-AC_DEFINE([RELEASE_DATE], ["20120517"], [Release date of package])
+AC_DEFINE([RELEASE_DATE], ["20150320"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
-Copyright (C) 2011, 2012 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
+Copyright (C) 2011, 2012, 2015 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
