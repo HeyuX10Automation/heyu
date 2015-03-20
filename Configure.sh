@@ -21,7 +21,7 @@
 #
 SYS=
 OPTIONS='--localstatedir=/var --mandir=$(prefix)/man'
-OPTIONS="$OPTIONS --enable-postinst=./post-install.sh"
+OPTIONS=$OPTIONS' --enable-postinst=$(srcdir)/post-install.sh'
 
 while [ $# -ge 1 ] ; do
     case "$1" in
@@ -178,8 +178,9 @@ case "$SYS" in
 esac
 
 
+srcdir=`dirname $0`
 (	set -x
-	./configure $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS" \
+	"$srcdir/configure" $OPTIONS CPPFLAGS="$CPPFLAGS" LDFLAGS="$LDFLAGS" \
 			LIBS="$LIBS"
 ) || {
 	rm -f Makefile

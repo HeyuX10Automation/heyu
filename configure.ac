@@ -239,13 +239,12 @@ AC_CHECK_DECLS(timezone, [], [], [
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_GETGROUPS
-AC_FUNC_MALLOC
 AC_FUNC_MKTIME
-AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
 AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
 AC_CHECK_FUNCS([nanosleep nsleep setitimer sigaction siginterrupt])
+AC_CHECK_FUNCS([malloc realloc])
 
 AC_MSG_CHECKING(whether to enable RFXLAN receiver support)
 	AC_ARG_ENABLE([rfxlan], [AS_HELP_STRING([--disable-rfxlan],

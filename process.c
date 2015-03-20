@@ -319,6 +319,9 @@ int verify_tevent_links ( TEVENT *teventp )
    while ( teventp[size].line_no > 0 ) 
       size++;
 
+   if (!size)
+      return 0;
+
    linker = calloc( size, sizeint );
    if ( linker == NULL ) {
       (void)fprintf(stderr, "verify_tevent_links() - Unable to allocate memory 1\n");
@@ -413,6 +416,9 @@ int verify_timer_links ( TIMER *timerp )
    size = 0;
    while ( timerp[size].line_no > 0 ) 
       size++;
+
+   if (!size)
+      return 0;
 
    linker = calloc( size, sizeint );
    if ( linker == NULL ) {
@@ -3899,6 +3905,9 @@ int warn_duplicate_timer ( TIMER *timerp )
       j++; 
 
    count = j;
+   if (!count)
+      return 0;
+
    if ( (arrp = calloc(count, sizint)) == NULL ) {
       fprintf(stderr, "warn_duplicate_timer() - Unable to allocate memory.\n");
       exit(1);
@@ -3951,6 +3960,9 @@ int warn_duplicate_tevent ( TEVENT *teventp )
       j++; 
 
    count = j;
+   if (!count)
+      return 0;
+
    if ( (arrp = calloc(count, sizint)) == NULL ) {
       fprintf(stderr, "warn_duplicate_tevent() - Unable to allocate memory.\n");
       exit(1);
@@ -4002,6 +4014,9 @@ int warn_duplicate_trigger ( TRIGGER *triggerp )
       j++; 
 
    count = j;
+   if (!count)
+      return 0;
+
    if ( (arrp = calloc(count, sizint)) == NULL ) {
       fprintf(stderr, "warn_duplicate_trigger() - Unable to allocate memory.\n");
       exit(1);
@@ -7595,6 +7610,9 @@ int write_macroxref ( char *pathname, MACRO *macrop, unsigned char *elementp, in
       j++;
    }
 
+   if (!count)
+      return 0;
+
    if ( (macp = calloc( count, strucsize  )) == NULL ) {
       fprintf(stderr, "write_macroxref() - Unable to allocate memory.\n");
       exit(1);
@@ -8407,6 +8425,9 @@ int find_startchain ( TEVENT *teventp )
    size = 0;
    while ( teventp[size].line_no > 0 ) 
       size++;
+
+   if (!size)
+      return 0;
 
    if ( (evrlink = calloc( size, sizint )) == NULL ) {
       fprintf(stderr, "find_startchain() - Unable to allocate memory.\n");
@@ -9951,6 +9972,9 @@ int compress_elements ( unsigned char *elemlist, int *nelem, int *total )
    unsigned char *outbuff;
    static int sizint = sizeof(int);
    static int sizuchr = sizeof(unsigned char);
+
+   if (!*total)
+      return 0;
 
    index   = calloc( *total, sizint );
    length  = calloc( *total, sizint );

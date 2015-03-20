@@ -2922,7 +2922,7 @@ int parse_config_tail ( char *buffer, unsigned char source )
             
          case OreChgBitsDT :
             longvalue = strtol(tokv[0], &sp, 10);
-            if ( !strchr(" \t\n\r", *sp) || longvalue < 1 || longvalue > 255 ) {
+            if ( !strchr(" \t\n\r", *sp) || longvalue < 1 || longvalue > 65535 ) {
                store_error_message("ORE_CHGBITS_DT must be 1 though 65535");
                errors++;
             }
