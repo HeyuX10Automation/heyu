@@ -3610,14 +3610,22 @@ int finalize_config ( unsigned char mode )
    else if ( configp->rfxcom_enable )
       store_error_message("Directive RFXCOM_ENABLE is deprecated; see RFXCOM_DISABLE");
 
-   if ( configp->securid_16 == NO || configp->auxdev != DEV_RFXCOMVL ) {
+   if ( configp->securid_16 == NO
+#ifndef HAVE_LIBXPL
+     || configp->auxdev != DEV_RFXCOMVL
+#endif
+   ) {
       configp->securid_mask = 0x00ffu;
    }
    else {
       configp->securid_mask = 0xffffu;
    }
 
-   if ( configp->oreid_16 == NO || configp->auxdev != DEV_RFXCOMVL ) {
+   if ( configp->oreid_16 == NO
+#ifndef HAVE_LIBXPL
+     || configp->auxdev != DEV_RFXCOMVL
+#endif
+   ) {
       configp->oreid_mask = 0x00ffu;
    }
    else {

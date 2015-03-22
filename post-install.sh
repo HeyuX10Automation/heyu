@@ -47,6 +47,7 @@ else
 fi
 
 # Recover the LOCKDIR, SPOOLDIR, and SYSBASEDIR directories compiled into Heyu
+# and optionally the XPLCONFDIR directory if built with xPL support
 eval `./heyu list`
 
 # Files:  x10config 
@@ -298,6 +299,33 @@ else
 	fi
     else
         echo "The permissions for the LOCK directory ($LOCKDIR) are OK"
+    fi
+fi
+
+# Now we do it all over again for the XPLCONFDIR if defined
+
+if [ "$XPLCONFDIR" != "" ] && [ "$XPLCONFDIR" != "$SPOOLDIR" ] ; then
+    if [ ! -d $XPLCONFDIR ] ; then
+        if [ "$ME" = root ] ; then
+            mkdir $XPLCONFDIR
+            chmod 1777 $XPLCONFDIR
+	    echo "The directory $XPLCONFDIR was created with the permissions 1777."
+	else
+	    echo "Please log in as root and create the directory $XPLCONFDIR with"
+	    echo "the permissions 1777."
+	fi
+
+    fi
+    set `ls -lad $XPLCONFDIR` none
+    if [ $1 != drwxrwxrwt ] ; then
+	if [ "$ME" = root ] ; then
+	    chmod 1777 $XPLCONFDIR
+	    echo "The permissions for the directory $XPLCONFDIR were set to 1777"
+	else
+	    echo "Please log in as root and run the command \"chmod 1777 $XPLCONFDIR\""
+	fi
+    else
+        echo "The permissions for the XPLCONF directory ($XPLCONFDIR) are OK"
     fi
 fi
 

@@ -63,6 +63,22 @@ compile Heyu without CM17A support for users outside North America or those
 who simply have no interest in this device. (See the file "README" included
 in the Heyu distribution directory.)
 .PP
+Except for being able to communicate with home automation devices
+over dedicated hardware interfaces, Heyu can optionally process home
+automation signals received over a LAN
+in the form of xPL protocol messages.
+In the current implementation,
+X10 RF Standard
+in RFFORWARD mode (signal source RCVA)
+and X10 RF Security
+signals comming from RFXLAN receivers flashed with xPL firmware
+are supported.
+For this to work, the xPL support must be enabled explicitly in Heyu at
+build time.
+See the file "README" for details on how to build Heyu with xPL enabled.
+See also x10xpl(7), x10aux(5), x10config(5) and x10scripts(5) man pages
+for more information on Heyu xPL functionality.
+.PP
 Heyu depends on a configuration file to tell it on what serial port
 the CM11A is connected and to provide it with various other user options.
 Heyu will not run without the configuration file. 
@@ -124,14 +140,27 @@ communication via the house wiring) and has its own set of associated files.
 
 .SH OPTIONS
 .PP 
--v   Enable verbose mode
+.IP -v
+Enable verbose mode
 .PP
--c  \<pathname\>  Specify full configuration file pathname
+.IP -c\ <pathname>
+Specify full configuration file pathname
 .PP
--s  \<pathname\>  Specify full schedule file pathname
+.IP -s\ <pathname>
+Specify full schedule file pathname
 .PP
--0 ... -9  Look for config file in subdirectory /0 ... /9
+.IP -0\ ...\ -9
+Look for config file in subdirectory /0 ... /9
 of standard location, e.g., $HOME/.heyu/3/x10config
+.PP
+Additional options are available if Heyu was built with xPLLib:
+.PP 
+.IP -interface\ <if>
+Change the default interface xPLLib uses; can be specified as
+either a network interface name, like 'eth0', or an IP address
+.PP
+.IP -xpldebug
+Enable xPLLib debugging       
 
 .PP
 .SH COMMANDS
@@ -2186,4 +2215,4 @@ W800RF32A is a trademark of WGL & Associates.
 .SH SEE ALSO
 http://www.heyu.org
 .br
-date(1),  x10config(5), x10sched(5), x10scripts(5), x10cm17a(5), x10aux(5), x10rfxsensors(5)
+date(1),  x10config(5), x10sched(5), x10scripts(5), x10cm17a(5), x10aux(5), x10rfxsensors(5), x10xpl(7)

@@ -79,7 +79,8 @@ previous system.
 The Heyu state engine daemon (heyu_engine) interprets X10 signals, both those
 received over the AC power line via the CM11A interface, those sent to the
 interface from the Heyu command line, and those RF signals transceived or
-forwarded from the heyu_aux daemon.  It keeps a record of the effect of these
+forwarded from the heyu_aux daemon or xPL services.
+It keeps a record of the effect of these
 signals upon each X10 module identified in an ALIAS directive in the
 configuration file (or the default module). See the \fIx10config\fP(5) man
 page for details about this. 
@@ -106,7 +107,11 @@ following:
    \fIrcvt\fP  - A Trigger signal which initiated an uploaded macro.
 .br
 (*) When that script is launched by the Heyu state engine daemon.
-
+.br
+In case of signals received over xPL services, the signal source will
+always match the xPL device ID prefix of the receiving service.
+See x10xpl(7) man page for more information on configuring xPL services
+in Heyu.
 .PP
 The launch conditions for a script requires that the source or sources
 to be allowed to launch the script be specified if other than the
@@ -395,7 +400,8 @@ will match any of the above.
 .br
 
 RF signals received from X10 security remotes and sensors via the
-heyu_aux daemon provide the additional functions disarm, arm, alert,
+heyu_aux daemon, or over an xPL service,
+provide the additional functions disarm, arm, alert,
 clear, panic, slightson, slightsoff, sdusk, and sdawn.  The general functions
 \'anysec\' or \'anyfunc\' will match any of these.
 .br
@@ -516,6 +522,7 @@ if the module at A1 is already in the Off state when the \'off\' function
 is received.
 .PP
 In the case of RF signals received from the auxiliary input daemon heyu_aux
+or over an xPL service with a device ID starting from \'rcva\'
 (source RCVA), any difference in the data from the previous transmission
 at the same housecode|unit address is considered a change.  (The difference
 in the data for it to be considered changed may be configured for Oregon

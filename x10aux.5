@@ -11,7 +11,12 @@ This page contains information about the capability of Heyu to receive
 and process signals from RF remotes and sensors using a WGL W800RF32A, an
 X-10 MR26A, or an RFXCOM X10 RF receiver connected to a second serial port,
 or an RFXLAN network version of the RFXCOM connected to a local network.
-
+.PP
+If build with xPL support turned on, Heyu should be able to receive X10
+RF signals from RFXLAN receivers flashed with xPL firmware, capable of
+retransmitting those signals as xPL messages over the local network.
+See x10xpl(7) man page for details on Heyu xPL functionality not covered
+below.
 .SH HARDWARE
 The W800RF32A is manufactured by WGL & Associates (http://www.wgldesigns.com).
 Two models are available - the US/Canada model operates at a frequency
@@ -46,7 +51,23 @@ capability.
 .PP
 The RFXLAN version of the RFXCOM receiver connects to a local network
 and is accessible over a TCP socket. Its optional transmitter part, if present,
-is not supported.
+is not supported,
+unless someone provides a compatible command line utility, which could
+be called from Heyu scripts.
+.PP
+If reflashed with the RFXCOM provided xPL firmware, the RFXLAN can feed
+xPL enabled Heyu with RF signals retransmitted over the local network as
+xPL messages, while also being able to accept xPL messages destined to
+its transmitter part, which can be sent from Heyu scripts using any
+command line utility capable of sending xPL messages. See
+.UR
+.SM http://xplproject.org.uk/wiki/index.php?title=Applications#xPL_Message_Senders
+for a list of possible options.
+.PP
+Note: Only X10 Standard and X10 Security RF signals comming from xPL RF
+receivers are supported by Heyu for now.
+No support for RFXsensor, Digimax or Oregon sensors over xPL support is
+present yet.
 
 .SH QUICK START
 Stop Heyu (if already running) with the command 'heyu stop'.
@@ -57,6 +78,14 @@ to /dev/ttyUSB0, or possibly to /dev/usb/ttyUSB0, the second USB device to
 /dev/ttyUSB1, etc.). Or connect an RFXLAN receiver to your local network and
 configure of verify its network address and port it listens on.
 .PP
+If using an xPL enabled version of the RFXCOM, just connect it to your
+local network, and make sure you have built Heyu with xPL support
+enabled.
+If necessary, rebuild it starting from \'./Configure.sh -xpl ...\'.
+See the file "README" for more details on Heyu build time configuration.
+.PP
+If using a standard, non-xPL receiver, you have to tell Heyu where your
+receiver can be found and what model it is.
 Describe for Heyu the port and receiver being used with the following
 directive in the Heyu configuration file:
 .br
@@ -67,16 +96,30 @@ Examples:
   TTY_AUX  /dev/ttyS1  W800RF32A
 .br
   TTY_AUX  10.10.10.10:10000  RFXCOM
+.br
+The TTY_AUX directive is not required
+for receiving RF signals retransmitted over the xPL network.
+Moreover, if provided,
+it turns off default support for the RFXCOM over xPL signal source RCVA.
 .PP
 The configuration directives TRANSCEIVE and RFFORWARD determine whether signals
 from a Standard X10 transmitter (like the HR12A PalmPad) are directly transceived
 to the powerline or are forwarded to the Heyu Engine for processing.  The defaults
 for these directives are "TRANSCEIVE  ALL" and "RFFORWARD  NONE".
 .PP
+Note: Heyu doesn't support the TRANSCEIVE functionality for xPL
+receivers yet.
+You can overcome this limitation either by still using a non-xPL X10 RF
+receiver,
+or by arranging your Heyu engine scripts for retransmitting selected X10
+Standard RF signals over a power line.
+.PP
 Run \'heyu start\', and in another xterm \'heyu monitor\'.  Verify that the RF
 signals are being correctly received.  Transceived signals will appear in the 
 monitor window with source "snda", indicating they were sent by the auxilliary
 daemon heyu_aux.
+If using an xPL receiver, reconfigure some or all of X10 housecodes for
+RFFORWARD first, then watch signals comming from the "rcva" source.
 .PP
 For transmissions from Security X10 sensors like the X10 DS10A Door/Window sensor
 (with an RF receiver capable of receiving these transmissions) the Heyu monitor
@@ -189,11 +232,12 @@ in the SPECIAL DS90 SETUP section toward the bottom of this man page.
 
 
 .SH BASIC OPERATION
-In order to receive RF signals, Heyu relies on the heyu_aux
+In order to receive RF signals from standard (non-xPL) receivers,
+Heyu relies on the heyu_aux
 daemon, which is started either manually with the \'heyu aux\'
 command or automatically in the startup sequence with the
 \'heyu start\' command.  The serial port, or network address
-in case of the RFXLAN network receiver, and attached receiver
+in case of the RFXLAN receiver in TCP mode, and attached receiver
 device must be specified in the Heyu configuration file with
 the TTY_AUX directive. The syntax for this directive is:
 .br
@@ -302,6 +346,23 @@ MS14A, set to address B1 (which often causes collision problems
 when the sensor\'s "motion" signal turns on a lamp within view
 of the sensor).
 .PP  
+As already mentioned above, support for automatic powerline
+retransmission of X10 RF signals comming from xPL receivers is not yet
+present in Heyu, so RFFORWARD mode must be used for those signals to be
+processed.
+Next, Heyu scripts can be set up to emulate the TRANSCEIVE mode, for
+example:
+.EX
+  TRANSCEIVE NONE
+  RFFORWARD ALL
+  SCRIPT A1-16 anyplc rcva continue :: heyu $x10_function $X10_Housecode$X10_Unit
+.EE
+can be used as an almost equivalent of:
+.EX
+  TRANSCEIVE [A]
+  RFFORWARD ALLEXCEPT [A]
+.EE
+.PP
 If, for whatever reason, you have an external transceiver like
 a TM751 or RR501 in operation, Heyu should usually not transceive
 on the same housecode lest there be signal collisions on the
@@ -312,7 +373,9 @@ source SNDA. Signals forwarded to heyu_engine are identified as
 having source RCVA.  Remember this when using these signals to
 launch a script.
 .PP
-Security and Entertainment X10 RF signals received by heyu_aux are
+Security and Entertainment X10 RF signals received by heyu_aux,
+as well as equivalent xPL messages translated back to their RF
+representation, are
 decoded and processed by the Heyu State Engine daemon, heyu_engine.
 Since these types of signals contain no Housecode/Unit identification,
 the transmitting device must be mapped to a Housecode and Unit in
@@ -320,7 +383,8 @@ an ALIAS configuration directive for the RF signal to be decoded by the
 Heyu Engine.  Once decoded, the signals can be used to launch scripts
 or control various Heyu features like a home security system.
 .PP
-Heyu identifies security and entertainment signals from heyu_aux as originating
+Heyu identifies security and entertainment signals from heyu_aux
+or xPL as originating
 from source RCVA. Remember this when using these signals to launch a script.
 .PP
 For security devices, the identification of the individual device (or devices
@@ -364,7 +428,8 @@ switch set to the "min" position.
 .PP
 Most X10 Security devices actually send a 16-bit ID code, however the
 upper byte is received only with an RFXCOM receiver in variable
-length packet mode.  The examples here illustrate only the 8-bit code
+length packet or xPL mode.
+The examples here illustrate only the 8-bit code
 which would be received by a W800RF32A/AE receiver or RFXCOM in 32 bit
 mode.  In the ALIAS directive, use whatever ID code, 16-bit or 8-bit,
 is reported by Heyu from your RF receiver.
@@ -848,4 +913,4 @@ Charles W. Sullivan (cwsulliv01@heyu.org)
 .SH SEE ALSO
 http://www.heyu.org
 .br
-heyu(1), x10config(5), x10sched(5), x10scripts(5), x10cm17a(5), x10rfxsensors(5), x10rfxmeters(5), x10digimax(5), x10oregon(5)
+heyu(1), x10config(5), x10sched(5), x10scripts(5), x10cm17a(5), x10rfxsensors(5), x10rfxmeters(5), x10digimax(5), x10oregon(5), x10xpl(7)

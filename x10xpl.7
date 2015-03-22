@@ -1,0 +1,101 @@
+.TH X10XPL 7 local
+.SH NAME
+.B x10xpl
+- an xPL interface to Heyu
+.SH DESCRIPTION
+.I Heyu
+is a program primarily intended for controlling an X-10 CM11A home
+automation computer interface, however optional support for other
+hardware has been developed over time.
+.PP
+This page contains information about the capability of Heyu to exchange
+data with home automation devices, device gateways, application programs
+or daemons, over a local area network using the xPL protocol.
+.PP
+Quoting xPL FAQ,
+\fIxPL\fR, for "eXtremely simPle protocoL", is an open protocol intended
+to permit the control and monitoring of home automation devices.
+See
+.UR
+http://xplproject.org.uk/
+for more information on xPL.
+.SH HEYU BASICS
+A typical Heyu host runs one or more Heyu daemons in the backgound.
+There is a mandatory daemon \- heyu_relay \- primarily intended for
+providing a 2-way communication between a CM11 interface and Heyu
+commands run by users asynchronously, while listening to the CM11 for
+incomming X10 powerline signals and other messages.
+This daemon is spawned automatically with a first Heyu command run.
+Once started, it creates a spool file where all incomming and outgoing
+transmission is recorded.
+.PP
+When a user runs a Heyu command intended for transmitting an X10 signal
+over a power line, that command sends the signal to the CM11 interface,
+but also puts its representation into the spool file.
+Next, a response from the interface is appended to the spool file by the
+heyu_relay daemon, from where it can be examined by that command for the
+transmission success or failure.
+.PP
+Another heyu daemon is heyu_aux. It can be started with a dedicated
+Heyu command "aux", but also starts up automatically when \'heyu start\'
+is run, if a TTY_AUX device is defined in the Heyu configuration file.
+This daemon connects to an RF receiver over an interface pointed to by
+the TTY_AUX directive and appends all received RF signals to the Heyu
+spool file.
+.PP
+There is yet another Heyu daemon - the heyu_engine.
+Started with \'heyu engine\' or just \'heyu start\' if a \'START_ENGINE
+AUTO\' configuration directive is specified, it differs from the frist
+two in that it doesn't feed the spool file with any data, only traces
+that file and processes all signals read from there.
+Based on the signals read from the spool file, the heyu_engine maintains
+a state table of all home automation devices described in the
+configuration file, and lauches user defined Heyu scripts.
+.PP
+There is also a Heyu command "monitor" which,
+like the heyu_engine daemon,
+reads signals from the Heyu spool file,
+but only reports them in a human readable form to the user
+over its standard output
+(the same reports can usually be found in the engine log file
+if so configured with a LOG_DIR configuration directive).
+.SH XPL EXTENSIONS
+These are the "heyu_engine" daemon and the "monitor" command only
+which can talk xPL to some extent in the current implementation.
+.PP
+If the TTY_AUX configuration directive is not present,
+an xPL enabled heyu_engine or monitor instance automatically sets up
+an xPL service with the xPL device ID "rcva" and a random instance ID.
+This service is automatically configured with an xPL filter which passes
+only xPL trigger type messages comming from any rfxcom.lan devices,
+and with two listeners, one for processing x10.basic,
+and the other for x10.security schema compliant xPL messages.
+This way, the not configured heyu_aux daemon is automatically replaced
+by an xPL service providing the RCVA signal source,
+capable of feeding the engine or monitor with X10 RF signals
+retransmitted over the LAN by any number of xPL enabled RFXLAN
+receivers simultaneously.
+.PP
+Since the heyu_engine or monitor functionality is limited to
+listening to events, and not transmitting signals,
+their xPL interface ability of processing X10 RF Standard signals
+is limited to the RFFORWARD mode described on the x10aux(5) man page.
+The TRANSCEIVE functionality is not supported
+until the heyu_relay also talks xPL.
+See x10aux(5) man page for possible workarounds.
+.SH DIAGNOSTICS
+xPL functions write their diagnotsics information to the Heyu log file,
+and also respond with standard log type xPL messages to incorrectly
+formatted xPL triggers received.
+.SH BUGS
+Due to a few bugs in the xPLLib library,
+reconfiguation of Heyu xPL services over the xPL protocol
+is not yet possible.
+Until corrected,
+reconfiguring Heyu for listening to RF signals
+from both heyu_aux and xPL is not supported,
+even if maybe possible.
+.SH AUTHOR
+Janusz Krzysztofik <jmkrzyszt@gmail.com>
+.SH SEE ALSO
+x10aux(5), heyu(1), x10config(5), x10scripts(5)

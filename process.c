@@ -2201,6 +2201,35 @@ int alias_rev_index ( char hc, unsigned int bitmap, unsigned char vtype, unsigne
    return -1;
 }
 
+/* Find an x10config alias matching the module type and ID. */
+int id2index(unsigned char type, unsigned long id, unsigned char *ucodep)
+{
+	ALIAS *aliasp = configp->aliasp;
+	unsigned long mask = (type == RF_SEC) ? configp->securid_mask :
+			0xffffffffu;
+	int j, k;
+
+	if (!aliasp)
+		return -1;
+
+	for (j = 0; aliasp[j].line_no > 0; j++) {
+		unsigned int bitmap = aliasp[j].unitbmap;
+
+		if (aliasp[j].vtype != type || bitmap == 0)
+			continue;
+
+		*ucodep = single_bmap_unit(bitmap);
+		if (*ucodep == 0xff)
+			continue;
+
+		for (k = 0; k < aliasp[j].nident; k++)
+			if ((aliasp[j].ident[k] & mask) == (id & mask))
+				return j;
+	}
+	
+	return -1;
+}
+
 /*---------------------------------------------------------------------+
  | Search the array of ALIAS structures for an alias having the        |
  | argument housecode and bitmap.  Return the alias label if found,    |

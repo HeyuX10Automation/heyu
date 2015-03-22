@@ -62,6 +62,9 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the xPL library. */
+#undef HAVE_LIBXPL
+
 /* Define to 1 if you have the <limits.h> header file. */
 #undef HAVE_LIMITS_H
 
@@ -220,6 +223,9 @@
 
 /* Define to 1 if `vfork' works. */
 #undef HAVE_WORKING_VFORK
+
+/* Define to 1 if you have the <xPL.h> header file. */
+#undef HAVE_XPL_H
 
 /* Define if you need more than 1 bank of 32 user counters each */
 #undef NUM_COUNTER_BANKS
