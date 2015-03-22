@@ -1,7 +1,7 @@
 #
 # configure.ac - Autoconf source file for Heyu
 #
-# Copyright (C) 2011, 2012 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+# Copyright (C) 2011, 2012, 2015 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
 #
 # Derived from an initial version genereted automatically by the
 # autoscan application.
@@ -24,11 +24,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([Heyu], [2.11-rc1],
+AC_INIT([Heyu], [2.11-rc2],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
-AC_DEFINE([RELEASE_DATE], ["20120517"], [Release date of package])
+AC_DEFINE([RELEASE_DATE], ["20150320"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
-Copyright (C) 2011, 2012 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
+Copyright (C) 2011, 2012, 2015 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -239,13 +239,12 @@ AC_CHECK_DECLS(timezone, [], [], [
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_FORK
 AC_FUNC_GETGROUPS
-AC_FUNC_MALLOC
 AC_FUNC_MKTIME
-AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_CHECK_FUNCS([alarm floor ftruncate gettimeofday memmove memset putenv])
 AC_CHECK_FUNCS([socket sqrt strchr strdup strerror strrchr strstr strtol])
 AC_CHECK_FUNCS([nanosleep nsleep setitimer sigaction siginterrupt])
+AC_CHECK_FUNCS([malloc realloc])
 
 AC_MSG_CHECKING(whether to enable RFXLAN receiver support)
 	AC_ARG_ENABLE([rfxlan], [AS_HELP_STRING([--disable-rfxlan],

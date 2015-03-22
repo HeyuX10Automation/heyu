@@ -192,7 +192,7 @@ Weight sensors
 .PP
 Radio clocks
 .br
-  ORE_DT1 : RTGR328N
+  ORE_DT1 : RTGR328N RTGN318
 .PP
 Wind sensors
 .br
@@ -441,7 +441,7 @@ and ORE_BPSCALE.  This also applies to TMIN and TMAX setpoint temperatures
 when the entered temperature does not have a temperature scale suffix.
 
 .SH RADIO CLOCKS
-The only model supported so far is RTGR328N, ie. combined Temperature/
+The models supported are RTGR328N and RTGN318, ie. combined Temperature/
 Humidity and Radio clock device. The clock part transmits its own
 signals, independent of Temerature/Humidity reports, hence it has been
 implemented as a separate module type and should be configured with a
@@ -1019,6 +1019,8 @@ expand this table.)
 Radio clocks:
 .br
   RTGR328N   DT1   318  354  366  402  426   (samples, to be verified)
+.br
+  RTGN318    DT1                  402
 .PP
 Rebranded Units: 
 .br
