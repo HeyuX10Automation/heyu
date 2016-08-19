@@ -1,0 +1,15 @@
+# don't commit generated files:
+*.o
+Makefile
+autom4te.cache/
+config.h
+config.log
+config.status
+heyu
+stamp-h1
+
+debian/heyu/
+debian/*.substvars
+debian/files
+debian/*.log
+

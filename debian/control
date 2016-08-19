@@ -1,0 +1,20 @@
+Source: heyu
+Maintainer: jwater7 <jwater7@users.noreply.github.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.3
+
+Package: heyu
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: 2-way x10 communications for the CM11A x10 controller
+     'heyu' is similar to the package 'x10', differing mainly in the
+ controller supported (this package supports CM11A, 'x10' supports the CP290)
+ X-10 modules are devices that plug into an electrical outlet and allow you
+ to remotely control the power to a lamp or an appliance that is plugged
+ into them. There are also X-10 modules that install in place of wall
+ switches to control lights, fans, and many other appliances.
+     This package supports the CM11A Interface (from Radio Shack), which
+ supports two-way communication.  This allows for devices such as motion
+ detectors to trigger scripts on your system, turning lights on, updating
+ web pages, or send you e-mail.
+
