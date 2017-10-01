@@ -24,11 +24,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([Heyu], [2.11-rc2],
+AC_INIT([Heyu], [2.11-rc3],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
-AC_DEFINE([RELEASE_DATE], ["20150320"], [Release date of package])
+AC_DEFINE([RELEASE_DATE], ["20170930"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
-Copyright (C) 2011, 2012, 2015 Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>])
+Copyright (C) 2011, 2012, 2015, 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
