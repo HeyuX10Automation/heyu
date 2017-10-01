@@ -2678,7 +2678,7 @@ int show_oregon ( void )
                printf("Dir %4.1fdeg ", (double)direction / 10.0);
                break;
             case OreRainRateFunc :
-               longvdata = x10global.data_storage[loc + (2 * j)];
+               longvdata = x10global.data_storage[loc + statusoffset];
                status = longvdata & 0xff;
                if ( subtype == OreRain1 ) {
                   unitstring = (*configp->ore_rainrateunits) ? configp->ore_rainrateunits : "mm/hr";
@@ -2692,13 +2692,13 @@ int show_oregon ( void )
                   break;
                }
                else {
-                  drain = x10global.data_storage[loc + (2 * j) + 1];
+                  drain = x10global.data_storage[loc + statusoffset + 1];
                   printf("Rate "FMT_ORERRATE"%s ", ((double)drain / 1000.0) * configp->ore_rainratescale, unitstring); 
                }
 
                break;
             case OreRainTotFunc :
-               longvdata = x10global.data_storage[loc + (2 * j)];
+               longvdata = x10global.data_storage[loc + statusoffset];
                status = longvdata & 0xff;
                if ( subtype == OreRain1 ) {
                   unitstring = (*configp->ore_raintotunits) ? configp->ore_raintotunits : "mm";
@@ -2712,7 +2712,7 @@ int show_oregon ( void )
                   break;
                }
                else {
-                 drain = x10global.data_storage[loc + (2 * j) + 1];
+                 drain = x10global.data_storage[loc + statusoffset + 1];
                  printf("Total "FMT_ORERTOT"%s ", ((double)drain / 1000.0) * configp->ore_raintotscale, unitstring);
                }
 
