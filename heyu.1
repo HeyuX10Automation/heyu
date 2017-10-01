@@ -45,11 +45,18 @@ The X-10 MR26A is usually bundled with a univeral remote in a package
 by X-10 but is also available individually.  It can receive standard and
 entertainment X10 signals but not security X10 signals.
 .PP
-The RFXCOM X10 receiver is supported in W800RF32 emulation mode and
-has the same capabilities.  It is a USB device but has a built-in 
+The RFXCOM X10 receiver is supported in W800RF32 emulation mode,
+providing the same capabilities as the W800RF32A, but also in a more
+advanced, variable length mode, capable of receiving signals from non-X10
+sensor types, like RFXsensor, Digimax, Oregon, KAKU or Visonic.
+It is a USB device but has a built-in 
 FTDI USB-to-Serial converter and communication with it is the same
 as with a serial port (assuming your OS supports the FTDI chipset, as
 does Linux).
+.br
+The RFXLAN version has the same functional characteristics
+as the standard RFXCOM, but Heyu communicates with it
+over a TCP sockect instead of a serial/USB port.
 .PP
 Heyu also supports the X-10 CM17A "Firecracker", a small serial dongle which
 can transmit X10 commands via RF signals to a transceiver plugged into the
