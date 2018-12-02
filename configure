@@ -12,7 +12,7 @@
 # gives unlimited permission to copy, distribute and modify it.
 #
 # Heyu specific bits:
-# Copyright (C) 2011, 2012, 2015. 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>
+# Copyright (C) 2011, 2012, 2015, 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>
 ## -------------------- ##
 ## M4sh Initialization. ##
 ## -------------------- ##
@@ -1488,7 +1488,7 @@ This configure script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it.
 
 Heyu specific bits:
-Copyright (C) 2011, 2012, 2015. 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>
+Copyright (C) 2011, 2012, 2015, 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>
 _ACEOF
   exit
 fi
