@@ -294,7 +294,7 @@ int main ( int argc, char *argv[] )
     struct cmdentry *c;
     int retcode;
     int ntokens;
-    char writefilename[PATH_LEN + 1];
+    char writefilename[PATH_LEN + 128];
     char *cptr;
     int start_engine_main();
     int check_for_engine();

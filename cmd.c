@@ -2323,7 +2323,7 @@ int direct_command( int argc, char *argv[], int mode )
     long          longvalue;
     int           counter_no;
     unsigned short counter_value;
-    char          writefilename[PATH_LEN + 1];
+    char          writefilename[PATH_LEN + 128];
     unsigned char sflags;
 
 int flaglist2banks ( unsigned long *flagbank, int banks, char *str );

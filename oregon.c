@@ -553,7 +553,7 @@ unsigned char oretype ( unsigned char *xbuf, unsigned char *subindx, unsigned ch
 char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
 #ifdef HASORE
-   static char    outbuf[160];
+   static char    outbuf[512];
    static char    intvstr[32];
    long           intv;
    char           flagslist[80];
@@ -2068,7 +2068,7 @@ char *translate_oregon( unsigned char *buf, unsigned char *sunchanged, int *laun
 char *translate_ore_emu( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
 #ifdef HASORE
-   static char    outbuf[160];
+   static char    outbuf[512];
    static char    intvstr[32];
    long           intv;
    char           flagslist[80];
@@ -2835,8 +2835,8 @@ int send_ore_emu ( unsigned char vtype, unsigned char subindex, int seq,
 {
    extern int sptty;
    extern int heyu_parent;
-   char writefilename[PATH_LEN + 1];
-   unsigned char outbuf[128];
+   char writefilename[PATH_LEN + 16];
+   unsigned char outbuf[512];
    int  j;
    int  ignoret;
 

@@ -63,8 +63,8 @@ char *argv[];
     char procname[80];
     char *ignoretp;
 #endif
-    char relayfilename[PATH_LEN + 1];
-    char auxfilename[PATH_LEN + 1];
+    char relayfilename[PATH_LEN + 128];
+    char auxfilename[PATH_LEN + 128];
 
     if ( configp->ttyaux[0] != '\0' ) {
        sprintf(auxfilename, "%s%s", AUXFILE, configp->suffixaux);

@@ -119,9 +119,9 @@ int start_relay ( char *tty_name )
    int count_5a;
    int first_byte;
    char argv[2][5];
-   char spoolfilename[PATH_LEN + 1];
-   char relayfilename[PATH_LEN + 1];
-   char writefilename[PATH_LEN + 1];
+   char spoolfilename[PATH_LEN + 128];
+   char relayfilename[PATH_LEN + 128];
+   char writefilename[PATH_LEN + 128];
    struct stat file_buf;
    extern char *argptr;
    extern int ttylock(), c_setclock(), lock_for_write(), munlock();
@@ -541,7 +541,7 @@ void alarmist(int signo)
 void cleanup_files ( void )
 {
     extern char spoolfile[];
-    char buffer[PATH_LEN + 1];
+    char buffer[PATH_LEN + 128];
 
     sprintf(buffer, "%s/LCK..%s%s", LOCKDIR, RELAYFILE, configp->suffix);
     unlink(buffer);
@@ -560,7 +560,7 @@ void cleanup_files ( void )
 void flag_intr( int signo )
 {
     extern int munlock();
-    char buffer[PATH_LEN + 1];
+    char buffer[PATH_LEN + 128];
     PID_T pid;
     PID_T lockpid();
 
@@ -612,7 +612,7 @@ void flag_intr( int signo )
 int quick_ports_check ( void )
 {
    struct stat statbuf;
-   char lockpath[PATH_LEN + 1];
+   char lockpath[PATH_LEN + 128];
 
    if ( !configp->ttyaux[0] )
       return 0;

@@ -93,7 +93,7 @@ char   *heyu_tzname[2];
 
 /* Directory (terminated with /) containing the critical */
 /* heyu files x10config, x10record, and x10macroxref     */
-char   heyu_path[PATH_LEN + 1];
+char   heyu_path[PATH_LEN + 128];
 
 char   schedfile[PATH_LEN + 1];
 char   heyu_script[PATH_LEN + 1];

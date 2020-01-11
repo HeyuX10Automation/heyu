@@ -72,7 +72,7 @@ extern void update_activity_timeout ( ALIAS *, int );
 int send_rfxtype_message ( char rfxtype, unsigned char code )
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
 
    int ignoret;
 
@@ -103,7 +103,7 @@ int send_rfxtype_message ( char rfxtype, unsigned char code )
  +---------------------------------------------------------------------*/
 char *translate_rfxtype_message( unsigned char *buf )
 {
-   static char outbuf[80];
+   static char outbuf[512];
 
 #ifdef HASRFXS
    sprintf(outbuf, "RFXSensorXmitter : Type %c, version %d, sample_mode %s",
@@ -143,7 +143,7 @@ int send_rfxsensor_ident ( unsigned short sensor, unsigned char *serial )
  +---------------------------------------------------------------------*/
 char *translate_rfxsensor_ident ( unsigned char *buf )
 {
-   static char outbuf[80];
+   static char outbuf[512];
 #ifdef HASRFXS
    unsigned char addr;
    unsigned char chip;
@@ -1280,7 +1280,7 @@ char *translate_rfxmeter_code ( unsigned short vident, unsigned long rfxdata )
 { 
    unsigned char code, subcode, intv;
 
-   static char outbuf[80];
+   static char outbuf[512];
    unsigned char recbuf[6];
    double calib, dmeasured;
    unsigned long measured;
@@ -1611,7 +1611,7 @@ int powerpanel_query ( unsigned char panelid, unsigned long *rfxpower )
  +------------------------------------------------------------------------*/
 char *translate_rfxmeter ( unsigned char *buf, unsigned char *sunchanged, int *launchp )
 {
-   static char outbuf[160];
+   static char outbuf[512];
 #ifdef HASRFXM
    char flagslist[80];
    ALIAS *aliasp;
@@ -2169,7 +2169,7 @@ char *translate_kaku ( unsigned char *xbuf, unsigned char *sunchanged, int *laun
  +----------------------------------------------------------------------------*/
 char *translate_visonic ( unsigned char *xbuf, unsigned char *sunchanged, int *launchp )
 {
-   static char   outbuf[120];
+   static char   outbuf[512];
    unsigned int  ident;
    unsigned char data;
    unsigned char *buf;

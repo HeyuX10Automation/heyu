@@ -54,7 +54,7 @@ int c_info( int argc, char *argv[] )
 
     struct tm *tms;
     int expire;
-    char error_msg[127];
+    char error_msg[256];
 
 
     if (argc != 2)
@@ -167,7 +167,7 @@ int c_readclock( int argc, char *argv[] )
     time_t    now;			      
     struct tm *tms;
     int expire;
-    char error_msg[127];
+    char error_msg[256];
 
 
     if (argc != 2)

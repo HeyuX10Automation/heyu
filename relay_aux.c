@@ -85,7 +85,7 @@ extern int heyu_parent;
 static char saved_auxport[PATH_LEN + 1] = "";
 static char saved_suffix[PATH_LEN + 1] = "";
 static unsigned char saved_auxdev;
-static char auxfilename[PATH_LEN + 1];
+static char auxfilename[PATH_LEN + 128];
 
 unsigned int rflastaddr[16];
 unsigned int rftransceive[16][7];
@@ -163,7 +163,7 @@ void configure_rf_tables ( void )
  +---------------------------------------------------------------*/
 void aux_shutdown_port ( char *saved_auxport )
 {
-   char filename[PATH_LEN + 1];
+   char filename[PATH_LEN + 128];
    extern int tty_aux;
    extern int munlock(char *);
 
@@ -252,10 +252,10 @@ int c_start_aux ( char *tty_auxname )
    PID_T pid;
    int in_sync;
    int first_byte;
-   char spoolfilename[PATH_LEN + 1];
-   char relayfilename[PATH_LEN + 1];
+   char spoolfilename[PATH_LEN + 128];
+   char relayfilename[PATH_LEN + 128];
 
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
    struct stat file_buf;
    extern char *argptr;
    extern int ttylock(), lock_for_write(), munlock();
@@ -387,7 +387,7 @@ int check_for_aux ( void )
 {
    struct stat statbuf;
    int retcode;
-   char lockpath[PATH_LEN + 1];
+   char lockpath[PATH_LEN + 128];
 
    if ( !configp->ttyaux[0] )
       return -1;

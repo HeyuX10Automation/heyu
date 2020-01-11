@@ -79,7 +79,7 @@ char *translate_digimax ( unsigned char *buf, unsigned char *sunchanged, int *la
 {
 
 #ifdef HASDMX
-   static char    outbuf[160];
+   static char    outbuf[512];
    char           flagslist[80], unknown[32];
    ALIAS          *aliasp;
    LAUNCHER       *launcherp;

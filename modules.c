@@ -550,7 +550,7 @@ char *display_module_options (int aliasindex )
    int      j, k;
    int      rh;
    double   tempc, bp;
-   char     keystr[4], grpstr[4];
+   char     keystr[16], grpstr[4];
    long     secs;
 
    aliasp = configp->aliasp;

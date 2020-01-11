@@ -75,7 +75,7 @@ void iquit( int signo )
 
 void engine_quit ( int signo )
 {
-   char buffer[PATH_LEN + 1];
+   char buffer[PATH_LEN + 128];
    signal(SIGTERM, engine_quit);
    syslog(LOG_ERR, "interrupt received\n");
    write_x10state_file();
@@ -89,7 +89,7 @@ int c_monitor( int argc, char *argv[] )
     off_t f_offset;
     int check4poll();
     struct stat stat_buf;
-    char spoolfile[100];
+    char spoolfile[256];
     time_t time_now, time_prev;
 
     sprintf( spoolfile, "%s/%s%s", SPOOLDIR, SPOOLFILE, configp->suffix);
@@ -153,7 +153,7 @@ int c_engine( int argc, char *argv[] )
     off_t f_offset;
     int check4poll();
     struct stat stat_buf;
-    char spoolfile[100];
+    char spoolfile[256];
     time_t time_now, time_prev;
     long   tmin_now, tmin_prev, thour_now, thour_prev;
     mode_t oldumask;

@@ -538,7 +538,7 @@ PID_T lockpid ( char *ttydev )
 int lock_for_write()
 {
     int max;
-    char writefilename[PATH_LEN + 1];
+    char writefilename[PATH_LEN + 128];
 
     sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
     max = 0;

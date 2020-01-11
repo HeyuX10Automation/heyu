@@ -1264,7 +1264,7 @@ void show_armed_status ( void )
  +----------------------------------------------------------------------------*/
 char *display_armed_status ( void )
 {
-   static char outbuf[120];
+   static char outbuf[256];
 
    if ( x10global.sflags & GLOBSEC_PENDING ) {
       sprintf(outbuf, "%sSystem will be Armed %s in %ld seconds.",
@@ -1616,7 +1616,7 @@ int c_logmsg ( int argc, char *argv[] )
  +----------------------------------------------------------------------------*/
 char *display_variable_aux_data ( unsigned char *buff )
 {
-   static char outbuf[120];
+   static char outbuf[256];
    int         j;
 
    if ( buff[2] == RF_NOISEVL ) {
@@ -4426,7 +4426,7 @@ void x10state_show ( unsigned char hcode )
 char *bmap2asc2 ( unsigned int bitmap1, unsigned int bitmap2, char *chrs )
 {
    int j;
-   static char outbuf[17];
+   static char outbuf[256];
 
    for ( j = 0; j < 16; j++ ) {
       if ( bitmap1 & (1 << j) )
@@ -4453,7 +4453,7 @@ char *bmap2asc2 ( unsigned int bitmap1, unsigned int bitmap2, char *chrs )
 char *linmap2asc2 ( unsigned int bitmap1, unsigned int bitmap2, char *chrs )
 {
    int j;
-   static char outbuf[17];
+   static char outbuf[256];
 
    for ( j = 0; j < 16; j++ ) {
       if ( bitmap1 & (1 << j) )
@@ -4487,7 +4487,7 @@ char *bmap2statestr ( unsigned int onmap, unsigned int dimmap,
   int j;
   int val;
   unsigned int bmap;
-  static char outbuf[17];
+  static char outbuf[256];
   char hexdigit[] = "0123456789abcdef";
 
   for ( j = 0; j < 16; j++ )  {
@@ -5233,7 +5233,7 @@ void show_sticky_addr ( void )
    unsigned char hcode;
    char          hc;
    int           j, unit;
-   char          outbuf[17];
+   char          outbuf[256];
    char          label[16];
    char          *chrs = "*.";
    int           lw = 13;
@@ -5266,7 +5266,7 @@ void show_housemap ( void )
    unsigned char hcode;
    char          hc;
    int           j, unit;
-   char          outbuf[17];
+   char          outbuf[256];
    char          label[16];
    char          *chrs = "*x.";
    int           lw = 13;
@@ -5301,7 +5301,7 @@ void show_flags_old ( void )
 {
    int           j, lw = 13;
    char          *chrs = "01-";
-   char          outbuf[64];
+   char          outbuf[256];
    int           offset = 0;
 
    for ( j = 0; j < (int)sizeof(outbuf); j++ )
@@ -5359,7 +5359,7 @@ void show_geoflags ( void )
 {
    int           j, lw = 13;
    char          *chrs = "01-";
-   char          outbuf[64];
+   char          outbuf[256];
    int           offset = 0;
 
    for ( j = 0; j < (int)sizeof(outbuf); j++ )
@@ -5855,7 +5855,7 @@ void create_flagslist ( unsigned char vtype, unsigned long vflags, char *flagsli
  +---------------------------------------------------------------------*/
 char *translate_virtual ( unsigned char *buf, int len, unsigned char *sunchanged, int *launchp )
 {
-   static char outbuf[120];
+   static char outbuf[256];
    static char intvstr[32];
    long intv;
    char flagslist[80];
@@ -6311,7 +6311,7 @@ char *translate_gen_longdata ( unsigned char *buff, unsigned char *sunchanged, i
  +---------------------------------------------------------------------*/
 char *translate_sent ( unsigned char *buf, int len, int *launchp )
 { 
-   static char outbuf[120];
+   static char outbuf[256];
    char hc;
    unsigned char hcode, func, level, unit, subunit, chksum;
    unsigned char xgroup, xfunc, xsubfunc, xtype, xdata;
@@ -6596,7 +6596,7 @@ char *translate_rf_sent ( unsigned char *buf, int *launchp )
    extern void xlate_rf( unsigned char, char **, unsigned int, char *,
                                                int *, unsigned char * );
 
-   static char   outbuf[80];
+   static char   outbuf[256];
    char verb[16];
    unsigned char type, bursts, nosw, addr;
    char          hc;
@@ -6665,7 +6665,7 @@ char *translate_rf_sent ( unsigned char *buf, int *launchp )
  +---------------------------------------------------------------------*/
 char *translate_other ( unsigned char *buf, int len, unsigned char *chksum )
 { 
-   static char outbuf[80];
+   static char outbuf[256];
    unsigned int memloc;
 
    if ( buf[0] == 0 && len == 1 ) {
@@ -13456,7 +13456,7 @@ void show_extended_groups ( unsigned char hcode )
    unsigned char ucode, grpmask, grel;
    unsigned int  bitmap, mask, relmask;
    int           unit, group, found;
-   char          outbuf[80];
+   char          outbuf[256];
    char          minbuf[16];
 
    printf("Group levels (0-63) for Housecode %c\n", code2hc(hcode));
@@ -13653,7 +13653,7 @@ int set_counter ( int index, unsigned short count, unsigned char mode )
 char *translate_counter_action ( unsigned char *buf )
 {
    int index, count, mode;
-   static char outbuf[80];
+   static char outbuf[256];
 
    index = buf[2] | (buf[3] << 8);
    count = buf[4] | (buf[5] << 8);

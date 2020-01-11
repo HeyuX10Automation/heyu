@@ -435,7 +435,7 @@ int display_aux_message ( char *message )
    extern int    sptty;
    int           size;
    unsigned char buf[88];
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
 
    int   ignoret;
 
@@ -486,7 +486,7 @@ int atp ( int testpoint )
 int forward_variable_aux_data ( unsigned char vl_type, unsigned char *buff, unsigned char length )
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
    unsigned char sendbuf[80];
 
    int ignoret;
@@ -529,7 +529,7 @@ int forward_variable_aux_data ( unsigned char vl_type, unsigned char *buff, unsi
 int forward_standard_aux_data ( unsigned char byte1, unsigned char byte2 )
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
 
    int ignoret;
 
@@ -561,7 +561,7 @@ int send_virtual_aux_data ( unsigned char address, unsigned char vdata,
      unsigned char vtype, unsigned char vidlo, unsigned char vidhi, unsigned char byte2, unsigned char byte3 )
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
 
    int ignoret;
 
@@ -629,7 +629,7 @@ int forward_aux_longdata ( unsigned char vtype, unsigned char seq, unsigned char
     unsigned char nbytes, unsigned char buff[])
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
    unsigned char sendbuf[80];
 
    int ignoret;
@@ -672,7 +672,7 @@ int forward_gen_longdata ( unsigned char vtype, unsigned char subtype, int nseq,
     unsigned char id_high, unsigned char id_low, unsigned char nbytes, unsigned char buff[] )
 {
    extern int sptty;
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
    unsigned char outbuf[128];
    int  j;
 
@@ -770,7 +770,7 @@ int transceive_std( unsigned char hcode, unsigned char ucode,
                                             unsigned char fcode )
 {
    unsigned char cmdbuf[16];
-   char writefilename[PATH_LEN + 1];
+   char writefilename[PATH_LEN + 128];
 
    if ( configp->device_type & DEV_DUMMY ) {
       display_x10state_message("Unable to transceive to TTY dummy");

@@ -67,7 +67,7 @@ extern int  fetch_x10state_old ( void );
 extern struct x10global_st x10global;
 
 char        statefile[PATH_LEN + 1];
-char        enginelockfile[PATH_LEN + 1];
+char        enginelockfile[PATH_LEN + 128];
 char        auxfile[PATH_LEN + 1];
 
 unsigned int transceive_list[16];
@@ -834,7 +834,7 @@ int parse_config ( FILE *fd_conf, unsigned char mode )
  +---------------------------------------------------------------------*/
 int parse_config_tail ( char *buffer, unsigned char source ) 
 {  
-   char   errbuffer[80];
+   char   errbuffer[256];
    char   searchstr[128];
    char   directive[128];
    char   label[(NAME_LEN + SCENE_LEN + MACRO_LEN + 1)];
@@ -3526,7 +3526,7 @@ int finalize_config ( unsigned char mode )
 
    ALIAS    *aliasp;
 
-   char errmsg[80];
+   char errmsg[256];
    char *sp;
    int  j;
 
@@ -3737,7 +3737,7 @@ int add_alias ( ALIAS **aliaspp, char *label, int line_no,
    char          hc;
    unsigned int  bmap;
    unsigned long vflags, flags, xflags, kflags;
-   char          errmsg[128];
+   char          errmsg[256];
    int           (*module_xlate_func(int index))();
 
    clear_error_message();
@@ -3962,7 +3962,7 @@ int add_scene ( SCENE **scenepp, char *label,
    int           cmdc, nparms;
    char          **cmdv;
    int           blksize = 10;
-   char          errmsg[128];
+   char          errmsg[256];
    extern char   *typename[];
 
    /* Allocate initial block of memory */
@@ -4482,7 +4482,7 @@ int verify_unique_ids ( unsigned char vtype )
    ALIAS          *aliasp;
    unsigned short ident, mask;
    int            j, k;
-   char           errmsg[160];
+   char           errmsg[256];
    int            ntable, dupes;
 
    struct idtable_st {
@@ -5179,7 +5179,7 @@ int webhook_helpinfo ( int argc, char *argv[] )
    char *label;
    struct webhook_st hooks;
    int j, k, ntopic;
-   char outformat[80];
+   char outformat[128];
    char *topic[32];
 
    init_hooks(&hooks);
