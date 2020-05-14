@@ -144,6 +144,9 @@ unsigned char *buf;
 		{
 		    break;
 		}
+#ifndef DARWIN
+                millisleep(10);  /* Added by CWS */
+#endif
 		continue;
 	    }
 	    if( (i < 0) && (i_am_relay != 1) )
