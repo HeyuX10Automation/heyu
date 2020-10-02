@@ -416,7 +416,7 @@ char *make_lock_name ( char *ttydev )
     struct stat stat_buf;
 
     /* strip the leading path name */
-    ptr = rindex(ttydev, '/');
+    ptr = strrchr(ttydev, '/');
 
     devstr = dev_string;
     
