@@ -96,7 +96,7 @@ int sptty = -1;	/* Spool */
 
 #ifndef SYSV
 #include <sgtty.h>
-struct sgttyb oldsb, newsb;
+static struct sgttyb oldsb, newsb;
 void hangup();
 #else
 #ifndef POSIX
@@ -104,7 +104,7 @@ void hangup();
 #ifndef NCC
 #define NCC NCCS
 #endif
-struct termio oldsb, newsb;
+static struct termio oldsb, newsb;
 #else
 #include <termios.h>
 #ifdef DARWIN
@@ -113,7 +113,7 @@ struct termio oldsb, newsb;
 #ifndef NCC
 #define NCC NCCS
 #endif
-struct termios oldsb, newsb;
+static struct termios oldsb, newsb;
 #endif
 
 #endif

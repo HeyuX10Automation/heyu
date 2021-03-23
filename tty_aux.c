@@ -92,7 +92,7 @@ int tty_aux = -1;		/* Real tty */
 
 #ifndef SYSV
 #include <sgtty.h>
-struct sgttyb oldsb, newsb;
+static struct sgttyb oldsb, newsb;
 void hangup();
 #else
 #ifndef POSIX
@@ -100,7 +100,7 @@ void hangup();
 #ifndef NCC
 #define NCC NCCS
 #endif
-struct termio oldsb, newsb;
+static struct termio oldsb, newsb;
 #else
 #include <termios.h>
 #if defined(DARWIN) || defined(NETBSD)
@@ -109,7 +109,7 @@ struct termio oldsb, newsb;
 #ifndef NCC
 #define NCC NCCS
 #endif
-struct termios oldsb, newsb;
+static struct termios oldsb, newsb;
 #endif
 
 #endif

@@ -74,7 +74,7 @@ extern unsigned char alert_ack[];
 extern CONFIG config;
 extern CONFIG *configp;
 
-char spoolfile[PATH_LEN + 1];
+extern char spoolfile[PATH_LEN + 1];
 
 extern int is_ring( void );
 int relay_ri_control( void );
