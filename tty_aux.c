@@ -121,7 +121,7 @@ int tty_aux = -1;		/* Real tty */
 
 #if !defined(HAVE_STRUCT_TERMIOS) && !defined(HAVE_STRUCT_TERMIO)
 # include <sgtty.h>
-struct sgttyb oldsb, newsb;
+static struct sgttyb oldsb, newsb;
 void hangup();
 #else
 # ifndef HAVE_STRUCT_TERMIOS
@@ -131,7 +131,7 @@ void hangup();
 #  ifdef HAVE_SYS_TERMIO_H
 #   include <sys/termio.h>
 #  endif
-struct termio oldsb, newsb;
+static struct termio oldsb, newsb;
 # else
 #  ifdef HAVE_TERMIOS_H
 #   include <termios.h>
@@ -139,7 +139,7 @@ struct termio oldsb, newsb;
 #  ifdef HAVE_SYS_TERMIOS_H
 #   include <sys/termios.h>
 #  endif
-struct termios oldsb, newsb;
+static struct termios oldsb, newsb;
 # endif
 # ifndef NCC
 #  define NCC NCCS
