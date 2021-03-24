@@ -26,9 +26,9 @@
 AC_PREREQ([2.68])
 AC_INIT([Heyu], [2.11-rc3],
 	[heyu@tickets.assembla.com], [heyu], [http://heyu.org])
-AC_DEFINE([RELEASE_DATE], ["20170930"], [Release date of package])
+AC_DEFINE([RELEASE_DATE], ["20210324"], [Release date of package])
 AC_COPYRIGHT([Heyu specific bits:
-Copyright (C) 2011, 2012, 2015, 2017 Janusz Krzysztofik <jmkrzyszt@gmail.com>])
+Copyright (C) 2011 - 2021 Janusz Krzysztofik <jmkrzyszt@gmail.com>])
 AC_CONFIG_SRCDIR([relay.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -164,6 +164,7 @@ AC_MSG_CHECKING([for a custom post-install script])
 	AC_MSG_RESULT([$enable_postinst])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_MAINTAINER_MODE([disable])
 
 AC_CANONICAL_HOST
 AS_CASE([$host_os],
