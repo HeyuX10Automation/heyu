@@ -317,7 +317,8 @@ int c_start_aux ( char *tty_auxname )
    strcat(spoolfile, spoolfilename);
 
    /* is an aux daemon in place ? */
-    if ( lockpid(auxfilename) > (PID_T)1)  {
+    was_locked = lockpid(auxfilename);
+    if (was_locked && was_locked != getpid()) {
        if ( verbose )
           printf("There was already an aux daemon running (pid = %ld)\n",
 		(long)lockpid(auxfilename) );

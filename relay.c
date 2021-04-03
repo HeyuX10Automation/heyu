@@ -194,7 +194,8 @@ int start_relay ( char *tty_name )
    strcat(spoolfile, spoolfilename);
 
    /* is a relay in place ? */
-    if ( lockpid(relayfilename) > (PID_T)1)  {
+    was_locked = lockpid(relayfilename);
+    if (was_locked && was_locked != getpid())  {
        if ( stat(spoolfile, &file_buf) < 0 )  {
 	   char tmpbuf[sizeof(spoolfile) + 100];
 	   sprintf(tmpbuf, "The file %s does not exist or is not writable.",
@@ -490,10 +491,9 @@ int start_relay ( char *tty_name )
 			  means a power failure*/
 
                     /* Set lock file if not already set */
-                    if ( (was_locked = lockpid(writefilename)) == (PID_T)0 ) {                    
-                        if ( lock_for_write() < 0 )
-                            error("Program exiting.\n");
-                    }
+                    was_locked = lockpid(writefilename);
+                    if (lock_for_write() < 0)
+                        error("Program exiting.\n");
                     port_locked = 1;
 
 		    powerfail = 0;

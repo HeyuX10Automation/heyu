@@ -313,8 +313,7 @@ int ttylock ( char *ttydev )
 
     if( verbose )
         printf("Trying to lock (%s)\n", devstr);
-    if( lockpid(ttydev) == 0 )
-	rtn = lock_device(devstr);
+    rtn = lock_device(devstr);
     if( (verbose) && ( rtn == 0 ) )
             printf("%s is locked\n", devstr);
     else if(  rtn != 0  )
@@ -340,21 +339,50 @@ int munlock ( char *ttydev )
     return(0);
 }
 
-/* This function writes the pid into the lock file.  It uses the ASCII mode.
- * It will overwrite the existing file.
+/*
+ * This function creates the lock file and writes the pid into it.
+ * It will NOT overwrite the existing file unless removed as stale.
  */
 int lock_device ( char *ttydev )
 {
-    FILE *f;
-    char err_string[128];
+    unsigned long our_pid = getpid(), lock_pid;
+    char err_string[128], buf[12], *bufp;
+    int fd, count, ret;
 
-    if ( (f = fopen(ttydev, "w")) != NULL ) {
-        fprintf(f, "    %d\n", (int)getpid() );
+retry:
+    fd = open(ttydev, O_EXCL | O_CREAT | O_RDWR, 0644);
+    if (fd >= 0) {
+#ifndef BINARY_LOCK_FILE_FORMAT
+        snprintf(buf, sizeof(buf), "%10ld\n", our_pid);
+	bufp = buf;
+	count = 11;
+#else
+	bufp = &our_pid;
+	count = 4;
+#endif
+
+	while (count > 0) {
+	    errno = 0;
+	    ret = write(fd, bufp, count);
+
+	    if (ret > 0) {
+	        count -= ret;
+		bufp += ret;
+
+	    } else if (errno != EINTR) {
+	        syslog(LOG_DAEMON | LOG_ERR, "Lock file write error.");
+		sprintf(err_string, "Lock file write error.\n");
+		error(err_string);
+	    }
+	}
+	close(fd);
 #ifdef REVERT_PERMS
 	chmod(ttydev, 0777);
 #endif
-    }
-    else {
+	millisleep(100);
+	goto retry;
+
+    } else if (errno != EEXIST) {
 	if ( verbose )
 	    syslog(LOG_ERR,"Unable to create the lock file:");
 	syslog(LOG_DAEMON | LOG_ERR, "Unable to create the lock file.");
@@ -362,8 +390,13 @@ int lock_device ( char *ttydev )
         sprintf(err_string, "Unable to create the lock file %s.\n", ttydev);
         error(err_string);
     }
-    fclose(f);
-    return(0);
+
+    /* the lock file exists */
+    lock_pid = lockpid(ttydev);
+    if (!lock_pid)	/* must have been removed */
+	goto retry;
+
+    return -(lock_pid != our_pid);
 }
 
 /* set up the real and spool psuedo tty file descriptor.
@@ -476,83 +509,89 @@ char *make_lock_name ( char *ttydev )
 
 
 
-/* lockpid returns 0 if the file is not locked or PID is invalid,
- *         returns the PID if the file is locked
- *         returns -1 on error
+/*
+ * lockpid returns 0 if no lock file exists or a stale one has been removed
+ *         returns a PID of an owning process if the file and the process exist
  */
 PID_T lockpid ( char *ttydev )
 {
-    FILE *input;
-    /* char bufr[PATH_MAX]; */
-    char bufr[PATH_LEN + 1];
+    char bufr[12], *bufp = bufr;
+    int  infd, count = 0, ret;
     char *devstr;
-    struct stat lockstat;
-    int infd;
     long pid_no;
-
-    char *ignorep;
-    int  ignoret;
 
     devstr = make_lock_name(ttydev);
 
     if ( verbose && !i_am_relay )
        fprintf(stderr, "lockpid: Checking for file '%s'\n", devstr);
 
-    errno = 0;
-    if ( stat(devstr, &lockstat) >= 0 ) {
-        /* a lock file exists */
-	input = fopen(devstr, "r");
-	if( input == NULL ) {
-	   syslog(LOG_DAEMON | LOG_ERR, "Problem opening the lock file.");
-           if ( !i_am_relay )
-	      fprintf(stderr, "Problem opening the lock file.\n");
-	   quit();
+    infd = open(devstr, O_RDONLY);
+    if (infd < 0) {
+	if (errno == ENOENT) {
+	    /* Cool!  no lock file. */
+	    return 0;
 	}
-	ignorep = fgets(bufr,80,input);	/* read the pid info from the file */
-	if ( strncmp("    ", bufr, 4) == 0 ) {
-	    /* Oh! ascii info */
-	    sscanf(bufr, " %ld", &pid_no);
-	    fclose(input);
+
+	syslog(LOG_DAEMON | LOG_ERR, "Problem opening the lock file.");
+        if (!i_am_relay)
+            fprintf(stderr, "Problem opening the lock file.\n");
+	quit();
+    }
+
+    /* a lock file exists -- read the pid info from the file */
+    while (count < 11) {
+	ret = read(infd, bufp, count);
+
+	if (!ret)	/* EOF */
+	    break;
+
+	if (ret > 0) {
+	    count += ret;
+	    bufp += ret;
+	    continue;
 	}
-	else {
-           /* Ahhh.  Binary */
-	   fclose(input);
-	   infd = open(devstr, O_RDONLY);
-	   if ( infd < 0  ) {
-	       syslog(LOG_DAEMON | LOG_ERR, "Problem opening the lock file.");
-               if ( !i_am_relay )
-                  fprintf(stderr, "Problem opening the lock file.\n");
-	       quit();
-	   }
-	   ignoret = read(infd,&pid_no,4);
-	   close(infd);
+
+	if (errno != EINTR) {
+	    syslog(LOG_DAEMON | LOG_ERR, "Problem reading the lock file.");
+	    if (!i_am_relay)
+		fprintf(stderr, "Problem reading the lock file.\n");
+	    quit();
 	}
+    }
+    close(infd);
+
+#ifndef BINARY_LOCK_FILE_FORMAT
+    *bufp = '\0';
+    ret = sscanf(bufr, " %ld\n%n", &pid_no, &count);
+    if (ret != 1 || count != 11)
+	pid_no = 0;	/* malformed content - remove */
+#else /* BINARY_LOCK_FILE_FORMAT */
+    if (count == 4)
+	memcpy(&pid_no, bufr, 4);
+    else
+	pid_no = 0;	/* malformed content - remove */
+#endif /* BINARY_LOCK_FILE_FORMAT */
+
+    if (pid_no > 0) {
 	/* does the process exist? */
         
         errno = 0;
-        getpriority(PRIO_PROCESS, (PID_T)pid_no);	/* a harmless check for a pid */
-        if ( errno == ESRCH )
-            return(0);			/* no pid exists */
-        else {
+        ret = getpriority(PRIO_PROCESS, pid_no);	/* a harmless check for a pid */
+        if (ret != -1 || errno != ESRCH) {
 	    /*  locked by other process.  Please try again. */
 	    return((PID_T)pid_no);
         }
     }
-    else {
-	/* could not stat the file.  Why? */
-        if ( errno == ENOENT ) {
-            /* Cool!  no lock file. */
-            return(0);
-        }
-	else {
-	    if ( !i_am_relay ) {
-	       fprintf(stderr, "stat pathspec '%s': Error = %s\n",
-		  devstr, strerror(errno));
-	    }  
-	    perror("Lock file not accessable:");
-	    syslog(LOG_DAEMON | LOG_ERR, "Lock file not accessable.");
-	    quit(); 
-	}
+
+    /* stale or invalid lock file - remove it */
+    if (!unlink(devstr)) {
+	syslog(LOG_DAEMON | LOG_NOTICE, "Removed stale lock file %s pid %ld\n", devstr, pid_no);
+
+    } else if (errno != ENOENT) {
+	syslog(LOG_DAEMON | LOG_ERR, "Couldn't remove stale lock file %s\n", devstr);
+	if (!i_am_relay)
+	    fprintf(stderr, "Couldn't remove stale lock file %s\n", devstr);
+	quit();
     }
 
     return(0);
@@ -565,10 +604,10 @@ int lock_for_write()
 
     sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
     max = 0;
-    while( (lockpid(writefilename) > 1) && (++max <= configp->lock_timeout) )
+    while( (ttylock(writefilename) < 0) && (++max <= configp->lock_timeout) )
          sleep(1);
 
-    if ( ttylock(writefilename) < 0 ) {
+    if (max > configp->lock_timeout) {
         if ( !i_am_relay && !i_am_aux )
            fprintf(stderr, "Could not set up the heyu.write lock\n");
         syslog(LOG_ERR, "Could not set up the heyu.write lock-");

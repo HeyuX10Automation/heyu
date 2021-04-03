@@ -225,6 +225,12 @@ LOCKDIR		LOCALSTATEDIR/lock; override with CPPFLAGS='...
 SPOOLDIR	LOCALSTATEDIR/tmp/heyu; override with CPPFLAGS='...
 		-DSPOOLDIR=\"path\" ...'
 
+Heyu uses HDB UUCP lock file format by default.  Binary lock file
+format can be requested if needed by calling ./configure with
+-DBINARY_LOCK_FILE_FORMAT option added to CPPFLAGS.  If using
+./Configure.sh, please edit the script so ./configure is called
+with that option.
+
 
 Default installation directories passed through ./configure to 'make
 install':
