@@ -26,6 +26,7 @@
  */
 
 #include <stdio.h>
+#include "process.h"
 #include "x10.h"
 
 char *E_2MANY = EM_2MANY;
@@ -35,6 +36,8 @@ char *E_NMA = EM_NMA;
 char *E_NOCMD = EM_NOCMD;
 
 void exit();
+
+extern CONFIG *configp;
 
 int usage(s)
 char *s;
@@ -91,8 +94,12 @@ char *s;
     extern int port_locked;
 
     (void) fprintf(stderr, "HEYU: %s\n", s);
-    if( port_locked == 1 )
-        munlock( "heyu.write" );
+    if( port_locked == 1 ) {
+        char writefilename[PATH_LEN + 1];
+
+        sprintf(writefilename, "%s%s", WRITEFILE, configp->suffix);
+        munlock(writefilename);
+    }
 
     quit();
 }
