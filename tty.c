@@ -312,12 +312,12 @@ int ttylock ( char *ttydev )
     devstr = make_lock_name(ttydev);
 
     if( verbose )
-        printf("Trying to lock (%s)\n", devstr);
-    rtn = lock_device(devstr);
+        printf("Trying to lock %s (%s)\n", ttydev, devstr);
+    rtn = lock_device(ttydev);
     if( (verbose) && ( rtn == 0 ) )
-            printf("%s is locked\n", devstr);
+            printf("%s is locked (%s)\n", ttydev, devstr);
     else if(  rtn != 0  )
-    	    printf("Unable to lock %s\n", devstr);
+	    printf("Unable to lock %s (%s)\n", ttydev, devstr);
 
     return(rtn);
 }
@@ -345,12 +345,13 @@ int munlock ( char *ttydev )
  */
 int lock_device ( char *ttydev )
 {
+    char *devstr, err_string[128], buf[12], *bufp;
     unsigned long our_pid = getpid(), lock_pid;
-    char err_string[128], buf[12], *bufp;
     int fd, count, ret;
 
+    devstr = make_lock_name(ttydev);
 retry:
-    fd = open(ttydev, O_EXCL | O_CREAT | O_RDWR, 0644);
+    fd = open(devstr, O_EXCL | O_CREAT | O_RDWR, 0644);
     if (fd >= 0) {
 #ifndef BINARY_LOCK_FILE_FORMAT
         snprintf(buf, sizeof(buf), "%10ld\n", our_pid);
@@ -377,7 +378,7 @@ retry:
 	}
 	close(fd);
 #ifdef REVERT_PERMS
-	chmod(ttydev, 0777);
+	chmod(devstr, 0777);
 #endif
 	millisleep(100);
 	goto retry;
@@ -387,7 +388,7 @@ retry:
 	    syslog(LOG_ERR,"Unable to create the lock file:");
 	syslog(LOG_DAEMON | LOG_ERR, "Unable to create the lock file.");
         /* error quits the program */
-        sprintf(err_string, "Unable to create the lock file %s.\n", ttydev);
+        sprintf(err_string, "Unable to create the lock file %s.\n", devstr);
         error(err_string);
     }
 
